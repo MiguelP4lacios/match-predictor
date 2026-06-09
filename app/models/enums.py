@@ -16,6 +16,7 @@ class CompetitionKind(enum.StrEnum):
     QUALIFIER = "qualifier"
     NATIONS_LEAGUE = "nations_league"
     FRIENDLY = "friendly"
+    OTHER = "other"
 
 
 class DataSource(enum.StrEnum):
