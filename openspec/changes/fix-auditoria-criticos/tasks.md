@@ -2,16 +2,16 @@
 
 ## Phase 1: Git + Backup
 
-- [ ] 1.1 `git init && git add . && git commit -m "chore: initial commit pre-fix"` en el root del proyecto. ops-resilience R1.S1
-- [ ] 1.2 Crear `scripts/backup.sh` (pg_dump via `docker compose exec db` → `backups/YYYY-MM-DD_HHMMSS.sql`); añadir `backups/` a `.gitignore`; ejecutar backup. **MANUAL-OPTIONAL** ops-resilience R2.S1
+- [x] 1.1 `git init && git add . && git commit -m "chore: initial commit pre-fix"` en el root del proyecto. ops-resilience R1.S1
+- [x] 1.2 Crear `scripts/backup.sh` (pg_dump via `docker compose exec db` → `backups/YYYY-MM-DD_HHMMSS.sql`); añadir `backups/` a `.gitignore`; ejecutar backup. **MANUAL-OPTIONAL** ops-resilience R2.S1
 
 ## Phase 2: Alembic Migration Wave
 
-- [ ] 2.1 `app/models/enums.py`: añadir `OTHER = "other"` a `CompetitionKind`. Prereq de M1.
-- [ ] 2.2 M1: `alembic revision` con `autocommit_block` → `ALTER TYPE competition_kind ADD VALUE IF NOT EXISTS 'other'`; `docker compose run --rm migrate alembic upgrade head`. D2
-- [ ] 2.3 `app/models/odds.py` (+`source_event_id VARCHAR(80)`, `commence_time TIMESTAMP`), `match.py` (+`kickoff_at TIMESTAMP`), `model.py` (+`Prediction.line Numeric(5,2)` nullable). odds-capture R1, ops-resilience R4
-- [ ] 2.4 M2: `alembic revision --autogenerate` para columnas nuevas; revisar diff; upgrade head.
-- [ ] 2.5 Crear `scripts/dedup.py` (conservar `MIN(id)`, re-apuntar FKs, borrar duplicados en `match` y teams case-dup). M3: UNIQUE `(match_date, home_team_id, away_team_id)` + CHECK `ck_odds_target` + índice funcional `lower(team.name)`; ejecutar dedup ANTES de M3. D7
+- [x] 2.1 `app/models/enums.py`: añadir `OTHER = "other"` a `CompetitionKind`. Prereq de M1.
+- [x] 2.2 M1: `alembic revision` con `autocommit_block` → `ALTER TYPE competition_kind ADD VALUE IF NOT EXISTS 'other'`; `docker compose run --rm migrate alembic upgrade head`. D2
+- [x] 2.3 `app/models/odds.py` (+`source_event_id VARCHAR(80)`, `commence_time TIMESTAMP`), `match.py` (+`kickoff_at TIMESTAMP`), `model.py` (+`Prediction.line Numeric(5,2)` nullable). odds-capture R1, ops-resilience R4
+- [x] 2.4 M2: `alembic revision --autogenerate` para columnas nuevas; revisar diff; upgrade head.
+- [x] 2.5 Crear `scripts/dedup.py` (conservar `MIN(id)`, re-apuntar FKs, borrar duplicados en `match` y teams case-dup). M3: UNIQUE `(match_date, home_team_id, away_team_id)` + CHECK `ck_odds_target` + índice funcional `lower(team.name)`; ejecutar dedup ANTES de M3. D7
 
 ## Phase 3: TDD RED
 
