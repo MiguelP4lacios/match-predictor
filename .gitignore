@@ -20,6 +20,9 @@ venv/
 data/raw/
 *.sqlite3
 
+# Backups de PostgreSQL (generados por scripts/backup.sh)
+backups/
+
 # OS / editor
 .DS_Store
 .idea/
