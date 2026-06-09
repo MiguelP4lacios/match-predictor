@@ -35,5 +35,9 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+# Las migraciones son auto-generadas por Alembic; E501/I001 son esperables.
+"migrations/versions/*.py" = ["E501", "I001"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

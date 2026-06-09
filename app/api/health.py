@@ -14,7 +14,7 @@ def health() -> dict[str, str]:
 
 
 @router.get("/health/db")
-def health_db(session: Session = Depends(get_session)) -> dict[str, str]:
+def health_db(session: Session = Depends(get_session)) -> dict[str, str]:  # noqa: B008
     """Readiness: la BD responde. Útil para detectar Postgres caído."""
     session.execute(text("SELECT 1"))
     return {"status": "ok", "db": "ok"}

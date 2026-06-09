@@ -7,7 +7,7 @@ sync_log para idempotencia (no re-cargar lo ya cargado).
 
 from datetime import UTC, datetime
 
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.ingestion.resolver import TeamResolver
