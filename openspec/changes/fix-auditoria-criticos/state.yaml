@@ -1,0 +1,19 @@
+change: fix-auditoria-criticos
+phase: tasks
+artifact_store: hybrid
+execution_mode: auto  # usuario pidió correr hasta el final sin preguntar (2026-06-09)
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  verify_report: false
+tasks_progress:
+  completed: []
+  pending: [Phase 1 (git+backup), Phase 2 (migraciones M1-M3), Phase 3 (TDD RED x7), Phase 4 (TDD GREEN x6), Phase 5 (backfill kind), Phase 6 (ops hardening), Phase 7 (recompute+suite final)]
+last_updated: 2026-06-09
+notes: |
+  28 tasks. Batching apply: A=Phases 1-2 (bloqueante), B=Phases 3-4 (TDD RED->GREEN misma sesión),
+  C=Phases 5-6, D=Phase 7. M1 (enum OTHER) en revisión propia con autocommit_block. Dedup antes de
+  la UNIQUE (task 2.5). Recompute de Elo último. MANUAL-OPTIONAL: 1.2, 6.2, 7.3.

@@ -1,0 +1,80 @@
+# UN SOLO COMANDO levanta TODO en orden:
+#
+#   docker compose up -d --build
+#
+# Flujo orquestado por depends_on + condition:
+#   db (healthy) -> migrate (alembic, one-shot) -> api (uvicorn) + ingest (one-shot)
+#
+# `migrate` e `ingest` corren, terminan y salen (exit 0). La API queda sirviendo.
+# La ingesta es idempotente (sync_log): en ups siguientes salta en segundos.
+
+x-app: &app
+  build: .
+  image: match_predictor-app
+  environment: &app-env
+    # Dentro de la red de compose el host de la BD es `db`, no localhost.
+    DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/match_predictor
+    APP_NAME: match-predictor
+    DEBUG: "false"
+    # Se lee de tu .env (vacía si no está). Necesaria para el capturador de odds.
+    ODDS_API_KEY: ${ODDS_API_KEY:-}
+  volumes:
+    - .:/app          # bind-mount: tu código (hot-reload); el venv vive en /opt/uv-venv
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: match_predictor_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: match_predictor
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d match_predictor"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    <<: *app
+    container_name: match_predictor_migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    command: alembic upgrade head
+    restart: "no"
+
+  ingest:
+    <<: *app
+    container_name: match_predictor_ingest
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: python -m app.ingestion.run
+    restart: "no"
+
+  api:
+    <<: *app
+    container_name: match_predictor_api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  scheduler:
+    <<: *app
+    container_name: match_predictor_scheduler
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: python -m app.scheduler.run
+    restart: unless-stopped
+
+volumes:
+  pgdata:

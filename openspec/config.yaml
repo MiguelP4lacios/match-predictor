@@ -1,0 +1,58 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Tech stack: Python 3.12, FastAPI, SQLAlchemy 2.0 (sync), PostgreSQL 16, Alembic, APScheduler, httpx.
+  Runtime: 100% dockerizado (docker compose: db -> migrate -> ingest/api/scheduler); nada corre en el host.
+  Architecture: hexagonal en ingesta (Protocols ISP + DTOs neutrales en app/ingestion/sources/), modelo determinista separado (app/model/ — Elo); dominio: sistema +EV de apuestas Mundial 2026.
+  Invariantes (CLAUDE.md): LLM nunca calcula probabilidades; sin edge medido no hay apuesta; nunca API externa en request de usuario; DataSource provider-agnostic; cuotas free limitadas.
+  Testing: pytest (tests/), sin coverage tool.
+  Style: ruff check + ruff format (line-length 100, py312).
+  OJO: el proyecto AÚN no es repositorio git (hallazgo crítico de auditoría pendiente).
+
+strict_tdd: true
+
+testing:
+  test_runner:
+    framework: pytest
+    command: "docker compose run --rm api pytest"
+  layers:
+    unit: { available: true, tool: pytest }
+    integration: { available: true, tool: "httpx + fastapi TestClient (sin fixtures de BD de test todavía)" }
+    e2e: { available: false, tool: null }
+  coverage:
+    available: false
+    command: null  # falta pytest-cov
+  quality:
+    linter: { available: true, command: "docker compose run --rm api ruff check ." }
+    type_checker: { available: false, command: null }  # no hay mypy/pyright
+    formatter: { available: true, command: "docker compose run --rm api ruff format ." }
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+    - Si el change toca el modelo (Elo/probabilidades), declarar si exige recalcular elo_rating y re-backtest
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Todo cálculo que alimente una apuesta MUST tener escenario de verificación numérica
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - Respetar invariantes de CLAUDE.md (determinista separado, provider-agnostic, cuotas)
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Comandos SIEMPRE vía docker compose (nada en el host)
+    tdd: true
+    test_command: "docker compose run --rm api pytest"
+  verify:
+    test_command: "docker compose run --rm api pytest"
+    build_command: "docker compose run --rm api ruff check ."
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas (large removals)
