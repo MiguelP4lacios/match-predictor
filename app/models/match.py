@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import BigInteger, ForeignKey, String
+from sqlalchemy import BigInteger, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -34,6 +34,9 @@ class Match(Base, TimestampMixin):
 
     city: Mapped[str | None] = mapped_column(String(120))
     country: Mapped[str | None] = mapped_column(String(120))
+
+    # Hora exacta de inicio del partido (poblada por re-link de odds orphans).
+    kickoff_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     # Solo partidos de fase de grupos del torneo.
     group_id: Mapped[int | None] = mapped_column(ForeignKey("tournament_group.id"))

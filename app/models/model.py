@@ -38,6 +38,8 @@ class Prediction(Base):
     market_type: Mapped[MarketType] = mapped_column(market_type_type)
     outcome_code: Mapped[str | None] = mapped_column(String(20))
     probability: Mapped[float] = mapped_column(Numeric(8, 5))
+    # Línea Over/Under asociada a la predicción (ej. 2.5, 3.5). NULL en 1X2.
+    line: Mapped[float | None] = mapped_column(Numeric(5, 2))
     generated_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     model_version: Mapped["ModelVersion"] = relationship(back_populates="predictions")
