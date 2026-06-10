@@ -1,0 +1,21 @@
+change: elo-to-1x2
+phase: tasks
+artifact_store: hybrid
+execution_mode: auto
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  verify_report: false
+tasks_progress:
+  completed: []
+  pending: [Phase 1 (deps+m5), Phase 2 (TDD RED 18 escenarios), Phase 3 (TDD GREEN 6 archivos), Phase 4 (fit+backtest+predict+signals datos reales), Phase 5 (suite+commits)]
+last_updated: 2026-06-09
+notes: |
+  23 tasks. Rulings del orquestador: prediction.low_confidence en m5; bankroll default 1000 en
+  params_json; layout en app/model/ (design manda sobre la mención app/services de la spec);
+  neutral_site WC2026 verificado (63t/9f, correcto). Honest-stop: si OLM no vence baselines en
+  Brier Y log-loss OOS, Phase 4 para en 4.2 y las señales quedan bloqueadas por el gate.
+  Apply: agente 1 = Phases 1-3; agente 2 = Phases 4-5.

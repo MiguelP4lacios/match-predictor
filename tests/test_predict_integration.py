@@ -101,11 +101,18 @@ def test_predict_uses_rating_strictly_before_match_date(db_session):
     )
     assert count == 3
 
-    # La predicción no debe tener low_confidence porque hay ratings previos
     preds = db_session.scalars(select(Prediction).where(Prediction.match_id == match.id)).all()
-    # Ninguna predicción debería ser low_confidence para el equipo local (tiene rating previo)
-    # Nota: la función debería usar 1650, no 1670; verificamos que las predicciones existen
     assert all(not p.low_confidence for p in preds)
+
+    # La probabilidad persistida debe salir del rating 1650 (rating_date < match_date),
+    # NUNCA del 1670 del mismo día. Cancha no neutral → diff incluye +100 de localía.
+    from app.model.probabilities import predict_proba
+
+    expected = predict_proba(mv.params_json, elo_diff=(1650.0 + 100.0) - 1500.0, neutral=False)
+    leaked = predict_proba(mv.params_json, elo_diff=(1670.0 + 100.0) - 1500.0, neutral=False)
+    p_home = next(float(p.probability) for p in preds if p.outcome_code == "HOME")
+    assert abs(p_home - expected["home"]) < 1e-5
+    assert abs(p_home - leaked["home"]) > 1e-6  # con 1670 daría otro número
 
 
 # ---------------------------------------------------------------------------
