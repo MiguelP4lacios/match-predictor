@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.model.odds_queries import best_odds_per_outcome
 from app.model.probabilities import (
     BacktestGateError,
     BacktestRequiredError,
@@ -24,7 +25,7 @@ from app.model.probabilities import (
     devig_proportional,
     kelly_quarter,
 )
-from app.models import BetLog, ModelVersion, Odds, Prediction, ValueSignal
+from app.models import BetLog, ModelVersion, Prediction, ValueSignal
 from app.models.enums import BetMode, BetStatus, MarketType
 
 
@@ -120,29 +121,11 @@ def generate_signals(
     emitted_ids: list[int] = []
 
     for mid, preds_by_outcome in matches.items():
-        # Obtener el snapshot de odds más reciente por bookmaker para este partido
-        odds_stmt = (
-            select(Odds)
-            .where(
-                Odds.match_id == mid,
-                Odds.market_type == MarketType.MATCH_1X2,
-            )
-            .order_by(Odds.captured_at.desc())
-        )
-        all_odds = session.scalars(odds_stmt).all()
-        if not all_odds:
+        # Mejor cuota por outcome_code (extraído a odds_queries para reutilización)
+        best_odds = best_odds_per_outcome(mid, session)
+        if not best_odds:
             continue  # Sin odds, no hay señal
 
-        # Encontrar mejor cuota por outcome_code (máximo decimal_odds)
-        best_odds: dict[str, Odds] = {}
-        for o in all_odds:
-            oc = o.outcome_code
-            if oc not in best_odds or float(o.decimal_odds) > float(best_odds[oc].decimal_odds):
-                best_odds[oc] = o
-
-        # Obtener odds del triple HOME/DRAW/AWAY del primer bookmaker
-        # (para de-vig proporcional necesitamos el triple del mismo libro)
-        # Usar el snapshot más reciente con las 3 outcomes presentes
         h_odds_row = best_odds.get("HOME")
         d_odds_row = best_odds.get("DRAW")
         a_odds_row = best_odds.get("AWAY")
