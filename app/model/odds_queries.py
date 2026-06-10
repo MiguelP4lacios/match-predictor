@@ -50,13 +50,16 @@ def best_odds_per_outcome(
     )
 
     # Join con la tabla original para obtener el objeto Odds completo
-    stmt = select(Odds).join(
-        subq,
-        (Odds.outcome_code == subq.c.outcome_code)
-        & (Odds.decimal_odds == subq.c.max_odds),
-    ).where(
-        Odds.match_id == match_id,
-        Odds.market_type == market_type,
+    stmt = (
+        select(Odds)
+        .join(
+            subq,
+            (Odds.outcome_code == subq.c.outcome_code) & (Odds.decimal_odds == subq.c.max_odds),
+        )
+        .where(
+            Odds.match_id == match_id,
+            Odds.market_type == market_type,
+        )
     )
 
     rows = session.scalars(stmt).all()
@@ -109,14 +112,17 @@ def latest_per_bookmaker(
         .subquery()
     )
 
-    stmt = select(Odds).join(
-        subq,
-        (Odds.bookmaker == subq.c.bookmaker)
-        & (Odds.captured_at == subq.c.latest_at),
-    ).where(
-        Odds.match_id == match_id,
-        Odds.market_type == market_type,
-        Odds.outcome_code == outcome_code,
+    stmt = (
+        select(Odds)
+        .join(
+            subq,
+            (Odds.bookmaker == subq.c.bookmaker) & (Odds.captured_at == subq.c.latest_at),
+        )
+        .where(
+            Odds.match_id == match_id,
+            Odds.market_type == market_type,
+            Odds.outcome_code == outcome_code,
+        )
     )
 
     return list(session.scalars(stmt).all())

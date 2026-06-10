@@ -8,7 +8,6 @@ Spec: helpers best_odds_per_outcome y latest_per_bookmaker.
 
 import datetime
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.model.odds_queries import best_odds_per_outcome, latest_per_bookmaker
