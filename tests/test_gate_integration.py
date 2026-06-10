@@ -58,9 +58,7 @@ def _setup_eligible_model(session, name: str = "1x2-olm-v1-gate-test") -> ModelV
     return mv
 
 
-def _setup_match_and_prediction(
-    session, model_version: ModelVersion, p_model: float = 0.40
-):
+def _setup_match_and_prediction(session, model_version: ModelVersion, p_model: float = 0.40):
     """Crea competición, equipos, partido y predicción mínimos."""
     comp = Competition(name="Gate Test WC", kind=CompetitionKind.WORLD_CUP)
     session.add(comp)
@@ -206,7 +204,12 @@ def test_signal_below_threshold_not_emitted(db_session):
 
     generate_signals(db_session, model_version_id=mv.id, match_id=match.id)
 
-    count = db_session.scalar(select(func.count(ValueSignal.id)))
+    # Scope count to this test's model version to avoid pollution from real Phase 4 signals
+    count = db_session.scalar(
+        select(func.count(ValueSignal.id))
+        .join(Prediction, Prediction.id == ValueSignal.prediction_id)
+        .where(Prediction.model_version_id == mv.id)
+    )
     assert count == 0
 
 
@@ -235,10 +238,19 @@ def test_signal_above_threshold_emitted_as_paper(db_session):
 
     generate_signals(db_session, model_version_id=mv.id, match_id=match.id)
 
-    vs_count = db_session.scalar(select(func.count(ValueSignal.id)))
+    # Scope count and fetch to this test's model version to avoid real Phase 4 pollution
+    vs_count = db_session.scalar(
+        select(func.count(ValueSignal.id))
+        .join(Prediction, Prediction.id == ValueSignal.prediction_id)
+        .where(Prediction.model_version_id == mv.id)
+    )
     assert vs_count == 1
 
-    vs = db_session.scalar(select(ValueSignal))
+    vs = db_session.scalar(
+        select(ValueSignal)
+        .join(Prediction, Prediction.id == ValueSignal.prediction_id)
+        .where(Prediction.model_version_id == mv.id)
+    )
     assert vs is not None
     assert vs.odds_id == h_row.id
     assert vs.prediction_id == pred.id

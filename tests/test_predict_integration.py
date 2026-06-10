@@ -50,7 +50,7 @@ def _make_match(session, comp, home: Team, away: Team, date: datetime.date) -> M
     return m
 
 
-def _make_model_version(session, name: str = "1x2-olm-v1") -> ModelVersion:
+def _make_model_version(session, name: str = "1x2-olm-test-sc05") -> ModelVersion:
     mv = ModelVersion(
         name=name,
         params_json={
@@ -82,9 +82,7 @@ def test_predict_uses_rating_strictly_before_match_date(db_session):
     comp = _make_competition(db_session)
     home = _make_team(db_session, "TeamAlpha")
     away = _make_team(db_session, "TeamBeta")
-    match = _make_match(
-        db_session, comp, home, away, datetime.date(2018, 1, 15)
-    )
+    match = _make_match(db_session, comp, home, away, datetime.date(2018, 1, 15))
     mv = _make_model_version(db_session)
 
     # Rating del día del partido (NO debe usarse)
@@ -104,9 +102,7 @@ def test_predict_uses_rating_strictly_before_match_date(db_session):
     assert count == 3
 
     # La predicción no debe tener low_confidence porque hay ratings previos
-    preds = db_session.scalars(
-        select(Prediction).where(Prediction.match_id == match.id)
-    ).all()
+    preds = db_session.scalars(select(Prediction).where(Prediction.match_id == match.id)).all()
     # Ninguna predicción debería ser low_confidence para el equipo local (tiene rating previo)
     # Nota: la función debería usar 1650, no 1670; verificamos que las predicciones existen
     assert all(not p.low_confidence for p in preds)
@@ -122,18 +118,14 @@ def test_predict_defaults_to_1500_when_no_prior_rating(db_session):
     comp = _make_competition(db_session)
     home = _make_team(db_session, "TeamGamma")
     away = _make_team(db_session, "TeamDelta")
-    match = _make_match(
-        db_session, comp, home, away, datetime.date(2020, 6, 1)
-    )
+    match = _make_match(db_session, comp, home, away, datetime.date(2020, 6, 1))
     mv = _make_model_version(db_session, name="1x2-olm-test-sc06")
 
     # Sin ningún elo_rating → ambos equipos sin historial
 
     predict_match(db_session, match_id=match.id, model_version_id=mv.id)
 
-    preds = db_session.scalars(
-        select(Prediction).where(Prediction.match_id == match.id)
-    ).all()
+    preds = db_session.scalars(select(Prediction).where(Prediction.match_id == match.id)).all()
     assert len(preds) == 3
     # Ambos equipos sin rating → low_confidence debe ser True
     assert all(p.low_confidence for p in preds)
@@ -149,9 +141,7 @@ def test_predict_idempotent_two_runs(db_session):
     comp = _make_competition(db_session)
     home = _make_team(db_session, "TeamEpsilon")
     away = _make_team(db_session, "TeamZeta")
-    match = _make_match(
-        db_session, comp, home, away, datetime.date(2020, 7, 1)
-    )
+    match = _make_match(db_session, comp, home, away, datetime.date(2020, 7, 1))
     mv = _make_model_version(db_session, name="1x2-olm-test-sc08")
 
     _add_elo(db_session, home.id, datetime.date(2020, 6, 1), 1600.0)
@@ -166,8 +156,6 @@ def test_predict_idempotent_two_runs(db_session):
     assert count == 3
 
     # Verificar que P(H)+P(D)+P(A)=1 dentro de 1e-5
-    preds = db_session.scalars(
-        select(Prediction).where(Prediction.match_id == match.id)
-    ).all()
+    preds = db_session.scalars(select(Prediction).where(Prediction.match_id == match.id)).all()
     total = sum(float(p.probability) for p in preds)
     assert abs(total - 1.0) < 1e-5

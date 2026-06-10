@@ -23,11 +23,13 @@ def _record_version_via_engine(session, initial=1500.0, home_adv=100.0):
 # S1: Re-running EloEngine creates new version row, not overwrite
 # ---------------------------------------------------------------------------
 
+
 def test_first_record_creates_elo_v1(db_session):
     """Primera llamada a _record_version → INSERT con name='elo-v1'."""
     _record_version_via_engine(db_session)
 
-    versions = db_session.scalars(select(ModelVersion)).all()
+    # Scope to elo-family to avoid interference from 1x2-olm-v1 committed in Phase 4
+    versions = db_session.scalars(select(ModelVersion).where(ModelVersion.name.like("elo-%"))).all()
     assert len(versions) == 1
     assert versions[0].name == "elo-v1"
 
@@ -37,7 +39,10 @@ def test_record_same_params_reuses_existing_version(db_session):
     _record_version_via_engine(db_session)
     _record_version_via_engine(db_session)
 
-    count = db_session.scalar(select(func.count(ModelVersion.id)))
+    # Scope to elo-family to avoid interference from 1x2-olm-v1 committed in Phase 4
+    count = db_session.scalar(
+        select(func.count(ModelVersion.id)).where(ModelVersion.name.like("elo-%"))
+    )
     assert count == 1  # sigue siendo 1, no 2
 
 
@@ -49,8 +54,9 @@ def test_changed_params_creates_new_version(db_session):
     # Cambiar parámetros → debe crear elo-v2
     _record_version_via_engine(db_session, initial=1500.0, home_adv=120.0)  # home_adv diferente
 
+    # Scope to elo-family to avoid interference from 1x2-olm-v1 committed in Phase 4
     versions = db_session.scalars(
-        select(ModelVersion).order_by(ModelVersion.name)
+        select(ModelVersion).where(ModelVersion.name.like("elo-%")).order_by(ModelVersion.name)
     ).all()
     assert len(versions) == 2
 
@@ -62,16 +68,12 @@ def test_changed_params_creates_new_version(db_session):
 def test_elo_v1_params_preserved_after_v2_created(db_session):
     """elo-v1 y sus params NO son modificados cuando se crea elo-v2."""
     _record_version_via_engine(db_session, initial=1500.0, home_adv=100.0)
-    v1_before = db_session.scalar(
-        select(ModelVersion).where(ModelVersion.name == "elo-v1")
-    )
+    v1_before = db_session.scalar(select(ModelVersion).where(ModelVersion.name == "elo-v1"))
     original_params = dict(v1_before.params_json)
 
     # Cambio de params → nueva versión
     _record_version_via_engine(db_session, initial=1500.0, home_adv=120.0)
 
-    v1_after = db_session.scalar(
-        select(ModelVersion).where(ModelVersion.name == "elo-v1")
-    )
+    v1_after = db_session.scalar(select(ModelVersion).where(ModelVersion.name == "elo-v1"))
     assert v1_after is not None
     assert v1_after.params_json == original_params  # intacto
