@@ -24,6 +24,55 @@ function renderWithQuery(ui: React.ReactElement) {
 const EXPLAIN_FIXTURE = {
   sections: [
     {
+      key: 'apuesta',
+      titulo: '¿Qué apostamos?',
+      steps: [
+        {
+          key: 'outcome_label',
+          label_es: 'Resultado apostado',
+          raw: 'Mexico',
+          formatted: 'Mexico',
+          glossary_term: null,
+        },
+        {
+          key: 'cuota',
+          label_es: 'Cuota decimal',
+          raw: 1.47,
+          formatted: '1.47',
+          glossary_term: null,
+        },
+        {
+          key: 'bookmaker',
+          label_es: 'Casa de apuestas',
+          raw: 'gtbets',
+          formatted: 'gtbets',
+          glossary_term: null,
+        },
+        {
+          key: 'home_team',
+          label_es: 'Equipo local',
+          raw: 'Mexico',
+          formatted: 'Mexico',
+          glossary_term: null,
+        },
+        {
+          key: 'away_team',
+          label_es: 'Equipo visitante',
+          raw: 'South Africa',
+          formatted: 'South Africa',
+          glossary_term: null,
+        },
+        {
+          key: 'match_date',
+          label_es: 'Fecha del partido',
+          raw: '2026-06-11',
+          formatted: '11/06/2026',
+          glossary_term: null,
+        },
+      ],
+      note: null,
+    },
+    {
       key: 'edge',
       titulo: 'Cálculo del edge',
       steps: [
@@ -92,6 +141,22 @@ describe('ExplainDrawer', () => {
       })
       expect(screen.getByText('83.4%')).toBeInTheDocument()
       expect(screen.getByText('14.7%')).toBeInTheDocument()
+    })
+
+    it('renderiza la sección apuesta PRIMERO con título y campos clave', async () => {
+      mockFetchAPI.mockResolvedValue(EXPLAIN_FIXTURE)
+      renderWithQuery(<ExplainDrawer signalId={10} onClose={vi.fn()} />)
+      await waitFor(() => {
+        expect(screen.getByText('¿Qué apostamos?')).toBeInTheDocument()
+      })
+      // apuesta aparece antes que edge en el DOM
+      const titles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
+      expect(titles[0]).toBe('¿Qué apostamos?')
+      expect(titles[1]).toBe('Cálculo del edge')
+      // campos de la sección apuesta (Mexico aparece en outcome_label y home_team — 2+ instancias OK)
+      expect(screen.getAllByText('Mexico').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('gtbets')).toBeInTheDocument()
+      expect(screen.getByText('11/06/2026')).toBeInTheDocument()
     })
   })
 
