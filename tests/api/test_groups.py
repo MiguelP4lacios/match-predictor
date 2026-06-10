@@ -152,3 +152,27 @@ def test_group_detail_not_found(client, db_session):
 
     assert resp.status_code == 404
     assert resp.json()["detail"] == "Group not found"
+
+
+def test_groups_real_seed_exactly_12_a_to_l(client):
+    """R3-S1 (invariante end-to-end): el seed real dejó EXACTAMENTE 12 grupos A-L.
+
+    Corre contra los datos sembrados por scripts/seed_groups.py (no sintéticos):
+    si este test falla, el seed no corrió o dejó la BD en estado inválido.
+    """
+    resp = client.get("/api/v1/groups")
+
+    assert resp.status_code == 200
+    names = sorted(g["name"] for g in resp.json())
+    assert names == list("ABCDEFGHIJKL")
+
+
+def test_cors_allows_dashboard_origin(client):
+    """R8 (runtime): el middleware CORS responde el header para el origen del dashboard."""
+    resp = client.get(
+        "/api/v1/groups",
+        headers={"Origin": "http://localhost:5173"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
