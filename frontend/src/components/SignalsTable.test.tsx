@@ -36,9 +36,10 @@ describe('SignalsTable', () => {
       expect(screen.getByText('Argentina vs Uruguay')).toBeInTheDocument()
     })
 
-    it('ordena grupos por edge DESC: España(0.20) antes de Francia(0.14) antes de Argentina(0.08)', () => {
+    it('preserva el orden del server: España(06-15), Francia(06-16), Argentina(06-17)', () => {
       render(<SignalsTable items={items} />)
       const rows = screen.getAllByRole('row')
+      // Orden de primera aparición en la respuesta (cronológico) — el cliente NO re-ordena.
       // Estructura: [thead, group-España, row-España, group-Francia, row-Francia, group-Argentina, row-Argentina]
       expect(within(rows[1]).getByText('España vs Brasil')).toBeInTheDocument()
       expect(within(rows[3]).getByText('Francia vs Alemania')).toBeInTheDocument()
@@ -91,13 +92,13 @@ describe('SignalsTable', () => {
       })
       render(<SignalsTable items={[bAway, aHome, aDraw]} />)
       const rows = screen.getAllByRole('row')
-      // Grupos ordenados: B(0.141) primero, A(0.097) segundo
+      // Orden de primera aparición en el input: B primero, A segundo (el cliente no re-ordena)
       // rows[0]=thead, rows[1]=group-B-header, rows[2]=row-B, rows[3]=group-A-header(+hint), rows[4]=row-A-HOME, rows[5]=row-A-DRAW
       expect(within(rows[1]).queryByText(/exposición correlacionada/)).not.toBeInTheDocument()
       expect(within(rows[3]).getByText('⚠ 2 señales sobre este partido — exposición correlacionada')).toBeInTheDocument()
     })
 
-    it('escenario numérico: B(14.1%) primero, A(9.7%+5.1%) segundo con hint', () => {
+    it('escenario numérico: B primero por orden de aparición, A(9.7%+5.1%) segundo con hint', () => {
       const bAway = makeSignal({
         id: 3, edge: 0.141,
         home_team: 'Brasil', away_team: 'Argentina', match_date: '2026-06-21',

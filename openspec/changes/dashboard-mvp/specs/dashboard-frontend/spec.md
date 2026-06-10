@@ -89,9 +89,12 @@ ni stake.
 
 Reglas de agrupación:
 - Las señales se agrupan por combinación `(match_date, home_team, away_team)`.
-- Los grupos se ordenan por el edge máximo del grupo, DESC.
+- Los grupos preservan el orden de PRIMERA APARICIÓN en la respuesta del servidor
+  (el server ordena por `(match_date, id)` → lectura cronológica). El cliente NO
+  re-ordena — el servidor es la autoridad. *(Corregido 2026-06-10: la versión
+  inicial ordenaba por max edge DESC y rompía el orden cronológico.)*
 - Dentro de cada grupo, el orden de señales es el que entrega el servidor
-  (ya viene en edge DESC global — el cliente NO altera el orden relativo).
+  (el cliente NO altera el orden relativo).
 - El encabezado de partido (fecha + "Home vs Away") se renderiza UNA SOLA VEZ
   por grupo, como fila de cabecera antes de las filas de outcome del grupo.
 - Grupos con 2 o más señales MUST mostrar el texto de alerta de exposición
@@ -101,16 +104,16 @@ Reglas de agrupación:
 La función pura `groupSignals(items: SignalItem[]): SignalGroup[]` encapsula la
 lógica de agrupación y ordenación; el componente la llama y renderiza el resultado.
 
-#### Scenario: Orden de grupos por max edge — escenario numérico
+#### Scenario: Orden de grupos = orden del servidor (cronológico) — escenario numérico
 
-- GIVEN la API retorna 3 señales:
+- GIVEN la API retorna 3 señales en orden del servidor (`match_date, id`):
   - Partido A (Haiti vs Scotland, 2026-06-20): HOME edge=9.7%, DRAW edge=5.1%
   - Partido B (Brasil vs Argentina, 2026-06-21): AWAY edge=14.1%
-  - Orden del servidor (edge DESC global): B-AWAY(14.1%), A-HOME(9.7%), A-DRAW(5.1%)
+  - Orden del servidor: A-HOME(9.7%), A-DRAW(5.1%), B-AWAY(14.1%)
 - WHEN la vista renderiza
 - THEN los grupos aparecen en este orden:
-  1. Grupo B (Brasil vs Argentina) — max_edge=14.1% → primero
-  2. Grupo A (Haiti vs Scotland) — max_edge=9.7% → segundo, con señales HOME(9.7%) y DRAW(5.1%) en ese orden
+  1. Grupo A (Haiti vs Scotland, 2026-06-20) — primero por fecha, con señales HOME(9.7%) y DRAW(5.1%) en ese orden
+  2. Grupo B (Brasil vs Argentina, 2026-06-21) — segundo por fecha, aunque su edge (14.1%) sea mayor
 
 #### Scenario: Hint de exposición correlacionada
 

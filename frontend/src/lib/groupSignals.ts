@@ -11,8 +11,10 @@ export interface SignalGroup {
 /**
  * Agrupa señales por partido (match_date + home_team + away_team).
  *
- * - Los grupos se ordenan por max(edge) del grupo DESC.
- * - Dentro de cada grupo, el orden de las señales es el del servidor (sin reordenar).
+ * - Los grupos preservan el orden de PRIMERA APARICIÓN en la respuesta del
+ *   servidor (que ordena por fecha) — el server es la autoridad, el cliente
+ *   no re-ordena.
+ * - Dentro de cada grupo, el orden de las señales es el del servidor.
  * - El cliente NUNCA recalcula p_model, edge ni stake: solo reagrupa para presentación.
  */
 export function groupSignals(items: SignalItem[]): SignalGroup[] {
@@ -34,9 +36,6 @@ export function groupSignals(items: SignalItem[]): SignalGroup[] {
     }
   }
 
-  return Array.from(groupMap.values()).sort((a, b) => {
-    const maxA = Math.max(...a.signals.map((s) => s.edge))
-    const maxB = Math.max(...b.signals.map((s) => s.edge))
-    return maxB - maxA
-  })
+  // Map preserva orden de inserción → orden del server (cronológico) intacto.
+  return Array.from(groupMap.values())
 }

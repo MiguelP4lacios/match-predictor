@@ -37,7 +37,7 @@ describe('groupSignals', () => {
     expect(groups[0].signals[0]).toBe(signal)
   })
 
-  it('escenario numérico: B(0.141) primero, luego A(0.097, 0.051) en ese orden', () => {
+  it('escenario numérico: orden del server (cronológico) — A(06-20) antes que B(06-21) aunque B tenga más edge', () => {
     // Partido A: Haiti vs Scotland — 2 señales
     const aHome = makeSignal({
       id: 1,
@@ -65,23 +65,23 @@ describe('groupSignals', () => {
       match_date: '2026-06-21',
     })
 
-    // El servidor envía en edge DESC global: B(0.141), A-HOME(0.097), A-DRAW(0.051)
-    const groups = groupSignals([bAway, aHome, aDraw])
+    // El servidor envía por (match_date, id): A-HOME(0.097), A-DRAW(0.051), B(0.141)
+    const groups = groupSignals([aHome, aDraw, bAway])
 
     expect(groups).toHaveLength(2)
 
-    // B tiene max_edge=0.141 > max_edge A=0.097 → B es primero
-    expect(groups[0].home_team).toBe('Brasil')
-    expect(groups[0].away_team).toBe('Argentina')
-    expect(groups[0].signals).toHaveLength(1)
-    expect(groups[0].signals[0].edge).toBe(0.141)
+    // A (2026-06-20) aparece primero por orden del server, aunque B tenga más edge
+    expect(groups[0].home_team).toBe('Haiti')
+    expect(groups[0].away_team).toBe('Scotland')
+    expect(groups[0].signals).toHaveLength(2)
+    expect(groups[0].signals[0].edge).toBe(0.097)
+    expect(groups[0].signals[1].edge).toBe(0.051)
 
-    // A es segundo con 2 señales en orden del servidor
-    expect(groups[1].home_team).toBe('Haiti')
-    expect(groups[1].away_team).toBe('Scotland')
-    expect(groups[1].signals).toHaveLength(2)
-    expect(groups[1].signals[0].edge).toBe(0.097)
-    expect(groups[1].signals[1].edge).toBe(0.051)
+    // B (2026-06-21) es segundo: el cliente NO re-ordena por edge
+    expect(groups[1].home_team).toBe('Brasil')
+    expect(groups[1].away_team).toBe('Argentina')
+    expect(groups[1].signals).toHaveLength(1)
+    expect(groups[1].signals[0].edge).toBe(0.141)
   })
 
   it('preserva el orden de señales dentro del grupo (orden del servidor)', () => {
