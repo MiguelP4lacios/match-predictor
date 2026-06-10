@@ -19,7 +19,8 @@ function groupByDate(matches: UpcomingMatch[]): [string, UpcomingMatch[]][] {
 export default function MatchesPage() {
   const { data, isLoading, isError, refetch } = useQuery<UpcomingMatch[]>({
     queryKey: ['matches'],
-    queryFn: () => fetchAPI<UpcomingMatch[]>('/v1/matches/upcoming'),
+    // limit=200: el default del server (50) cortaría los 72 de grupos (y los 104 con knockouts)
+    queryFn: () => fetchAPI<UpcomingMatch[]>('/v1/matches/upcoming?limit=200'),
     staleTime: 55_000,
     refetchInterval: 60_000,
   })
