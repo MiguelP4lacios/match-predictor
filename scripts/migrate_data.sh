@@ -110,7 +110,7 @@ MATCH_COUNT="$(ssh "$TARGET" "
 # shellcheck disable=SC2029
 ODDS_COUNT="$(ssh "$TARGET" "
   docker compose -f $REMOTE_DIR/docker-compose.prod.yml exec -T db \
-    psql -U postgres match_predictor -t -c 'SELECT COUNT(*) FROM odds_snapshot'
+    psql -U postgres match_predictor -t -c 'SELECT COUNT(*) FROM odds'
 " | tr -d ' \r\n')"
 
 # shellcheck disable=SC2029
@@ -120,7 +120,7 @@ SIGNAL_COUNT="$(ssh "$TARGET" "
 " | tr -d ' \r\n')"
 
 echo "    match:         $MATCH_COUNT  (requerido: ≥49,443)"
-echo "    odds_snapshot: $ODDS_COUNT   (requerido: >5,800)"
+echo "    odds:             (requerido: >5,800)"
 echo "    value_signal:  $SIGNAL_COUNT (requerido: ≥69)"
 
 FAIL=0
@@ -131,7 +131,7 @@ if [[ "$MATCH_COUNT" -lt 49443 ]]; then
 fi
 
 if [[ "$ODDS_COUNT" -le 5800 ]]; then
-  echo "ERROR: odds_snapshot insuficiente — $ODDS_COUNT ≤ 5800. Las odds no se recuperaron." >&2
+  echo "ERROR: odds insuficiente — $ODDS_COUNT ≤ 5800. Las odds no se recuperaron." >&2
   FAIL=1
 fi
 
