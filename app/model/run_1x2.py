@@ -28,10 +28,11 @@ def _run_fit() -> None:
     from app.models import EloRating, Match, ModelVersion
     from app.models.enums import MatchStatus
 
-    cutoff = "2018-06-01"
+    cutoff = datetime.date(2018, 6, 1)
     home_adv = 100.0
 
-    print(f"Ajustando OLM sobre partidos con match_date < {cutoff}...")
+    cutoff_str = cutoff.isoformat()
+    print(f"Ajustando OLM sobre partidos con match_date < {cutoff_str}...")
     with SessionLocal() as session:
         stmt = (
             select(
@@ -62,25 +63,31 @@ def _run_fit() -> None:
     with SessionLocal() as session:
         for row in rows:
             # Lookup point-in-time de Elo para cada equipo
-            home_r = session.scalar(
-                select(EloRating.rating)
-                .where(
-                    EloRating.team_id == row.home_team_id,
-                    EloRating.rating_date < row.match_date,
+            home_r = (
+                session.scalar(
+                    select(EloRating.rating)
+                    .where(
+                        EloRating.team_id == row.home_team_id,
+                        EloRating.rating_date < row.match_date,
+                    )
+                    .order_by(EloRating.rating_date.desc())
+                    .limit(1)
                 )
-                .order_by(EloRating.rating_date.desc())
-                .limit(1)
-            ) or 1500.0
+                or 1500.0
+            )
 
-            away_r = session.scalar(
-                select(EloRating.rating)
-                .where(
-                    EloRating.team_id == row.away_team_id,
-                    EloRating.rating_date < row.match_date,
+            away_r = (
+                session.scalar(
+                    select(EloRating.rating)
+                    .where(
+                        EloRating.team_id == row.away_team_id,
+                        EloRating.rating_date < row.match_date,
+                    )
+                    .order_by(EloRating.rating_date.desc())
+                    .limit(1)
                 )
-                .order_by(EloRating.rating_date.desc())
-                .limit(1)
-            ) or 1500.0
+                or 1500.0
+            )
 
             adv = 0.0 if row.neutral_site else home_adv
             elo_diff = (home_r + adv) - away_r
@@ -92,13 +99,15 @@ def _run_fit() -> None:
             else:
                 outcome = 0  # away
 
-            records.append({
-                "match_id": row.match_id,
-                "match_date": row.match_date,
-                "elo_diff": elo_diff,
-                "neutral": int(row.neutral_site),
-                "outcome": outcome,
-            })
+            records.append(
+                {
+                    "match_id": row.match_id,
+                    "match_date": row.match_date,
+                    "elo_diff": elo_diff,
+                    "neutral": int(row.neutral_site),
+                    "outcome": outcome,
+                }
+            )
 
     df = pd.DataFrame(records)
     print(f"  Partidos de entrenamiento: {len(df)}")
@@ -107,18 +116,18 @@ def _run_fit() -> None:
     binned = build_binned_table(df)
     full_params = to_params(params, binned)
 
-    print(f"  Coeficientes: a1={params['cutpoints']['a1']:.4f}, "
-          f"delta={params['cutpoints']['delta']:.4f}, "
-          f"beta_diff={params['beta_diff']:.6f}, "
-          f"beta_neutral={params['beta_neutral']:.4f}")
+    print(
+        f"  Coeficientes: a1={params['cutpoints']['a1']:.4f}, "
+        f"delta={params['cutpoints']['delta']:.4f}, "
+        f"beta_diff={params['beta_diff']:.6f}, "
+        f"beta_neutral={params['beta_neutral']:.4f}"
+    )
     print(f"  Buckets binados con soporte: {len(binned)}")
 
     # Persistir en model_version
     with SessionLocal() as session:
         mv_name = "1x2-olm-v1"
-        existing = session.scalar(
-            select(ModelVersion).where(ModelVersion.name == mv_name)
-        )
+        existing = session.scalar(select(ModelVersion).where(ModelVersion.name == mv_name))
         if existing is None:
             mv = ModelVersion(name=mv_name, params_json=full_params)
             session.add(mv)
@@ -139,16 +148,15 @@ def _run_backtest() -> None:
     from app.models import EloRating, Match, ModelVersion
     from app.models.enums import MatchStatus
 
-    cutoff = "2018-06-01"
+    cutoff = datetime.date(2018, 6, 1)
+    cutoff_str = cutoff.isoformat()
     home_adv = 100.0
 
-    print(f"Backtest OLM (eval >= {cutoff})...")
+    print(f"Backtest OLM (eval >= {cutoff_str})...")
 
     with SessionLocal() as session:
         mv_name = "1x2-olm-v1"
-        mv = session.scalar(
-            select(ModelVersion).where(ModelVersion.name == mv_name)
-        )
+        mv = session.scalar(select(ModelVersion).where(ModelVersion.name == mv_name))
         if mv is None:
             print(f"ERROR: ModelVersion '{mv_name}' no encontrada. Ejecutar 'fit' primero.")
             sys.exit(1)
@@ -177,25 +185,31 @@ def _run_backtest() -> None:
 
         records = []
         for row in rows:
-            home_r = session.scalar(
-                select(EloRating.rating)
-                .where(
-                    EloRating.team_id == row.home_team_id,
-                    EloRating.rating_date < row.match_date,
+            home_r = (
+                session.scalar(
+                    select(EloRating.rating)
+                    .where(
+                        EloRating.team_id == row.home_team_id,
+                        EloRating.rating_date < row.match_date,
+                    )
+                    .order_by(EloRating.rating_date.desc())
+                    .limit(1)
                 )
-                .order_by(EloRating.rating_date.desc())
-                .limit(1)
-            ) or 1500.0
+                or 1500.0
+            )
 
-            away_r = session.scalar(
-                select(EloRating.rating)
-                .where(
-                    EloRating.team_id == row.away_team_id,
-                    EloRating.rating_date < row.match_date,
+            away_r = (
+                session.scalar(
+                    select(EloRating.rating)
+                    .where(
+                        EloRating.team_id == row.away_team_id,
+                        EloRating.rating_date < row.match_date,
+                    )
+                    .order_by(EloRating.rating_date.desc())
+                    .limit(1)
                 )
-                .order_by(EloRating.rating_date.desc())
-                .limit(1)
-            ) or 1500.0
+                or 1500.0
+            )
 
             adv = 0.0 if row.neutral_site else home_adv
             elo_diff = (home_r + adv) - away_r
@@ -207,32 +221,36 @@ def _run_backtest() -> None:
             else:
                 outcome = 0
 
-            records.append({
-                "match_date": str(row.match_date),
-                "elo_diff": elo_diff,
-                "neutral": int(row.neutral_site),
-                "outcome": outcome,
-            })
+            records.append(
+                {
+                    "match_date": str(row.match_date),
+                    "elo_diff": elo_diff,
+                    "neutral": int(row.neutral_site),
+                    "outcome": outcome,
+                }
+            )
 
         df = pd.DataFrame(records)
         binned_table = params.get("binned_table", [])
 
     try:
-        metrics = run_backtest(df, params, binned_table, cutoff=cutoff)
+        metrics = run_backtest(df, params, binned_table, cutoff=cutoff_str)
         print("  Backtest APROBADO — el modelo supera ambos baselines.")
-        print(f"  Brier OLM: {metrics['brier']:.4f} "
-              f"(uniform={metrics['baselines']['uniform_brier']:.4f}, "
-              f"binned={metrics['baselines']['binned_brier']:.4f})")
-        print(f"  Log-loss OLM: {metrics['logloss']:.4f} "
-              f"(uniform={metrics['baselines']['uniform_logloss']:.4f}, "
-              f"binned={metrics['baselines']['binned_logloss']:.4f})")
+        print(
+            f"  Brier OLM: {metrics['brier']:.4f} "
+            f"(uniform={metrics['baselines']['uniform_brier']:.4f}, "
+            f"binned={metrics['baselines']['binned_brier']:.4f})"
+        )
+        print(
+            f"  Log-loss OLM: {metrics['logloss']:.4f} "
+            f"(uniform={metrics['baselines']['uniform_logloss']:.4f}, "
+            f"binned={metrics['baselines']['binned_logloss']:.4f})"
+        )
         print(f"  Partidos evaluados: {metrics['eval_n']}")
 
         # Actualizar params_json con el reporte de backtest
         with SessionLocal() as session:
-            mv = session.scalar(
-                select(ModelVersion).where(ModelVersion.name == mv_name)
-            )
+            mv = session.scalar(select(ModelVersion).where(ModelVersion.name == mv_name))
             updated = dict(mv.params_json)
             updated["backtest"] = {
                 "brier": metrics["brier"],
@@ -242,7 +260,7 @@ def _run_backtest() -> None:
                 "calibration_table": metrics["calibration_table"],
                 "eval_n": metrics["eval_n"],
                 "eval_window": metrics["eval_window"],
-                "split": cutoff,
+                "split": cutoff_str,
             }
             mv.params_json = updated
             session.commit()
@@ -268,9 +286,7 @@ def _run_predict() -> None:
 
     with SessionLocal() as session:
         mv_name = "1x2-olm-v1"
-        mv = session.scalar(
-            select(ModelVersion).where(ModelVersion.name == mv_name)
-        )
+        mv = session.scalar(select(ModelVersion).where(ModelVersion.name == mv_name))
         if mv is None:
             print(f"ERROR: ModelVersion '{mv_name}' no encontrada. Ejecutar 'fit' primero.")
             sys.exit(1)
@@ -299,7 +315,7 @@ def _run_predict() -> None:
             total += len(ids)
         session.commit()
 
-    print(f"  Predicciones escritas: {total} (3 por fixture = {total//3} partidos)")
+    print(f"  Predicciones escritas: {total} (3 por fixture = {total // 3} partidos)")
 
 
 def _run_signals() -> None:
@@ -313,9 +329,7 @@ def _run_signals() -> None:
     print("Generando señales +EV PAPER...")
     with SessionLocal() as session:
         mv_name = "1x2-olm-v1"
-        mv = session.scalar(
-            select(ModelVersion).where(ModelVersion.name == mv_name)
-        )
+        mv = session.scalar(select(ModelVersion).where(ModelVersion.name == mv_name))
         if mv is None:
             print(f"ERROR: ModelVersion '{mv_name}' no encontrada.")
             sys.exit(1)
@@ -333,9 +347,7 @@ def _run_signals() -> None:
 
 def main() -> None:
     """CLI con subcomandos fit | backtest | predict | signals."""
-    parser = argparse.ArgumentParser(
-        description="Runner del modelo 1X2 (OLM + señales +EV)"
-    )
+    parser = argparse.ArgumentParser(description="Runner del modelo 1X2 (OLM + señales +EV)")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("fit", help="Ajustar OLM sobre datos históricos")
