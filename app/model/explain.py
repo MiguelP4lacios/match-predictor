@@ -112,6 +112,82 @@ def _best_per_outcome_at_snapshot(
     return {r.outcome_code: float(r.best_odds) for r in rows}
 
 
+def _build_apuesta_section(
+    signal: ValueSignal,
+    prediction: Prediction,
+    odds: Odds,
+    match: Match,
+    session: Session,
+) -> ExplainSection:
+    """Sección apuesta: qué se apostó, a qué cuota y en qué casa.
+
+    outcome_label:
+        HOME  → nombre del equipo local
+        DRAW  → "Empate"
+        AWAY  → nombre del equipo visitante
+    """
+    outcome_code = prediction.outcome_code or "HOME"
+
+    home_team = session.get(Team, match.home_team_id)
+    away_team = session.get(Team, match.away_team_id)
+    home_name = home_team.name if home_team else str(match.home_team_id)
+    away_name = away_team.name if away_team else str(match.away_team_id)
+
+    if outcome_code == "HOME":
+        outcome_label = home_name
+    elif outcome_code == "DRAW":
+        outcome_label = "Empate"
+    else:
+        outcome_label = away_name
+
+    cuota = float(odds.decimal_odds)
+
+    steps = [
+        ExplainStep(
+            key="outcome_label",
+            label_es="Resultado apostado",
+            raw=outcome_label,
+            formatted=outcome_label,
+        ),
+        ExplainStep(
+            key="cuota",
+            label_es="Cuota decimal",
+            raw=cuota,
+            formatted=f"{cuota:.2f}",
+        ),
+        ExplainStep(
+            key="bookmaker",
+            label_es="Casa de apuestas",
+            raw=odds.bookmaker,
+            formatted=odds.bookmaker,
+        ),
+        ExplainStep(
+            key="home_team",
+            label_es="Equipo local",
+            raw=home_name,
+            formatted=home_name,
+        ),
+        ExplainStep(
+            key="away_team",
+            label_es="Equipo visitante",
+            raw=away_name,
+            formatted=away_name,
+        ),
+        ExplainStep(
+            key="match_date",
+            label_es="Fecha del partido",
+            raw=match.match_date.isoformat(),
+            formatted=match.match_date.strftime("%d/%m/%Y"),
+        ),
+    ]
+
+    return ExplainSection(
+        key="apuesta",
+        titulo="¿Qué apostamos?",
+        steps=steps,
+    )
+
+
 def _build_edge_section(
     p_model: float,
     edge: float,
@@ -400,7 +476,7 @@ def _build_calidad_section(model_version: ModelVersion) -> ExplainSection:
             label_es="Log-loss (modelo)",
             raw=logloss,
             formatted=_fmt_float(logloss),
-            glossary_term="calibracion",
+            glossary_term="calibración",
         ),
         ExplainStep(
             key="logloss_uniform",
@@ -526,6 +602,7 @@ def build_explanation(session: Session, signal_id: int) -> Explanation | None:
     triple = _best_per_outcome_at_snapshot(session, match.id, odds.captured_at)
 
     sections = [
+        _build_apuesta_section(signal, prediction, odds, match, session),
         _build_edge_section(p_model, edge, triple, prediction.outcome_code or "HOME"),
         _build_origen_section(session, match, prediction, model_version),
         _build_stake_section(signal, model_version),

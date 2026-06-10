@@ -271,10 +271,39 @@ def test_explain_signal_10_numerical_scenario(db_session):
     p_model=0.83394, edge=0.14724, p_fair_derived=0.68670
     overround=0.99064, triple H=1.470 D=4.800 A=9.800
     |p_fair_reconstructed − p_fair_derived| ≤ 0.0001
+    apuesta: outcome_label="Mexico", cuota=1.47, bookmaker="gtbets"
     """
     explanation = build_explanation(db_session, 10)
 
     assert explanation is not None
+
+    # Verificar orden y conteo exacto de las 6 secciones del spec R1
+    section_keys = [s.key for s in explanation.sections]
+    assert section_keys == [
+        "apuesta",
+        "edge",
+        "origen_p_model",
+        "stake",
+        "calidad_modelo",
+        "metadata",
+    ], f"Secciones incorrectas: {section_keys}"
+
+    # --- Sección apuesta ---
+    apuesta_section = _find_section(explanation, "apuesta")
+    outcome_label_step = _find_step(apuesta_section, "outcome_label")
+    assert outcome_label_step.raw == "Mexico", (
+        f"outcome_label esperado 'Mexico', obtenido {outcome_label_step.raw!r}"
+    )
+    cuota_step = _find_step(apuesta_section, "cuota")
+    assert abs(float(cuota_step.raw) - 1.47) < 1e-4
+    bookmaker_step = _find_step(apuesta_section, "bookmaker")
+    assert bookmaker_step.raw == "gtbets"
+    home_step = _find_step(apuesta_section, "home_team")
+    assert home_step.raw == "Mexico"
+    away_step = _find_step(apuesta_section, "away_team")
+    assert away_step.raw == "South Africa"
+    match_date_step = _find_step(apuesta_section, "match_date")
+    assert match_date_step.raw is not None  # fecha ISO present
 
     edge_section = _find_section(explanation, "edge")
 

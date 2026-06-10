@@ -14,18 +14,22 @@ El escenario 200 se basa en la señal real id=10 sembrada en la BD de test.
 
 
 def test_explain_signal_10_returns_200_with_expected_sections(client, db_session):
-    """GET /api/v1/signals/10/explain → 200 con las 5 secciones esperadas."""
+    """GET /api/v1/signals/10/explain → 200 con las 6 secciones exactas del spec R1."""
     resp = client.get("/api/v1/signals/10/explain")
 
     assert resp.status_code == 200, f"Unexpected status: {resp.status_code} — {resp.text}"
 
     body = resp.json()
 
-    # Debe tener las 5 secciones definidas en el spec
+    # Debe tener exactamente las 6 secciones definidas en el spec R1
     assert "sections" in body
-    section_keys = {s["key"] for s in body["sections"]}
-    expected_keys = {"edge", "origen_p_model", "stake", "calidad_modelo", "metadata"}
-    assert expected_keys.issubset(section_keys), f"Faltan secciones: {expected_keys - section_keys}"
+    section_keys = [s["key"] for s in body["sections"]]
+    expected_keys = ["apuesta", "edge", "origen_p_model", "stake", "calidad_modelo", "metadata"]
+    assert section_keys == expected_keys, (
+        f"Claves de secciones incorrectas.\n"
+        f"  Esperado: {expected_keys}\n"
+        f"  Obtenido: {section_keys}"
+    )
 
     # Cada sección tiene steps
     for section in body["sections"]:
