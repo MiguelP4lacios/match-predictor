@@ -194,3 +194,37 @@ class GroupDetail(GroupItem):
     """Detalle de un grupo: equipos + tabla + fixtures con predicciones."""
 
     fixtures: list[FixtureItem]
+
+
+# ---------------------------------------------------------------------------
+# Explicación de señal (+EV)
+# ---------------------------------------------------------------------------
+
+
+class ExplainStep(BaseModel):
+    """Un paso dentro de una sección de explicación.
+
+    formatted=null → el front formatea raw con formatters.ts (canónicos).
+    formatted=str  → el servidor ya lo formateó; renderizar verbatim (intermedios).
+    """
+
+    key: str
+    label_es: str
+    raw: float | str | bool | int | None
+    formatted: str | None
+    glossary_term: str | None = None
+
+
+class ExplainSection(BaseModel):
+    """Sección trazable de la explicación."""
+
+    key: str
+    titulo: str
+    steps: list[ExplainStep]
+    note: str | None = None
+
+
+class SignalExplanation(BaseModel):
+    """Respuesta del endpoint GET /signals/{id}/explain."""
+
+    sections: list[ExplainSection]

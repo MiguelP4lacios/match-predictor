@@ -1,17 +1,21 @@
 """Router de señales +EV — solo lectura.
 
-GET /api/v1/signals — lista paginada con filtros por fecha y edge mínimo.
+GET /api/v1/signals             — lista paginada con filtros por fecha y edge mínimo.
+GET /api/v1/signals/{id}/explain — explicación trazable de una señal concreta.
 """
 
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, aliased
 
-from app.api.schemas import SignalItem, SignalList
+from app.api.schemas import SignalExplanation, SignalItem, SignalList
 from app.core.database import get_session
+from app.model.explain import ExplainSection as ModelExplainSection
+from app.model.explain import ExplainStep as ModelExplainStep
+from app.model.explain import build_explanation
 from app.models.betting import ValueSignal
 from app.models.match import Match
 from app.models.model import Prediction
@@ -99,3 +103,51 @@ def list_signals(
     ]
 
     return SignalList(items=items, total=total)
+
+
+# ---------------------------------------------------------------------------
+# GET /signals/{id}/explain
+# ---------------------------------------------------------------------------
+
+
+def _map_step(step: ModelExplainStep) -> dict:
+    """Convierte un ExplainStep del modelo a dict para Pydantic."""
+    return {
+        "key": step.key,
+        "label_es": step.label_es,
+        "raw": step.raw,
+        "formatted": step.formatted,
+        "glossary_term": step.glossary_term,
+    }
+
+
+def _map_section(section: ModelExplainSection) -> dict:
+    """Convierte un ExplainSection del modelo a dict para Pydantic."""
+    return {
+        "key": section.key,
+        "titulo": section.titulo,
+        "steps": [_map_step(s) for s in section.steps],
+        "note": section.note,
+    }
+
+
+@router.get("/signals/{signal_id}/explain", response_model=SignalExplanation)
+def explain_signal(
+    signal_id: int,
+    session: Session = Depends(get_session),  # noqa: B008
+) -> SignalExplanation:
+    """Explicación trazable de una señal +EV.
+
+    Desglosa 5 secciones: edge, origen_p_model, stake, calidad_modelo y metadata.
+    Todos los valores canónicos vienen verbatim de la BD; cero llamadas externas.
+
+    Raises:
+        HTTPException(404): si signal_id no existe.
+    """
+    explanation = build_explanation(session, signal_id)
+    if explanation is None:
+        raise HTTPException(status_code=404, detail="Signal not found")
+
+    return SignalExplanation(
+        sections=[_map_section(s) for s in explanation.sections],
+    )
