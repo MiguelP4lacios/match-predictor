@@ -137,9 +137,7 @@ def generate_signals(
         best_odds: dict[str, Odds] = {}
         for o in all_odds:
             oc = o.outcome_code
-            if oc not in best_odds or float(o.decimal_odds) > float(
-                best_odds[oc].decimal_odds
-            ):
+            if oc not in best_odds or float(o.decimal_odds) > float(best_odds[oc].decimal_odds):
                 best_odds[oc] = o
 
         # Obtener odds del triple HOME/DRAW/AWAY del primer bookmaker

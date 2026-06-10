@@ -13,14 +13,10 @@ class ValueSignal(Base, TimestampMixin):
     """Señal +EV: cuando la prob. del modelo supera la implícita en la cuota."""
 
     __tablename__ = "value_signal"
-    __table_args__ = (
-        UniqueConstraint("prediction_id", "odds_id", name="uq_signal_identity"),
-    )
+    __table_args__ = (UniqueConstraint("prediction_id", "odds_id", name="uq_signal_identity"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    prediction_id: Mapped[int] = mapped_column(
-        ForeignKey("prediction.id", ondelete="CASCADE")
-    )
+    prediction_id: Mapped[int] = mapped_column(ForeignKey("prediction.id", ondelete="CASCADE"))
     odds_id: Mapped[int] = mapped_column(ForeignKey("odds.id", ondelete="CASCADE"))
 
     edge: Mapped[float] = mapped_column(Numeric(8, 5))

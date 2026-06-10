@@ -12,9 +12,7 @@ class TournamentGroup(Base):
 
     __tablename__ = "tournament_group"
     __table_args__ = (
-        UniqueConstraint(
-            "competition_id", "season_year", "name", name="uq_group_comp_season_name"
-        ),
+        UniqueConstraint("competition_id", "season_year", "name", name="uq_group_comp_season_name"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -33,14 +31,10 @@ class GroupTeam(Base):
     """Pertenencia de un equipo a un grupo del torneo."""
 
     __tablename__ = "group_team"
-    __table_args__ = (
-        UniqueConstraint("group_id", "team_id", name="uq_group_team"),
-    )
+    __table_args__ = (UniqueConstraint("group_id", "team_id", name="uq_group_team"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    group_id: Mapped[int] = mapped_column(
-        ForeignKey("tournament_group.id", ondelete="CASCADE")
-    )
+    group_id: Mapped[int] = mapped_column(ForeignKey("tournament_group.id", ondelete="CASCADE"))
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
 
     group: Mapped["TournamentGroup"] = relationship(back_populates="members")

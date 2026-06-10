@@ -69,6 +69,7 @@ def _pipeline_with_resolver(resolver) -> OddsCapturePipeline:
 # S1: "Draw" outcome code assigned correctly
 # ---------------------------------------------------------------------------
 
+
 def test_draw_outcome_from_literal_draw():
     """outcome_name == 'Draw' (exacto) → 'DRAW'."""
     pipeline = _pipeline_with_resolver(_AlwaysResolvesResolver())
@@ -105,6 +106,7 @@ def test_away_outcome_code():
 # S2: Unresolved team name is NOT treated as DRAW
 # ---------------------------------------------------------------------------
 
+
 def test_unresolved_team_returns_none_not_draw(caplog):
     """outcome_name desconocido (resolver → None) → retorna None y loguea warning."""
     pipeline = _pipeline_with_resolver(_NeverResolvesResolver())
@@ -137,9 +139,7 @@ def test_unresolved_team_not_inserted(db_session, caplog):
 
     # No se insertó la fila para este event_id específico
 
-    inserted_row = db_session.scalar(
-        select(Odds).where(Odds.source_event_id == "ev1")
-    )
+    inserted_row = db_session.scalar(select(Odds).where(Odds.source_event_id == "ev1"))
     assert inserted_row is None
     # El warning debe mencionar el nombre irresoluto
     assert "EquipoDesconocidoXYZ" in caplog.text

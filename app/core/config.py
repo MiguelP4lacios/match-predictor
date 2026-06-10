@@ -10,9 +10,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    database_url: str = (
-        "postgresql+psycopg://postgres:postgres@localhost:5432/match_predictor"
-    )
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/match_predictor"
     app_name: str = "match-predictor"
     debug: bool = False
 

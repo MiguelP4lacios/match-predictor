@@ -10,9 +10,7 @@ class EloRating(Base):
     """Serie temporal de Elo por selección. El predictor central del modelo."""
 
     __tablename__ = "elo_rating"
-    __table_args__ = (
-        UniqueConstraint("team_id", "rating_date", name="uq_elo_team_date"),
-    )
+    __table_args__ = (UniqueConstraint("team_id", "rating_date", name="uq_elo_team_date"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"), index=True)
@@ -25,9 +23,7 @@ class MatchTeamStats(Base, TimestampMixin):
     la mayoría de partidos de selecciones NO tienen xG gratis."""
 
     __tablename__ = "match_team_stats"
-    __table_args__ = (
-        UniqueConstraint("match_id", "team_id", name="uq_stats_match_team"),
-    )
+    __table_args__ = (UniqueConstraint("match_id", "team_id", name="uq_stats_match_team"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     match_id: Mapped[int] = mapped_column(ForeignKey("match.id", ondelete="CASCADE"))

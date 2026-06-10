@@ -23,9 +23,7 @@ class Match(Base, TimestampMixin):
     # En mundiales casi todo es campo neutral -> afecta la ventaja de localía.
     neutral_site: Mapped[bool] = mapped_column(default=False)
     stage: Mapped[MatchStage | None] = mapped_column(match_stage_type)
-    status: Mapped[MatchStatus] = mapped_column(
-        match_status_type, default=MatchStatus.SCHEDULED
-    )
+    status: Mapped[MatchStatus] = mapped_column(match_status_type, default=MatchStatus.SCHEDULED)
 
     home_score: Mapped[int | None] = mapped_column()
     away_score: Mapped[int | None] = mapped_column()
@@ -79,9 +77,7 @@ class Shootout(Base):
     __tablename__ = "shootout"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    match_id: Mapped[int] = mapped_column(
-        ForeignKey("match.id", ondelete="CASCADE"), unique=True
-    )
+    match_id: Mapped[int] = mapped_column(ForeignKey("match.id", ondelete="CASCADE"), unique=True)
     winner_team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
 
     match: Mapped["Match"] = relationship(back_populates="shootout")

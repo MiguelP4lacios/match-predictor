@@ -59,8 +59,7 @@ def _neg_log_likelihood(
     p_home = np.clip(p_home, eps, 1.0)
 
     ll = np.where(
-        outcomes == 0, np.log(p_away),
-        np.where(outcomes == 1, np.log(p_draw), np.log(p_home))
+        outcomes == 0, np.log(p_away), np.where(outcomes == 1, np.log(p_draw), np.log(p_home))
     )
     return -float(np.sum(ll))
 
@@ -102,6 +101,7 @@ def fit_olm(matches_df) -> dict[str, Any]:
 
     if not result.success:
         import warnings
+
         warnings.warn(f"OLM minimize no convergió: {result.message}", stacklevel=2)
 
     a1, delta, beta_diff, beta_neutral = result.x
@@ -155,12 +155,14 @@ def build_binned_table(
         if count < min_support:
             continue
         draw_rate = float(is_draw[mask].mean())
-        table.append({
-            "bucket_low": low,
-            "bucket_high": high,
-            "draw_rate": draw_rate,
-            "count": count,
-        })
+        table.append(
+            {
+                "bucket_low": low,
+                "bucket_high": high,
+                "draw_rate": draw_rate,
+                "count": count,
+            }
+        )
 
     return table
 

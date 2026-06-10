@@ -22,6 +22,7 @@ from app.models.enums import DataSource
 # Fake source para pruebas
 # ---------------------------------------------------------------------------
 
+
 class FakeResultsSource:
     source = DataSource.MARTJ42
 
@@ -60,17 +61,21 @@ def _count_test_matches(session, home_name: str, away_name: str) -> int:
     away = session.scalar(select(Team).where(Team.name == away_name))
     if home is None or away is None:
         return 0
-    return session.scalar(
-        select(func.count(Match.id)).where(
-            Match.home_team_id == home.id,
-            Match.away_team_id == away.id,
+    return (
+        session.scalar(
+            select(func.count(Match.id)).where(
+                Match.home_team_id == home.id,
+                Match.away_team_id == away.id,
+            )
         )
-    ) or 0
+        or 0
+    )
 
 
 # ---------------------------------------------------------------------------
 # S1: Re-ingestion does not duplicate matches
 # ---------------------------------------------------------------------------
+
 
 def test_reingest_same_data_no_duplicate(db_session):
     """Correr _load_matches dos veces con los mismos datos → exactamente 1 fila."""
@@ -98,6 +103,7 @@ def test_reingest_same_data_no_duplicate(db_session):
 # ---------------------------------------------------------------------------
 # S2: Updated score is applied on re-ingestion
 # ---------------------------------------------------------------------------
+
 
 def test_reingest_updates_score(db_session):
     """Upsert actualiza score si el source tiene datos nuevos."""
@@ -133,6 +139,7 @@ def test_reingest_updates_score(db_session):
 # ---------------------------------------------------------------------------
 # S3: Incremental re-ingest without force stays skipped
 # ---------------------------------------------------------------------------
+
 
 def test_run_force_false_skips_if_already_synced(db_session):
     """run(force=False) retorna skipped=True cuando sync_log ya existe para MARTJ42.

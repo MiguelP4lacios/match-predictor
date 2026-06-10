@@ -1,6 +1,6 @@
 """Runner del motor de Elo. Recalcula elo_rating desde cero.
 
-    docker compose run --rm api python -m app.model.run_elo
+docker compose run --rm api python -m app.model.run_elo
 """
 
 from app.core.database import SessionLocal

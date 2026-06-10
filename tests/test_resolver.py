@@ -39,8 +39,9 @@ def test_resolve_case_insensitive_returns_existing_team(db_session):
         select(Team).where(select(Team).where(Team.name.ilike("argentina")).exists())
     )
     count = db_session.scalar(
-        select(__import__("sqlalchemy", fromlist=["func"]).func.count(Team.id))
-        .where(Team.name.ilike("argentina"))
+        select(__import__("sqlalchemy", fromlist=["func"]).func.count(Team.id)).where(
+            Team.name.ilike("argentina")
+        )
     )
     assert count == 1
 

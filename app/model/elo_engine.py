@@ -131,9 +131,7 @@ class EloEngine:
             .limit(1)
         )
         if latest is None:
-            self._session.add(
-                ModelVersion(name=f"{_VERSION_PREFIX}1", params_json=params)
-            )
+            self._session.add(ModelVersion(name=f"{_VERSION_PREFIX}1", params_json=params))
             return
 
         if latest.params_json == params:
@@ -141,9 +139,7 @@ class EloEngine:
 
         # Params cambiados → INSERT nueva versión incrementando el número
         try:
-            n = int(latest.name[len(_VERSION_PREFIX):])
+            n = int(latest.name[len(_VERSION_PREFIX) :])
         except ValueError:
             n = 1
-        self._session.add(
-            ModelVersion(name=f"{_VERSION_PREFIX}{n + 1}", params_json=params)
-        )
+        self._session.add(ModelVersion(name=f"{_VERSION_PREFIX}{n + 1}", params_json=params))

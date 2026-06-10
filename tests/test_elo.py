@@ -57,9 +57,7 @@ def test_equal_teams_one_goal_neutral():
 def test_the_legendary_5_0_moves_a_lot():
     # Argentina (local) 0 - 5 Colombia (visitante), eliminatoria (K=40), con localía.
     # Equipos parejos: la goleada como visitante dispara el Elo de Colombia.
-    new_home, new_away = update_ratings(
-        1500, 1500, 0, 5, k=40, neutral=False, home_advantage=100
-    )
+    new_home, new_away = update_ratings(1500, 1500, 0, 5, k=40, neutral=False, home_advantage=100)
     assert new_away > new_home
     assert new_away == pytest.approx(1551.2, abs=0.5)  # +51.2 para Colombia
     assert new_home == pytest.approx(1448.8, abs=0.5)

@@ -14,6 +14,7 @@ from app.ingestion.sources.odds_api import _raise_for_status_redacted, _redact_u
 # _redact_url — función pura
 # ---------------------------------------------------------------------------
 
+
 def test_redact_url_masks_api_key():
     """La clave secreta en apiKey=<VALUE> queda reemplazada por ***."""
     url = "https://api.the-odds-api.com/v4/sports?apiKey=supersecret123&regions=eu"

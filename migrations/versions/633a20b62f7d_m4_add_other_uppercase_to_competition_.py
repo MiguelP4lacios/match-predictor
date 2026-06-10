@@ -16,14 +16,15 @@ Por qué existe esta migración:
   labels de un enum sin reconstruir el tipo, pero 'other' nunca será enviado
   por el ORM, así que no causa problemas.
 """
+
 from collections.abc import Sequence
 
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = '633a20b62f7d'
-down_revision: str | None = '067ababdda5c'
+revision: str = "633a20b62f7d"
+down_revision: str | None = "067ababdda5c"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

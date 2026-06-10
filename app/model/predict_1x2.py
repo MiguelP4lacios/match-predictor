@@ -8,7 +8,6 @@ Upsert idempotente sobre uq_prediction_identity
   (model_version_id, match_id, market_type, outcome_code).
 """
 
-
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session

@@ -34,7 +34,7 @@ def test_draw_rate_monotone_non_increasing():
 
     for i in range(len(draw_rates) - 1):
         assert draw_rates[i] >= draw_rates[i + 1], (
-            f"draw_rate[{i}]={draw_rates[i]:.4f} < draw_rate[{i+1}]={draw_rates[i+1]:.4f}"
+            f"draw_rate[{i}]={draw_rates[i]:.4f} < draw_rate[{i + 1}]={draw_rates[i + 1]:.4f}"
         )
 
 

@@ -18,9 +18,7 @@ class ModelVersion(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(80), unique=True)
     params_json: Mapped[dict] = mapped_column(JSONB, default=dict)
 
-    predictions: Mapped[list["Prediction"]] = relationship(
-        back_populates="model_version"
-    )
+    predictions: Mapped[list["Prediction"]] = relationship(back_populates="model_version")
 
 
 class Prediction(Base):

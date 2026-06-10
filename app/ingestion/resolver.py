@@ -49,15 +49,11 @@ class TeamResolver:
         team = self._get_or_create_team(canonical_name, create_missing)
         if team is None:
             return None
-        self._session.add(
-            TeamAlias(team_id=team.id, source=source, external_id=external_id)
-        )
+        self._session.add(TeamAlias(team_id=team.id, source=source, external_id=external_id))
         self._alias_cache[cache_key] = team.id
         return team
 
-    def _get_or_create_team(
-        self, canonical_name: str, create_missing: bool = True
-    ) -> Team | None:
+    def _get_or_create_team(self, canonical_name: str, create_missing: bool = True) -> Team | None:
         norm = canonical_name.strip()
         key = norm.lower()
 
@@ -66,9 +62,7 @@ class TeamResolver:
 
         # Case-insensitive lookup usando el índice funcional uq_team_name_lower (D7).
         # Evita duplicar "Argentina" y "argentina" como dos equipos distintos.
-        team = self._session.scalar(
-            select(Team).where(func.lower(Team.name) == norm.lower())
-        )
+        team = self._session.scalar(select(Team).where(func.lower(Team.name) == norm.lower()))
         if team is None:
             if not create_missing:
                 return None

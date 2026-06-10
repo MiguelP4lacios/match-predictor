@@ -4,7 +4,6 @@ Spec: value-signals — Req: Proportional De-Vig, EV and Edge, ¼-Kelly Stake
 TDD RED: fallan hasta que probabilities.py exista.
 """
 
-
 from app.model.probabilities import compute_ev, devig_proportional, kelly_quarter
 
 # ---------------------------------------------------------------------------

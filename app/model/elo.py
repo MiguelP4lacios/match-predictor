@@ -36,9 +36,7 @@ def k_factor(kind: CompetitionKind) -> int:
     return _K_BY_KIND.get(kind, K_OTHER_TOURNAMENT)
 
 
-def expected_score(
-    rating_a: float, rating_b: float, home_advantage: float = 0.0
-) -> float:
+def expected_score(rating_a: float, rating_b: float, home_advantage: float = 0.0) -> float:
     """We para A. `home_advantage` se suma al rating de A (0 si A no es local)."""
     dr = (rating_a + home_advantage) - rating_b
     return 1.0 / (1.0 + 10.0 ** (-dr / 400.0))

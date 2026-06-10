@@ -116,7 +116,8 @@ def relink_orphan_odds(session: Session) -> dict[str, int]:
         # Filtrar por ventana temporal (±1 día)
         window_secs = _RELINK_WINDOW.total_seconds()
         in_window = [
-            m for m in candidates
+            m
+            for m in candidates
             if m.kickoff_at is not None
             and abs((commence_time - m.kickoff_at).total_seconds()) <= window_secs
         ]

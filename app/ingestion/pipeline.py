@@ -82,11 +82,7 @@ class ResultsIngestionPipeline:
         for rm in self._source.fetch_matches():
             home = self._resolver.resolve(rm.source, rm.home_team)
             away = self._resolver.resolve(rm.source, rm.away_team)
-            status = (
-                MatchStatus.FINISHED
-                if rm.home_score is not None
-                else MatchStatus.SCHEDULED
-            )
+            status = MatchStatus.FINISHED if rm.home_score is not None else MatchStatus.SCHEDULED
             rows.append(
                 {
                     "competition_id": self._competition_id(rm.tournament),
@@ -190,9 +186,7 @@ class ResultsIngestionPipeline:
     def _competition_id(self, tournament: str) -> int:
         if tournament in self._competitions:
             return self._competitions[tournament]
-        comp = self._session.scalar(
-            select(Competition).where(Competition.name == tournament)
-        )
+        comp = self._session.scalar(select(Competition).where(Competition.name == tournament))
         if comp is None:
             comp = Competition(name=tournament, kind=infer_competition_kind(tournament))
             self._session.add(comp)

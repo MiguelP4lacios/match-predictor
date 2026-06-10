@@ -15,14 +15,15 @@ Constraints creados:
 - uq_team_name_lower: índice funcional UNIQUE lower(name) en team.
   Evita equipos case-duplicados sin tocar la columna original (D7).
 """
+
 from collections.abc import Sequence
 
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = '067ababdda5c'
-down_revision: str | None = 'ce5f5f676dea'
+revision: str = "067ababdda5c"
+down_revision: str | None = "ce5f5f676dea"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -46,9 +47,7 @@ def upgrade() -> None:
 
     # Índice funcional UNIQUE lower(name) en team (D7).
     # Impide insertar "Argentina" y "argentina" como dos equipos distintos.
-    op.execute(
-        "CREATE UNIQUE INDEX uq_team_name_lower ON team (lower(name))"
-    )
+    op.execute("CREATE UNIQUE INDEX uq_team_name_lower ON team (lower(name))")
 
 
 def downgrade() -> None:

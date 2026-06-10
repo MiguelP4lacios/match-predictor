@@ -30,18 +30,12 @@ def _raise_for_status_redacted(resp: httpx.Response) -> None:
     """
     if resp.status_code >= 400:
         redacted_url = _redact_url(str(resp.request.url))
-        raise RuntimeError(
-            f"Odds API {resp.status_code} {resp.reason_phrase} — {redacted_url}"
-        )
+        raise RuntimeError(f"Odds API {resp.status_code} {resp.reason_phrase} — {redacted_url}")
 
 
 def _parse_dt(raw: str) -> datetime:
     """ISO con 'Z' -> datetime naive en UTC (consistente con el resto de la BD)."""
-    return (
-        datetime.fromisoformat(raw.replace("Z", "+00:00"))
-        .astimezone(UTC)
-        .replace(tzinfo=None)
-    )
+    return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(UTC).replace(tzinfo=None)
 
 
 class OddsApiSource:

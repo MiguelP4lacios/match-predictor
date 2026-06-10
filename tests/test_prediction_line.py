@@ -28,9 +28,7 @@ def test_prediction_round_trip_con_line(db_session):
     )
     db_session.flush()
 
-    saved = db_session.scalar(
-        select(Prediction).where(Prediction.model_version_id == version.id)
-    )
+    saved = db_session.scalar(select(Prediction).where(Prediction.model_version_id == version.id))
     assert Decimal(saved.line) == Decimal("2.5")
 
 
@@ -49,7 +47,5 @@ def test_prediction_1x2_sin_line(db_session):
     )
     db_session.flush()
 
-    saved = db_session.scalar(
-        select(Prediction).where(Prediction.model_version_id == version.id)
-    )
+    saved = db_session.scalar(select(Prediction).where(Prediction.model_version_id == version.id))
     assert saved.line is None

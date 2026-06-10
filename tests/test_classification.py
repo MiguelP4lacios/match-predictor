@@ -25,6 +25,7 @@ from app.models.enums import CompetitionKind
 # S1: FIFA World Cup → WORLD_CUP (K=60)
 # ---------------------------------------------------------------------------
 
+
 def test_fifa_world_cup_maps_to_world_cup():
     assert classify_competition_kind("FIFA World Cup") == CompetitionKind.WORLD_CUP
 
@@ -36,6 +37,7 @@ def test_world_cup_k_factor_is_60():
 # ---------------------------------------------------------------------------
 # S2: CONIFA / Viva World Cup → OTHER (K=30, NOT WORLD_CUP)
 # ---------------------------------------------------------------------------
+
 
 def test_conifa_world_cup_maps_to_other():
     assert classify_competition_kind("CONIFA World Football Cup") == CompetitionKind.OTHER
@@ -58,6 +60,7 @@ def test_conifa_not_world_cup():
 # S3: CECAFA Cup → OTHER (K=30)
 # ---------------------------------------------------------------------------
 
+
 def test_cecafa_cup_maps_to_other():
     assert classify_competition_kind("CECAFA Cup") == CompetitionKind.OTHER
 
@@ -73,6 +76,7 @@ def test_unknown_tournament_maps_to_other():
 # S4: Copa América → CONTINENTAL (K=50)
 # ---------------------------------------------------------------------------
 
+
 def test_copa_america_maps_to_continental():
     assert classify_competition_kind("Copa América") == CompetitionKind.CONTINENTAL
 
@@ -84,6 +88,7 @@ def test_continental_k_factor_is_50():
 # ---------------------------------------------------------------------------
 # S5: FIFA World Cup qualification → QUALIFIER (precede a world cup keyword)
 # ---------------------------------------------------------------------------
+
 
 def test_qualification_overrides_world_cup():
     assert classify_competition_kind("FIFA World Cup qualification") == CompetitionKind.QUALIFIER
@@ -101,16 +106,20 @@ def test_qualifier_k_factor_is_40():
 # Whitelist CONTINENTAL_CHAMPIONSHIPS — todos los nombres reales del dataset
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("name", [
-    "UEFA Euro",
-    "Copa América",
-    "African Cup of Nations",
-    "AFC Asian Cup",
-    "Gold Cup",
-    "CONCACAF Championship",
-    "Oceania Nations Cup",
-    "Confederations Cup",
-])
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "UEFA Euro",
+        "Copa América",
+        "African Cup of Nations",
+        "AFC Asian Cup",
+        "Gold Cup",
+        "CONCACAF Championship",
+        "Oceania Nations Cup",
+        "Confederations Cup",
+    ],
+)
 def test_continental_whitelist(name):
     assert classify_competition_kind(name) == CompetitionKind.CONTINENTAL
 
@@ -118,6 +127,7 @@ def test_continental_whitelist(name):
 # ---------------------------------------------------------------------------
 # Nations League y Friendly
 # ---------------------------------------------------------------------------
+
 
 def test_nations_league():
     assert classify_competition_kind("UEFA Nations League") == CompetitionKind.NATIONS_LEAGUE
@@ -129,4 +139,5 @@ def test_friendly():
 
 def test_friendly_k_factor_is_20():
     from app.model.elo import K_FRIENDLY
+
     assert k_factor(CompetitionKind.FRIENDLY) == K_FRIENDLY

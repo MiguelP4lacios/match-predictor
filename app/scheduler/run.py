@@ -15,9 +15,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from app.core.config import settings
 from app.scheduler.jobs import capture_odds_job, make_odds_source
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 # Seguridad: httpx loguea la URL completa (incluye ?apiKey=...). Lo silenciamos
 # para que la API key NUNCA quede en logs.
 logging.getLogger("httpx").setLevel(logging.WARNING)

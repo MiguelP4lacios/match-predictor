@@ -12,6 +12,7 @@ Cambios:
 - uq_signal_identity (prediction_id, odds_id) en value_signal
   Upsert idempotente: re-ejecutar signals no duplica señales.
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa

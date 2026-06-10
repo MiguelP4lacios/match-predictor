@@ -1,8 +1,8 @@
 """Runner de ingesta histórica. Uso:
 
-    uv run python -m app.ingestion.run            # baja CSV (si faltan) y carga
-    uv run python -m app.ingestion.run --force    # recarga aunque ya esté sincronizado
-    uv run python -m app.ingestion.run --no-download
+uv run python -m app.ingestion.run            # baja CSV (si faltan) y carga
+uv run python -m app.ingestion.run --force    # recarga aunque ya esté sincronizado
+uv run python -m app.ingestion.run --no-download
 """
 
 import argparse

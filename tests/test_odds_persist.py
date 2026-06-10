@@ -21,6 +21,7 @@ from app.models.enums import CompetitionKind, DataSource, MatchStatus
 # Fake OddsSource
 # ---------------------------------------------------------------------------
 
+
 class FakeOddsSource:
     source = DataSource.ODDS_API
 
@@ -58,6 +59,7 @@ def _make_raw_h2h(
 # S1: Odds without fixture → match_id IS NULL, unlinked_events > 0
 # ---------------------------------------------------------------------------
 
+
 def test_odds_without_fixture_persisted_with_null_match_id(db_session):
     """Teams existen pero NO hay fixture → INSERT con match_id=NULL, unlinked_events>0."""
     # Crear teams que el resolver pueda encontrar
@@ -79,9 +81,7 @@ def test_odds_without_fixture_persisted_with_null_match_id(db_session):
     result = pipeline.capture()
 
     assert result["unlinked_events"] > 0
-    odds_row = db_session.scalar(
-        select(Odds).where(Odds.source_event_id == "evt-no-match")
-    )
+    odds_row = db_session.scalar(select(Odds).where(Odds.source_event_id == "evt-no-match"))
     assert odds_row is not None
     assert odds_row.match_id is None
     assert odds_row.source_event_id == "evt-no-match"
@@ -92,6 +92,7 @@ def test_odds_without_fixture_persisted_with_null_match_id(db_session):
 # S2: Odds with fixture → match_id NOT NULL (linked during capture)
 # ---------------------------------------------------------------------------
 
+
 def test_odds_with_fixture_gets_match_id(db_session):
     """Teams y fixture existen → match_id seteado en INSERT durante capture()."""
     home = Team(name="TEST_WCHome")
@@ -100,9 +101,7 @@ def test_odds_with_fixture_gets_match_id(db_session):
     db_session.flush()
 
     # Usar "FIFA World Cup" EXACTO para que _build_match_index lo encuentre
-    wc_comp = db_session.scalar(
-        select(Competition).where(Competition.name == "FIFA World Cup")
-    )
+    wc_comp = db_session.scalar(select(Competition).where(Competition.name == "FIFA World Cup"))
     if wc_comp is None:
         wc_comp = Competition(name="FIFA World Cup", kind=CompetitionKind.WORLD_CUP)
         db_session.add(wc_comp)
@@ -135,8 +134,6 @@ def test_odds_with_fixture_gets_match_id(db_session):
     result = pipeline.capture()
 
     assert result["unlinked_events"] == 0
-    odds_row = db_session.scalar(
-        select(Odds).where(Odds.source_event_id == "evt-wc-home")
-    )
+    odds_row = db_session.scalar(select(Odds).where(Odds.source_event_id == "evt-wc-home"))
     assert odds_row is not None
     assert odds_row.match_id == match.id

@@ -112,13 +112,15 @@ def calibration_table(probs: np.ndarray, outcomes: np.ndarray, n_bins: int = 10)
         count = int(mask.sum())
         if count == 0:
             continue
-        table.append({
-            "bin_low": round(float(edges[i]), 2),
-            "bin_high": round(float(edges[i + 1]), 2),
-            "mean_predicted": round(float(flat_pred[mask].mean()), 4),
-            "observed_freq": round(float(flat_obs[mask].mean()), 4),
-            "count": count,
-        })
+        table.append(
+            {
+                "bin_low": round(float(edges[i]), 2),
+                "bin_high": round(float(edges[i + 1]), 2),
+                "mean_predicted": round(float(flat_pred[mask].mean()), 4),
+                "observed_freq": round(float(flat_obs[mask].mean()), 4),
+                "count": count,
+            }
+        )
     return table
 
 
@@ -220,14 +222,16 @@ def run_backtest(
     outcomes_arr = eval_df["outcome"].to_numpy(dtype=int)
 
     # Predicciones OLM en evaluación
-    olm_probs = np.array([
+    olm_probs = np.array(
         [
-            predict_proba(params, elo_diff=d, neutral=bool(n))["away"],
-            predict_proba(params, elo_diff=d, neutral=bool(n))["draw"],
-            predict_proba(params, elo_diff=d, neutral=bool(n))["home"],
+            [
+                predict_proba(params, elo_diff=d, neutral=bool(n))["away"],
+                predict_proba(params, elo_diff=d, neutral=bool(n))["draw"],
+                predict_proba(params, elo_diff=d, neutral=bool(n))["home"],
+            ]
+            for d, n in zip(diffs, neutrals, strict=True)
         ]
-        for d, n in zip(diffs, neutrals, strict=True)
-    ])
+    )
 
     # Predicciones del baseline binado
     binned_probs = []
@@ -276,16 +280,18 @@ def run_backtest(
             "uniform_logloss": round(ll_unif, 6),
             "binned_logloss": round(ll_bin, 6),
         },
-        "beats_baselines": beats_baselines({
-            "brier": brier_olm,
-            "logloss": ll_olm,
-            "baselines": {
-                "uniform_brier": brier_unif,
-                "binned_brier": brier_bin,
-                "uniform_logloss": ll_unif,
-                "binned_logloss": ll_bin,
-            },
-        }),
+        "beats_baselines": beats_baselines(
+            {
+                "brier": brier_olm,
+                "logloss": ll_olm,
+                "baselines": {
+                    "uniform_brier": brier_unif,
+                    "binned_brier": brier_bin,
+                    "uniform_logloss": ll_unif,
+                    "binned_logloss": ll_bin,
+                },
+            }
+        ),
         "calibration_table": cal_table,
         "eval_n": int(len(eval_df)),
         "eval_window": f"{eval_min} → {eval_max}",

@@ -34,7 +34,9 @@ def dedup_matches(conn) -> int:
 
     Retorna el número de filas eliminadas (0 en dry-run).
     """
-    rows = conn.execute(text(dedent("""
+    rows = conn.execute(
+        text(
+            dedent("""
         SELECT
             match_date,
             home_team_id,
@@ -47,7 +49,9 @@ def dedup_matches(conn) -> int:
         GROUP BY match_date, home_team_id, away_team_id
         HAVING count(*) > 1
         ORDER BY match_date, home_team_id
-    """))).fetchall()
+    """)
+        )
+    ).fetchall()
 
     if not rows:
         log.info("match: sin duplicados — OK")
@@ -61,10 +65,17 @@ def dedup_matches(conn) -> int:
         log.warning(
             "Duplicado en match: date=%s home_id=%s away_id=%s | "
             "keep=%d (score %s-%s %s) | remove=%s (scores %s-%s %s)",
-            r.match_date, r.home_team_id, r.away_team_id,
-            keep_id, r.home_scores[0], r.away_scores[0], r.statuses[0],
+            r.match_date,
+            r.home_team_id,
+            r.away_team_id,
+            keep_id,
+            r.home_scores[0],
+            r.away_scores[0],
+            r.statuses[0],
             remove_ids,
-            r.home_scores[1:], r.away_scores[1:], r.statuses[1:],
+            r.home_scores[1:],
+            r.away_scores[1:],
+            r.statuses[1:],
         )
 
         # Re-apuntar FKs hijas antes de borrar
@@ -75,19 +86,22 @@ def dedup_matches(conn) -> int:
             ("odds", "match_id"),
             ("match_team_stats", "match_id"),
         ]:
-            n = conn.execute(text(
-                f"SELECT count(*) FROM {tbl} WHERE {col} = ANY(:ids)"
-            ), {"ids": remove_ids}).scalar()
+            n = conn.execute(
+                text(f"SELECT count(*) FROM {tbl} WHERE {col} = ANY(:ids)"), {"ids": remove_ids}
+            ).scalar()
             if n > 0:
                 log.info("  Re-apuntando %d filas en %s.%s → %d", n, tbl, col, keep_id)
                 if not DRY_RUN:
-                    conn.execute(text(
-                        f"UPDATE {tbl} SET {col} = :keep WHERE {col} = ANY(:ids)"
-                    ), {"keep": keep_id, "ids": remove_ids})
+                    conn.execute(
+                        text(f"UPDATE {tbl} SET {col} = :keep WHERE {col} = ANY(:ids)"),
+                        {"keep": keep_id, "ids": remove_ids},
+                    )
 
     log.info(
         "%s %d filas duplicadas en match (ids: %s)",
-        _dry("Eliminando"), len(surplus_ids), surplus_ids,
+        _dry("Eliminando"),
+        len(surplus_ids),
+        surplus_ids,
     )
     if not DRY_RUN:
         conn.execute(
@@ -103,14 +117,18 @@ def dedup_teams_lower(conn) -> int:
     La eliminación de equipos es peligrosa (FKs en match, elo_rating, etc.).
     Si hay case-duplicados, el script aborta con instrucciones manuales.
     """
-    rows = conn.execute(text(dedent("""
+    rows = conn.execute(
+        text(
+            dedent("""
         SELECT lower(name) AS lower_name, array_agg(id ORDER BY id) AS ids,
                array_agg(name ORDER BY id) AS names
         FROM team
         GROUP BY lower(name)
         HAVING count(*) > 1
         ORDER BY lower(name)
-    """))).fetchall()
+    """)
+        )
+    ).fetchall()
 
     if not rows:
         log.info("team: sin duplicados de nombre (case-insensitive) — OK")
@@ -143,8 +161,7 @@ def main() -> None:
         dedup_teams_lower(conn)
 
     log.info(
-        "Dedup completado: %d filas eliminadas de match. "
-        "Listo para M3 (UNIQUE constraints).",
+        "Dedup completado: %d filas eliminadas de match. Listo para M3 (UNIQUE constraints).",
         n_match,
     )
 
