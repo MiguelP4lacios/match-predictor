@@ -22,35 +22,113 @@ const makeSignal = (overrides: Partial<SignalItem> & { edge: number }): SignalIt
 })
 
 describe('SignalsTable', () => {
-  describe('renderiza filas en el orden recibido (server es autoridad)', () => {
-    it('muestra 3 filas cuando se pasan 3 señales', () => {
-      const items = [
-        makeSignal({ id: 1, edge: 0.20, home_team: 'España', away_team: 'Brasil' }),
-        makeSignal({ id: 2, edge: 0.14, home_team: 'Francia', away_team: 'Alemania' }),
-        makeSignal({ id: 3, edge: 0.08, home_team: 'Argentina', away_team: 'Uruguay' }),
-      ]
+  describe('vista agrupada — 3 partidos distintos (1 señal cada uno)', () => {
+    const items = [
+      makeSignal({ id: 1, edge: 0.20, home_team: 'España', away_team: 'Brasil', match_date: '2026-06-15' }),
+      makeSignal({ id: 2, edge: 0.14, home_team: 'Francia', away_team: 'Alemania', match_date: '2026-06-16' }),
+      makeSignal({ id: 3, edge: 0.08, home_team: 'Argentina', away_team: 'Uruguay', match_date: '2026-06-17' }),
+    ]
+
+    it('renderiza un encabezado de grupo por partido', () => {
       render(<SignalsTable items={items} />)
-      const rows = screen.getAllByRole('row')
-      // 3 filas de datos + 1 de encabezado = 4 rows
-      expect(rows).toHaveLength(4)
+      expect(screen.getByText('España vs Brasil')).toBeInTheDocument()
+      expect(screen.getByText('Francia vs Alemania')).toBeInTheDocument()
+      expect(screen.getByText('Argentina vs Uruguay')).toBeInTheDocument()
     })
 
-    it('preserva el orden dado: primera fila tiene el equipo de la primera señal', () => {
-      const items = [
-        makeSignal({ id: 1, edge: 0.20, home_team: 'España', away_team: 'Brasil' }),
-        makeSignal({ id: 2, edge: 0.14, home_team: 'Francia', away_team: 'Alemania' }),
-        makeSignal({ id: 3, edge: 0.08, home_team: 'Argentina', away_team: 'Uruguay' }),
-      ]
+    it('ordena grupos por edge DESC: España(0.20) antes de Francia(0.14) antes de Argentina(0.08)', () => {
       render(<SignalsTable items={items} />)
       const rows = screen.getAllByRole('row')
-      // Primera fila de datos (índice 1, tras el encabezado)
+      // Estructura: [thead, group-España, row-España, group-Francia, row-Francia, group-Argentina, row-Argentina]
       expect(within(rows[1]).getByText('España vs Brasil')).toBeInTheDocument()
-      // Segunda fila
-      expect(within(rows[2]).getByText('Francia vs Alemania')).toBeInTheDocument()
-      // Tercera fila
-      expect(within(rows[3]).getByText('Argentina vs Uruguay')).toBeInTheDocument()
+      expect(within(rows[3]).getByText('Francia vs Alemania')).toBeInTheDocument()
+      expect(within(rows[5]).getByText('Argentina vs Uruguay')).toBeInTheDocument()
     })
 
+    it('NO muestra hint de exposición correlacionada cuando hay 1 señal por partido', () => {
+      render(<SignalsTable items={items} />)
+      expect(screen.queryByText(/exposición correlacionada/)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('hint de exposición correlacionada', () => {
+    it('muestra hint cuando hay 2+ señales del mismo partido', () => {
+      // Partido A: Haiti vs Scotland con 2 señales; Partido B: 1 señal
+      const bAway = makeSignal({
+        id: 3, edge: 0.141,
+        home_team: 'Brasil', away_team: 'Argentina', match_date: '2026-06-21',
+        outcome_code: 'AWAY',
+      })
+      const aHome = makeSignal({
+        id: 1, edge: 0.097,
+        home_team: 'Haiti', away_team: 'Scotland', match_date: '2026-06-20',
+        outcome_code: 'HOME',
+      })
+      const aDraw = makeSignal({
+        id: 2, edge: 0.051,
+        home_team: 'Haiti', away_team: 'Scotland', match_date: '2026-06-20',
+        outcome_code: 'DRAW',
+      })
+      render(<SignalsTable items={[bAway, aHome, aDraw]} />)
+      expect(screen.getByText('⚠ 2 señales sobre este partido — exposición correlacionada')).toBeInTheDocument()
+    })
+
+    it('el hint aparece en el grupo con 2 señales, no en el de 1 señal', () => {
+      const bAway = makeSignal({
+        id: 3, edge: 0.141,
+        home_team: 'Brasil', away_team: 'Argentina', match_date: '2026-06-21',
+        outcome_code: 'AWAY',
+      })
+      const aHome = makeSignal({
+        id: 1, edge: 0.097,
+        home_team: 'Haiti', away_team: 'Scotland', match_date: '2026-06-20',
+        outcome_code: 'HOME',
+      })
+      const aDraw = makeSignal({
+        id: 2, edge: 0.051,
+        home_team: 'Haiti', away_team: 'Scotland', match_date: '2026-06-20',
+        outcome_code: 'DRAW',
+      })
+      render(<SignalsTable items={[bAway, aHome, aDraw]} />)
+      const rows = screen.getAllByRole('row')
+      // Grupos ordenados: B(0.141) primero, A(0.097) segundo
+      // rows[0]=thead, rows[1]=group-B-header, rows[2]=row-B, rows[3]=group-A-header(+hint), rows[4]=row-A-HOME, rows[5]=row-A-DRAW
+      expect(within(rows[1]).queryByText(/exposición correlacionada/)).not.toBeInTheDocument()
+      expect(within(rows[3]).getByText('⚠ 2 señales sobre este partido — exposición correlacionada')).toBeInTheDocument()
+    })
+
+    it('escenario numérico: B(14.1%) primero, A(9.7%+5.1%) segundo con hint', () => {
+      const bAway = makeSignal({
+        id: 3, edge: 0.141,
+        home_team: 'Brasil', away_team: 'Argentina', match_date: '2026-06-21',
+        outcome_code: 'AWAY',
+      })
+      const aHome = makeSignal({
+        id: 1, edge: 0.097,
+        home_team: 'Haiti', away_team: 'Scotland', match_date: '2026-06-20',
+        outcome_code: 'HOME',
+      })
+      const aDraw = makeSignal({
+        id: 2, edge: 0.051,
+        home_team: 'Haiti', away_team: 'Scotland', match_date: '2026-06-20',
+        outcome_code: 'DRAW',
+      })
+      render(<SignalsTable items={[bAway, aHome, aDraw]} />)
+      const rows = screen.getAllByRole('row')
+      // rows: [thead, B-header, B-row, A-header+hint, A-HOME-row, A-DRAW-row] = 6 total
+      expect(rows).toHaveLength(6)
+      expect(within(rows[1]).getByText('Brasil vs Argentina')).toBeInTheDocument()
+      expect(within(rows[3]).getByText('Haiti vs Scotland')).toBeInTheDocument()
+      expect(within(rows[3]).getByText('⚠ 2 señales sobre este partido — exposición correlacionada')).toBeInTheDocument()
+      // 14.1% en el grupo B
+      expect(within(rows[2]).getByText('14.1%')).toBeInTheDocument()
+      // 9.7% y 5.1% en grupo A
+      expect(within(rows[4]).getByText('9.7%')).toBeInTheDocument()
+      expect(within(rows[5]).getByText('5.1%')).toBeInTheDocument()
+    })
+  })
+
+  describe('formatters dentro de señales', () => {
     it('muestra el edge formateado a 1 decimal con %', () => {
       const items = [makeSignal({ edge: 0.0832 })]
       render(<SignalsTable items={items} />)
@@ -73,8 +151,6 @@ describe('SignalsTable', () => {
     it('no renderiza ninguna fila de datos cuando items=[]', () => {
       render(<SignalsTable items={[]} />)
       const rows = screen.queryAllByRole('row')
-      // Sin datos → sin filas (ni encabezado si la tabla no se renderiza,
-      // o solo encabezado si se renderiza con tbody vacío — ambos aceptables)
       expect(rows.length).toBeLessThanOrEqual(1)
     })
   })

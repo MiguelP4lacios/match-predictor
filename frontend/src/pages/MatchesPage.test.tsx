@@ -25,7 +25,7 @@ function renderWithQuery(ui: React.ReactElement) {
 
 function match(partial: Partial<UpcomingMatch>): UpcomingMatch {
   return {
-    match_id: 1,
+    id: 1,
     match_date: '2026-06-17',
     kickoff_at: null,
     home_team: 'Local FC',
@@ -54,9 +54,9 @@ describe('MatchesPage', () => {
 
   it('renderiza partidos de TODAS las fechas devueltas (sin recortar)', async () => {
     mockFetchAPI.mockResolvedValue([
-      match({ match_id: 1, match_date: '2026-06-17', home_team: 'Uzbekistan', away_team: 'Colombia' }),
-      match({ match_id: 2, match_date: '2026-06-23', home_team: 'Colombia', away_team: 'DR Congo' }),
-      match({ match_id: 3, match_date: '2026-06-27', home_team: 'Colombia', away_team: 'Portugal' }),
+      match({ id: 1, match_date: '2026-06-17', home_team: 'Uzbekistan', away_team: 'Colombia' }),
+      match({ id: 2, match_date: '2026-06-23', home_team: 'Colombia', away_team: 'DR Congo' }),
+      match({ id: 3, match_date: '2026-06-27', home_team: 'Colombia', away_team: 'Portugal' }),
     ])
 
     renderWithQuery(<MatchesPage />)

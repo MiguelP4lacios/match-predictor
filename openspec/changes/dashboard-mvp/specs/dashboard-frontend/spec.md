@@ -80,6 +80,53 @@ Formatters MUST cumplir exactamente:
 
 ---
 
+### Requirement: R2A — Agrupación por partido en vista Señales
+
+Las señales MUST mostrarse agrupadas por partido en la vista Señales. La agrupación
+es una responsabilidad de presentación exclusiva del cliente: el frontend reagrupa
+visualmente los items ya calculados por el servidor; NUNCA recalcula p\_model, edge
+ni stake.
+
+Reglas de agrupación:
+- Las señales se agrupan por combinación `(match_date, home_team, away_team)`.
+- Los grupos se ordenan por el edge máximo del grupo, DESC.
+- Dentro de cada grupo, el orden de señales es el que entrega el servidor
+  (ya viene en edge DESC global — el cliente NO altera el orden relativo).
+- El encabezado de partido (fecha + "Home vs Away") se renderiza UNA SOLA VEZ
+  por grupo, como fila de cabecera antes de las filas de outcome del grupo.
+- Grupos con 2 o más señales MUST mostrar el texto de alerta de exposición
+  correlacionada: `"⚠ 2 señales sobre este partido — exposición correlacionada"`.
+- Grupos con 1 señal NO muestran dicho texto.
+
+La función pura `groupSignals(items: SignalItem[]): SignalGroup[]` encapsula la
+lógica de agrupación y ordenación; el componente la llama y renderiza el resultado.
+
+#### Scenario: Orden de grupos por max edge — escenario numérico
+
+- GIVEN la API retorna 3 señales:
+  - Partido A (Haiti vs Scotland, 2026-06-20): HOME edge=9.7%, DRAW edge=5.1%
+  - Partido B (Brasil vs Argentina, 2026-06-21): AWAY edge=14.1%
+  - Orden del servidor (edge DESC global): B-AWAY(14.1%), A-HOME(9.7%), A-DRAW(5.1%)
+- WHEN la vista renderiza
+- THEN los grupos aparecen en este orden:
+  1. Grupo B (Brasil vs Argentina) — max_edge=14.1% → primero
+  2. Grupo A (Haiti vs Scotland) — max_edge=9.7% → segundo, con señales HOME(9.7%) y DRAW(5.1%) en ese orden
+
+#### Scenario: Hint de exposición correlacionada
+
+- GIVEN el partido A (Haiti vs Scotland) tiene 2 señales
+- WHEN la vista renderiza el grupo A
+- THEN muestra "⚠ 2 señales sobre este partido — exposición correlacionada"
+  junto al encabezado del grupo
+
+#### Scenario: Sin hint para partido de señal única
+
+- GIVEN el partido B (Brasil vs Argentina) tiene 1 sola señal
+- WHEN la vista renderiza el grupo B
+- THEN NO muestra texto de exposición correlacionada para ese grupo
+
+---
+
 ### Requirement: R3 — Vista Grupos
 
 La vista MUST renderizar 12 cards en orden A–L. Cada card MUST incluir
