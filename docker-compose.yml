@@ -78,5 +78,19 @@ services:
     command: python -m app.scheduler.run
     restart: unless-stopped
 
+  frontend:
+    image: node:22-alpine
+    container_name: match_predictor_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
   pgdata:
