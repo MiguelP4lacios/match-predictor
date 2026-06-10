@@ -30,12 +30,12 @@
 
 ## Phase 4: Páginas + Router
 
-- [ ] 4.1 Crear `frontend/src/App.tsx`: `QueryClientProvider`, `BrowserRouter`, `<nav>` con links a 5 rutas, `<Routes>` incluyendo `*`→404 "Página no encontrada".
-- [ ] 4.2 Crear `frontend/src/pages/SignalsPage.tsx`: `useQuery` `GET /api/v1/signals` (`staleTime:55000`, `refetchInterval:60000`), filtro `min_edge`, usa `SignalsTable/Loading/ErrorBanner`.
-- [ ] 4.3 Crear `frontend/src/pages/GroupsPage.tsx` y `GroupDetailPage.tsx`: queries `/api/v1/groups` y `/api/v1/groups/:letter`; usa `GroupCard`.
-- [ ] 4.4 Crear `frontend/src/pages/MatchesPage.tsx`: query `/api/v1/matches/upcoming`, partidos agrupados por `match_date`, usa `MatchProbBar`.
-- [ ] 4.5 Crear `frontend/src/pages/ModelPage.tsx` (baselines + calibration_table + semáforo `beats_baselines`) y `PaperPage.tsx` (usa `PaperStats`).
-- [ ] 4.6 Integration tests (1 por página): `QueryClient` wrapper + fetch mock con shapes reales → loading→data + error→`ErrorBanner`.
+- [x] 4.1 Crear `frontend/src/App.tsx`: `QueryClientProvider`, `BrowserRouter`, `<nav>` con links a 5 rutas, `<Routes>` incluyendo `*`→404 "Página no encontrada".
+- [x] 4.2 Crear `frontend/src/pages/SignalsPage.tsx`: `useQuery` `GET /api/v1/signals` (`staleTime:55000`, `refetchInterval:60000`), filtro `min_edge`, usa `SignalsTable/Loading/ErrorBanner`.
+- [x] 4.3 Crear `frontend/src/pages/GroupsPage.tsx` y `GroupDetailPage.tsx`: queries `/api/v1/groups` y `/api/v1/groups/:letter`; usa `GroupCard`.
+- [x] 4.4 Crear `frontend/src/pages/MatchesPage.tsx`: query `/api/v1/matches/upcoming`, partidos agrupados por `match_date`, usa `MatchProbBar`.
+- [x] 4.5 Crear `frontend/src/pages/ModelPage.tsx` (baselines + calibration_table + semáforo `beats_baselines`) y `PaperPage.tsx` (usa `PaperStats`).
+- [x] 4.6 Integration tests (1 por página): `QueryClient` wrapper + fetch mock con shapes reales → loading→data + error→`ErrorBanner`.
 
 ## Phase 5: Artefactos Prod
 
@@ -44,7 +44,7 @@
 
 ## Phase 6: Verificación Final
 
-- [ ] 6.1 `docker compose run --rm frontend npm test` — todos los tests en verde (unit + component + integration).
-- [ ] 6.2 `docker compose run --rm frontend npm run build` — sin errores TypeScript.
-- [ ] 6.3 Smoke real: `docker compose up -d frontend` → `curl http://localhost:5173` retorna HTML con `<div id="root">`; documentar URLs de navegación manual.
-- [ ] 6.4 Commits conventional + marcar tasks completadas + merge apply-progress en engram.
+- [x] 6.1 `docker compose run --rm frontend npm test` — todos los tests en verde (unit + component + integration).
+- [x] 6.2 `docker compose run --rm frontend npm run build` — sin errores TypeScript.
+- [x] 6.3 Smoke real: `docker compose up -d frontend` → `curl http://localhost:5173` retorna HTML con `<div id="root">`; documentar URLs de navegación manual.
+- [x] 6.4 Commits conventional + marcar tasks completadas + merge apply-progress en engram.
