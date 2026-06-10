@@ -26,14 +26,14 @@
 
 ## Phase 4: Execution on Real Data
 
-- [ ] 4.1 Run fit (train <2018-06-01): `docker compose run --rm api python -m app.model.run_1x2 fit`; persist coefficients + binned table to `model_version.params_json` for `1x2-olm-v1`
-- [ ] 4.2 Run backtest (eval 2018→today): `docker compose run --rm api python -m app.model.run_1x2 backtest`; **if gate fails → report Brier/log-loss honestly and STOP — signals stay locked (this is the system working)**
-- [ ] 4.3 If gate passes: create `docs/backtests/elo-to-1x2.md` with Brier, log-loss, calibration table (10 bins), `beats_baselines` verdict, `eval_n`, `eval_window`
-- [ ] 4.4 Run predict for 72 WC2026 fixtures: `docker compose run --rm api python -m app.model.run_1x2 predict`; verify 216 rows in `prediction` (3 per match)
-- [ ] 4.5 Run signals PAPER: `docker compose run --rm api python -m app.model.run_1x2 signals`; record signal count and top edges here — MANUAL-OPTIONAL if no odds snapshot available
+- [x] 4.1 Run fit (train <2018-06-01): `docker compose run --rm api python -m app.model.run_1x2 fit`; persist coefficients + binned table to `model_version.params_json` for `1x2-olm-v1`
+- [x] 4.2 Run backtest (eval 2018→today): `docker compose run --rm api python -m app.model.run_1x2 backtest`; **if gate fails → report Brier/log-loss honestly and STOP — signals stay locked (this is the system working)**
+- [x] 4.3 If gate passes: create `docs/backtests/elo-to-1x2.md` with Brier, log-loss, calibration table (10 bins), `beats_baselines` verdict, `eval_n`, `eval_window`
+- [x] 4.4 Run predict for 72 WC2026 fixtures: `docker compose run --rm api python -m app.model.run_1x2 predict`; verify 216 rows in `prediction` (3 per match)
+- [x] 4.5 Run signals PAPER: `docker compose run --rm api python -m app.model.run_1x2 signals`; record signal count and top edges here — MANUAL-OPTIONAL if no odds snapshot available
 
 ## Phase 5: Cleanup + Commit
 
-- [ ] 5.1 Full suite GREEN: `docker compose run --rm api pytest`
-- [ ] 5.2 Lint + format clean: `docker compose run --rm api ruff check . && ruff format .`
-- [ ] 5.3 Conventional commit: `feat(model): add OLM 1x2 fit/backtest/predict/signals and migration m5`; check all task boxes in this file
+- [x] 5.1 Full suite GREEN: `docker compose run --rm api pytest`
+- [x] 5.2 Lint + format clean: `docker compose run --rm api ruff check . && ruff format .`
+- [x] 5.3 Conventional commit: `feat(model): add OLM 1x2 fit/backtest/predict/signals and migration m5`; check all task boxes in this file
