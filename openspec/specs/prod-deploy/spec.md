@@ -17,15 +17,17 @@ A file `docker-compose.prod.yml` MUST exist that overrides `docker-compose.yml` 
 - `api` uses no bind-mount (`.:/app` removed), no `--reload` (uses Dockerfile CMD), no published ports.
 - `db` has no published ports.
 - `frontend` is built from `./frontend/Dockerfile` (multi-stage nginx) and publishes ONLY `127.0.0.1:8080:80`.
+- `caddy` (amendment 2026-06-10 — pedido del usuario: el túnel SSH se caía a cada rato) publishes `80:80` and `443:443` — the ONLY public ports — serving auto-HTTPS (nip.io) with MANDATORY `basic_auth` (bcrypt hash desde el `.env` del VPS, con `$` escapado como `$$` para la interpolación de compose; JAMÁS commiteado), reverse-proxying to `frontend:80`.
 - `scheduler` is under `profiles: [manual]` (not started by default).
 - All non-one-shot services MUST declare `restart: unless-stopped`.
 
-#### Scenario: Exactly one published port after merge
+#### Scenario: Published ports are exactly frontend-localhost + caddy-public
 
 - GIVEN `docker-compose.prod.yml` exists
 - WHEN `docker compose -f docker-compose.prod.yml config` is run
-- THEN the merged config contains exactly one `published:` entry binding `127.0.0.1:8080`
-- AND no binding references `0.0.0.0`
+- THEN the published ports are exactly: `127.0.0.1:8080` (frontend) and `80`/`443` (caddy)
+- AND `db` and `api` have no published ports
+- AND requests to caddy without credentials MUST receive 401
 
 #### Scenario: Dev compose unaffected
 

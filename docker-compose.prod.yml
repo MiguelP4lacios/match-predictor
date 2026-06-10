@@ -94,5 +94,25 @@ services:
     depends_on:
       - api
 
+  # Acceso público: HTTPS automático (Let's Encrypt/ZeroSSL) + basic auth.
+  # Únicos puertos públicos del stack: 80/443 de caddy.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Hash bcrypt de la contraseña (en el .env del VPS, jamás commiteado).
+      CADDY_BASIC_AUTH_HASH: ${CADDY_BASIC_AUTH_HASH:?falta CADDY_BASIC_AUTH_HASH en .env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:

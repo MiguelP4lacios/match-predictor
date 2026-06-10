@@ -1,0 +1,9 @@
+# Acceso público con HTTPS automático + basic auth.
+# El dominio nip.io resuelve a la IP del VPS (162-243-163-165.nip.io -> 162.243.163.165).
+# El hash bcrypt viene del .env del VPS (CADDY_BASIC_AUTH_HASH) — nunca commiteado.
+162-243-163-165.nip.io {
+	basic_auth {
+		miguel {$CADDY_BASIC_AUTH_HASH}
+	}
+	reverse_proxy frontend:80
+}
