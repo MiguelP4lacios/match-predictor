@@ -25,7 +25,7 @@ from app.model.elo import (
 from app.models import Competition, EloRating, Match, ModelVersion
 from app.models.enums import MatchStatus
 
-_VERSION_NAME = "elo-v1"
+_VERSION_PREFIX = "elo-v"
 _BATCH = 5000
 
 
@@ -105,6 +105,13 @@ class EloEngine:
             self._session.execute(insert(EloRating), rows[i : i + _BATCH])
 
     def _record_version(self) -> None:
+        """Registra los parámetros del cómputo en model_version (D6 — inmutable).
+
+        - Si NO existe ninguna versión → INSERT "elo-v1".
+        - Si la última versión tiene los mismos params → reutilizar (recompute
+          idempotente no hace spam de versiones).
+        - Si los params cambiaron → INSERT "elo-v{N+1}" sin tocar "elo-vN".
+        """
         params = {
             "initial_rating": self._initial,
             "home_advantage": self._home_advantage,
@@ -116,10 +123,27 @@ class EloEngine:
                 "friendly": K_FRIENDLY,
             },
         }
-        existing = self._session.scalar(
-            select(ModelVersion).where(ModelVersion.name == _VERSION_NAME)
+        # Obtener la versión más reciente (nombre lexicográfico: elo-v1 < elo-v2)
+        latest = self._session.scalar(
+            select(ModelVersion)
+            .where(ModelVersion.name.like(f"{_VERSION_PREFIX}%"))
+            .order_by(ModelVersion.name.desc())
+            .limit(1)
         )
-        if existing is None:
-            self._session.add(ModelVersion(name=_VERSION_NAME, params_json=params))
-        else:
-            existing.params_json = params
+        if latest is None:
+            self._session.add(
+                ModelVersion(name=f"{_VERSION_PREFIX}1", params_json=params)
+            )
+            return
+
+        if latest.params_json == params:
+            return  # mismos params → reusar, no generar spam
+
+        # Params cambiados → INSERT nueva versión incrementando el número
+        try:
+            n = int(latest.name[len(_VERSION_PREFIX):])
+        except ValueError:
+            n = 1
+        self._session.add(
+            ModelVersion(name=f"{_VERSION_PREFIX}{n + 1}", params_json=params)
+        )
