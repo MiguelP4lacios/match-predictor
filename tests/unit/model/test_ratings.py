@@ -14,15 +14,11 @@ Escenario numérico (signal id=10 datos reales):
 import datetime
 import decimal
 
-import pytest
 from sqlalchemy.orm import Session
 
 # RED: estas importaciones fallan porque app/model/ratings.py no existe todavía
 from app.model.ratings import DEFAULT_RATING, HOME_ADVANTAGE, lookup_rating
 from app.models import EloRating, Team
-from app.models.competition import Competition
-from app.models.enums import CompetitionKind
-
 
 # ---------------------------------------------------------------------------
 # Helpers de fixture

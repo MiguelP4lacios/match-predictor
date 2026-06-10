@@ -32,7 +32,6 @@ from app.models.model import ModelVersion, Prediction
 from app.models.odds import Odds
 from app.models.team import Team
 
-
 # ---------------------------------------------------------------------------
 # Dataclasses de salida
 # ---------------------------------------------------------------------------
@@ -149,7 +148,7 @@ def _build_edge_section(
                 key="inv_home",
                 label_es="1 / cuota LOCAL (mejor precio)",
                 raw=round(1.0 / h_odds, 5),
-                formatted=f"{1.0/h_odds:.5f}",
+                formatted=f"{1.0 / h_odds:.5f}",
             )
         )
         steps.append(
@@ -157,7 +156,7 @@ def _build_edge_section(
                 key="inv_draw",
                 label_es="1 / cuota EMPATE (mejor precio)",
                 raw=round(1.0 / d_odds, 5),
-                formatted=f"{1.0/d_odds:.5f}",
+                formatted=f"{1.0 / d_odds:.5f}",
             )
         )
         steps.append(
@@ -165,7 +164,7 @@ def _build_edge_section(
                 key="inv_away",
                 label_es="1 / cuota VISITA (mejor precio)",
                 raw=round(1.0 / a_odds, 5),
-                formatted=f"{1.0/a_odds:.5f}",
+                formatted=f"{1.0 / a_odds:.5f}",
             )
         )
 
@@ -202,9 +201,7 @@ def _build_edge_section(
                 f"diferencia ilustrativa={recon_diff:.5f}"
             )
     else:
-        note = (
-            "no reconstruible desde el snapshot; se muestra prob. justa derivada"
-        )
+        note = "no reconstruible desde el snapshot; se muestra prob. justa derivada"
 
     # p_fair derivada: SIEMPRE p_model − edge (canónico)
     steps.append(
