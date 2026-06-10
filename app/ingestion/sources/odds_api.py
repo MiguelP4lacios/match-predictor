@@ -4,6 +4,7 @@ Free tier = 500 créditos/mes. costo = nº markets × nº regions. UNA request t
 TODOS los partidos del sport. Listar /sports es gratis (para verificar sport key).
 """
 
+import re
 from collections.abc import Iterator
 from datetime import UTC, datetime
 
@@ -11,6 +12,28 @@ import httpx
 
 from app.ingestion.dto import RawOdds
 from app.models.enums import DataSource
+
+# Regex para enmascarar el apiKey en URLs (query param) y el header RapidAPI.
+_API_KEY_RE = re.compile(r"(apiKey=)[^&\s]+")
+_RAPID_KEY_RE = re.compile(r"(X-RapidAPI-Key:\s*)\S+", re.IGNORECASE)
+
+
+def _redact_url(url: str) -> str:
+    """Reemplaza el valor del query param apiKey con '***'."""
+    return _API_KEY_RE.sub(r"\1***", url)
+
+
+def _raise_for_status_redacted(resp: httpx.Response) -> None:
+    """Como raise_for_status() pero sin exponer el apiKey en la URL del error.
+
+    En caso de error HTTP, lanza RuntimeError con la URL redactada (D8).
+    Las claves de API nunca deben aparecer en logs o trazas de error.
+    """
+    if resp.status_code >= 400:
+        redacted_url = _redact_url(str(resp.request.url))
+        raise RuntimeError(
+            f"Odds API {resp.status_code} {resp.reason_phrase} — {redacted_url}"
+        )
 
 
 def _parse_dt(raw: str) -> datetime:
@@ -49,7 +72,7 @@ class OddsApiSource:
             params={"apiKey": self._api_key},
             timeout=self._timeout,
         )
-        resp.raise_for_status()
+        _raise_for_status_redacted(resp)
         return resp.json()
 
     def fetch_odds(self) -> Iterator[RawOdds]:
@@ -67,7 +90,7 @@ class OddsApiSource:
             },
             timeout=self._timeout,
         )
-        resp.raise_for_status()
+        _raise_for_status_redacted(resp)
         self.last_remaining = resp.headers.get("x-requests-remaining")
 
         for event in resp.json():
