@@ -1,0 +1,27 @@
+change: fix-auditoria-criticos
+phase: archived
+artifact_store: hybrid
+execution_mode: auto
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+tasks_progress:
+  completed: [Phase 1, Phase 2, Phase 3, Phase 4 (incl. 4.0 M4 enum uppercase), Phase 5, Phase 6, Phase 7]
+  pending: []
+archived_at: 2026-06-09
+last_updated: 2026-06-09
+notes: |
+  Apply COMPLETO en 4 batches (A: git+migraciones M1-M4+dedup; B: TDD RED->GREEN 6 fixes;
+  C+D: backfill 170 filas CONTINENTAL->OTHER, ops hardening, Elo recompute 49.371 partidos).
+  Verify APPROVED WITH WARNINGS — all 3 warnings (W1 stale spec text, W2 pre-dedup count,
+  W3 missing Prediction.line test) fixed post-verify. 64/64 tests, ruff limpio, zero CRITICAL.
+  Nuevo top-4: España 2250, Argentina 2242, Francia 2150, Colombia 2147 (+73).
+  Specs merged to openspec/specs/ (match-ingestion, odds-capture, ops-resilience).
+  Change archived to openspec/changes/archive/2026-06-09-fix-auditoria-criticos/.
+  Next change ready to proceed.
