@@ -64,17 +64,17 @@ A backfill migration MUST re-classify existing `competition.kind` rows using the
 
 ### Requirement: Idempotent Match Ingestion
 
-The `match` table MUST have a unique constraint on `(competition_id, match_date, home_team_id, away_team_id)`.
+The `match` table MUST have a unique constraint on `(match_date, home_team_id, away_team_id)` — WITHOUT `competition_id`, per design D1: the goal/shootout linker already treats that tuple as identity, and including `competition_id` would re-admit duplicates on reclassification.
 
-`ResultsIngestionPipeline._load_matches()` MUST use `INSERT … ON CONFLICT (competition_id, match_date, home_team_id, away_team_id) DO UPDATE SET home_score, away_score, status` instead of plain `session.add()`.
+`ResultsIngestionPipeline._load_matches()` MUST use `INSERT … ON CONFLICT (match_date, home_team_id, away_team_id) DO UPDATE SET home_score, away_score, status` instead of plain `session.add()`.
 
 Running `ResultsIngestionPipeline.run(force=True)` on an already-loaded dataset MUST leave the total `match` count unchanged.
 
 #### Scenario: Re-ingestion does not duplicate matches
 
-- GIVEN the database contains 49,445 matches after initial ingestion
+- GIVEN the database contains 49,443 matches after initial ingestion (49,445 raw minus 2 source duplicates removed by the pre-flight dedup)
 - WHEN `run(force=True)` is called a second time with the same source data
-- THEN `SELECT COUNT(*) FROM match` still returns `49,445`
+- THEN `SELECT COUNT(*) FROM match` still returns `49,443`
 - AND the return dict key `"matches"` reflects rows processed (not inserted)
 
 #### Scenario: Updated score is applied on re-ingestion

@@ -13,9 +13,8 @@ import httpx
 from app.ingestion.dto import RawOdds
 from app.models.enums import DataSource
 
-# Regex para enmascarar el apiKey en URLs (query param) y el header RapidAPI.
+# Regex para enmascarar el apiKey en URLs (query param).
 _API_KEY_RE = re.compile(r"(apiKey=)[^&\s]+")
-_RAPID_KEY_RE = re.compile(r"(X-RapidAPI-Key:\s*)\S+", re.IGNORECASE)
 
 
 def _redact_url(url: str) -> str:

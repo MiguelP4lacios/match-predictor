@@ -1,19 +1,24 @@
 change: fix-auditoria-criticos
-phase: tasks
+phase: apply
 artifact_store: hybrid
-execution_mode: auto  # usuario pidió correr hasta el final sin preguntar (2026-06-09)
+execution_mode: auto
 artifacts:
   exploration: false
   proposal: true
   specs: true
   design: true
   tasks: true
+  apply_progress: true
   verify_report: false
 tasks_progress:
-  completed: []
-  pending: [Phase 1 (git+backup), Phase 2 (migraciones M1-M3), Phase 3 (TDD RED x7), Phase 4 (TDD GREEN x6), Phase 5 (backfill kind), Phase 6 (ops hardening), Phase 7 (recompute+suite final)]
+  completed: [Phase 1, Phase 2, Phase 3, Phase 4 (incl. 4.0 M4 enum uppercase), Phase 5, Phase 6, Phase 7]
+  pending: []
 last_updated: 2026-06-09
 notes: |
-  28 tasks. Batching apply: A=Phases 1-2 (bloqueante), B=Phases 3-4 (TDD RED->GREEN misma sesión),
-  C=Phases 5-6, D=Phase 7. M1 (enum OTHER) en revisión propia con autocommit_block. Dedup antes de
-  la UNIQUE (task 2.5). Recompute de Elo último. MANUAL-OPTIONAL: 1.2, 6.2, 7.3.
+  Apply COMPLETO en 3 batches (A: git+migraciones M1-M4+dedup; B: TDD RED->GREEN 6 fixes, cortado
+  por session limit y completado/commiteado por el orquestador; C+D: backfill 170 filas
+  CONTINENTAL->OTHER, ops hardening, Elo recompute 49.371 partidos). 62/62 tests, ruff limpio.
+  Nuevo top-4: España 2250, Argentina 2242, Francia 2150, Colombia 2147 (+73).
+  model_version sigue en elo-v1 (params idénticos, cambió la DATA — verificar contra spec R4).
+  Hallazgo en 6.2: uv.lock no tenía httpx/apscheduler — corregido con uv lock.
+  Próxima fase: sdd-verify.
