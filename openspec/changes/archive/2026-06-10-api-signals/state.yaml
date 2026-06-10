@@ -1,0 +1,24 @@
+change: api-signals
+phase: archive
+artifact_store: hybrid
+execution_mode: interactive
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+tasks_progress:
+  completed: [Phase 1 (standings+union-find), Phase 2 (odds_queries), Phase 3 (seed grupos ejecutado 12/48/72 idempotente), Phase 4 (schemas + 5 routers + CORS), Phase 5 (suite 123/123 + ruff + smoke real 7 endpoints)]
+  pending: []
+last_updated: 2026-06-10
+notes: |
+  Apply COMPLETO (2 agentes). Seed verificado contra sorteo oficial FIFA (grupo K = Colombia ✓);
+  nombres canónicos BD: Czech Republic/Turkey (no Czechia/Türkiye). 123/123 tests (16 API + 16
+  core/seed nuevos), ruff limpio, 4 commits. Smoke real: /groups/K muestra Colombia standings en
+  cero; /model muestra 1x2-olm-v1 Brier 0.1703 beats_baselines=true; /paper roi=null (0 settled).
+  Riesgos menores para verify: VOID en total de /paper; /matches/upcoming sin filtro de competición.
+  Esperando aprobación del usuario para sdd-verify (interactivo).
