@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, ForeignKey, Numeric, String
+from sqlalchemy import BigInteger, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -13,6 +13,9 @@ class ValueSignal(Base, TimestampMixin):
     """Señal +EV: cuando la prob. del modelo supera la implícita en la cuota."""
 
     __tablename__ = "value_signal"
+    __table_args__ = (
+        UniqueConstraint("prediction_id", "odds_id", name="uq_signal_identity"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     prediction_id: Mapped[int] = mapped_column(

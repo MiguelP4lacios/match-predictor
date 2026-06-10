@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, ForeignKey, Numeric, String, func
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Numeric, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +27,15 @@ class Prediction(Base):
     """Probabilidad estimada por el modelo, point-in-time (sin look-ahead)."""
 
     __tablename__ = "prediction"
+    __table_args__ = (
+        UniqueConstraint(
+            "model_version_id",
+            "match_id",
+            "market_type",
+            "outcome_code",
+            name="uq_prediction_identity",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     match_id: Mapped[int | None] = mapped_column(
@@ -40,6 +49,8 @@ class Prediction(Base):
     probability: Mapped[float] = mapped_column(Numeric(8, 5))
     # Línea Over/Under asociada a la predicción (ej. 2.5, 3.5). NULL en 1X2.
     line: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    # True cuando no existe rating histórico previo y se usó 1500 por defecto.
+    low_confidence: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     generated_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     model_version: Mapped["ModelVersion"] = relationship(back_populates="predictions")
