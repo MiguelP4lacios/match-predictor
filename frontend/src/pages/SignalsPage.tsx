@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAPI } from '../api/client'
 import type { SignalsResponse } from '../api/types'
-import SignalsTable from '../components/SignalsTable'
+import SignalCardGroup from '../components/SignalCardGroup'
+import ExplainDrawer from '../components/ExplainDrawer'
 import Loading from '../components/Loading'
 import ErrorBanner from '../components/ErrorBanner'
 
 export default function SignalsPage() {
   const [minEdge, setMinEdge] = useState('')
+  const [selectedSignalId, setSelectedSignalId] = useState<number | null>(null)
 
   const params = new URLSearchParams()
   if (minEdge) params.set('min_edge', minEdge)
@@ -46,7 +48,17 @@ export default function SignalsPage() {
 
       {isLoading && <Loading />}
       {isError && <ErrorBanner onRetry={() => refetch()} />}
-      {data && <SignalsTable items={data.items} />}
+      {data && (
+        <SignalCardGroup
+          items={data.items}
+          onExplain={(id) => setSelectedSignalId(id)}
+        />
+      )}
+
+      <ExplainDrawer
+        signalId={selectedSignalId}
+        onClose={() => setSelectedSignalId(null)}
+      />
     </div>
   )
 }

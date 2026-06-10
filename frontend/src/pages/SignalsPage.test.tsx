@@ -3,7 +3,7 @@
  * QueryClient wrapper + mocked fetchAPI → verifica data flow real
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SignalsPage from './SignalsPage'
 
@@ -43,7 +43,7 @@ describe('SignalsPage', () => {
   beforeEach(() => vi.clearAllMocks())
 
   describe('con datos del servidor', () => {
-    it('renderiza la fila de la señal cuando la query resuelve', async () => {
+    it('renderiza tarjetas con nombre de partido (NO tabla)', async () => {
       mockFetchAPI.mockResolvedValue({ items: [SIGNAL_FIXTURE], total: 1 })
 
       renderWithQuery(<SignalsPage />)
@@ -52,6 +52,8 @@ describe('SignalsPage', () => {
         expect(screen.getByText('España vs Brasil')).toBeInTheDocument()
       })
       expect(screen.getByText('8.3%')).toBeInTheDocument()
+      // La especificación prohíbe <table> — la página usa tarjetas
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
     })
 
     it('muestra múltiples señales en el orden dado por el server', async () => {
@@ -69,6 +71,79 @@ describe('SignalsPage', () => {
         expect(screen.getByText('España vs Brasil')).toBeInTheDocument()
       })
       expect(screen.getByText('Francia vs Alemania')).toBeInTheDocument()
+    })
+
+    it('cada tarjeta tiene botón "¿Por qué? →"', async () => {
+      mockFetchAPI.mockResolvedValue({ items: [SIGNAL_FIXTURE], total: 1 })
+
+      renderWithQuery(<SignalsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /¿Por qué\?/i })).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('interacción con ExplainDrawer', () => {
+    it('clic en "¿Por qué? →" abre el drawer y llama a /v1/signals/{id}/explain', async () => {
+      // Primera llamada: listado de señales
+      mockFetchAPI.mockResolvedValueOnce({ items: [SIGNAL_FIXTURE], total: 1 })
+      // Segunda llamada: explicación (lazy)
+      mockFetchAPI.mockResolvedValueOnce({
+        signal_id: 1,
+        sections: [
+          {
+            key: 'apuesta',
+            titulo: 'La apuesta',
+            note: null,
+            steps: [
+              { key: 'p_model', label_es: 'P(modelo)', raw: 0.55, formatted: null, glossary_term: null },
+            ],
+          },
+        ],
+      })
+
+      renderWithQuery(<SignalsPage />)
+
+      // Esperar a que cargue la lista
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /¿Por qué\?/i })).toBeInTheDocument()
+      })
+
+      // Hacer clic en "¿Por qué? →"
+      fireEvent.click(screen.getByRole('button', { name: /¿Por qué\?/i }))
+
+      // El drawer debe abrirse (role=dialog)
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      // fetchAPI debe haber sido llamado con la URL de explain
+      expect(mockFetchAPI).toHaveBeenCalledWith(`/v1/signals/${SIGNAL_FIXTURE.id}/explain`)
+    })
+
+    it('clic en X del drawer lo cierra', async () => {
+      mockFetchAPI.mockResolvedValueOnce({ items: [SIGNAL_FIXTURE], total: 1 })
+      mockFetchAPI.mockResolvedValueOnce({ signal_id: 1, sections: [] })
+
+      renderWithQuery(<SignalsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /¿Por qué\?/i })).toBeInTheDocument()
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: /¿Por qué\?/i }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      // Cerrar con el botón X (aria-label="Cerrar explicación")
+      fireEvent.click(screen.getByRole('button', { name: /Cerrar explicación/i }))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
     })
   })
 
