@@ -1,5 +1,5 @@
 change: elo-to-1x2
-phase: tasks
+phase: archived
 artifact_store: hybrid
 execution_mode: auto
 artifacts:
@@ -8,11 +8,13 @@ artifacts:
   specs: true
   design: true
   tasks: true
-  verify_report: false
+  verify_report: true
+  archive_report: true
 tasks_progress:
-  completed: []
-  pending: [Phase 1 (deps+m5), Phase 2 (TDD RED 18 escenarios), Phase 3 (TDD GREEN 6 archivos), Phase 4 (fit+backtest+predict+signals datos reales), Phase 5 (suite+commits)]
+  completed: [Phase 1 (deps+m5), Phase 2 (TDD RED 18 escenarios), Phase 3 (TDD GREEN 6 archivos), Phase 4 (fit+backtest+predict+signals datos reales), Phase 5 (suite+commits)]
+  pending: []
 last_updated: 2026-06-09
+archived_at: 2026-06-09
 notes: |
   23 tasks. Rulings del orquestador: prediction.low_confidence en m5; bankroll default 1000 en
   params_json; layout en app/model/ (design manda sobre la mención app/services de la spec);
