@@ -1,0 +1,21 @@
+change: dashboard-ux-explicable
+phase: tasks
+artifact_store: hybrid
+execution_mode: interactive
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true   # engram OK
+  verify_report: false
+tasks_progress:
+  completed: []
+  pending: [Phase 1 (backend ratings+explain+router), Phase 2 (glossary+SignalCard), Phase 3 (ExplainDrawer), Phase 4 (integración+borrar tabla), Phase 5 (cierre)]
+last_updated: 2026-06-10
+notes: |
+  19 tasks. Batching apply: A=Phase 1 (backend), B=Phases 2-3 (frontend componentes, paralelo a A),
+  C=Phases 4-5 (integración+cierre, necesita A y B). Riesgos: extracción _lookup_rating con tests
+  de predict como safety net; reconstrucción del triple al captured_at exacto del odds_id (si no
+  matchea el snapshot, la reconciliación 1e-3 falla); borrado de SignalsTable con rg de imports
+  obligatorio. Esperando aprobación del usuario para apply (interactivo).

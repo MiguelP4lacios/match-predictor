@@ -12,24 +12,24 @@
 
 ## Phase 2: Frontend core (strict TDD, docker-only vitest)
 
-- [ ] 2.1 RED→GREEN `frontend/src/lib/glossary.ts`: exportar `glossary` con 6 entradas exactas (edge, de-vig, kelly, elo, brier, calibración); test unitario `glossary["edge"]` contiene "Ventaja"
-- [ ] 2.2 RED→GREEN `frontend/src/components/GlossaryTerm.tsx`: término expandible `<details>`-style, touch-friendly; tests: expand/collapse, sin entrada → sin ícono
-- [ ] 2.3 Actualizar `frontend/src/api/types.ts`: agregar `SignalExplanation`, `ExplainSection`, `ExplainStep` espejo del schema Pydantic
-- [ ] 2.4 RED→GREEN `frontend/src/components/SignalCard.tsx`: muestra fecha·partido, "Apostale a X", cuota+bookmaker, badge edge, stake, botón "¿Por qué? →"; usa formatters.ts existentes (sin aritmética); tests: escenario id=10 badge="14.7%", stake="$120.16", cuota="1.47 (gtbets)", texto "Apostale a México"
-- [ ] 2.5 RED→GREEN `frontend/src/components/SignalCardGroup.tsx`: agrupa con `groupSignals`; hint "⚠ {n} señales sobre este partido — exposición correlacionada" solo si ≥2; tests: escenario Haiti(2 señales)+Brasil(1); orden server intacto
+- [x] 2.1 RED→GREEN `frontend/src/lib/glossary.ts`: exportar `glossary` con 6 entradas exactas (edge, de-vig, kelly, elo, brier, calibración); test unitario `glossary["edge"]` contiene "Ventaja"
+- [x] 2.2 RED→GREEN `frontend/src/components/GlossaryTerm.tsx`: término expandible `<details>`-style, touch-friendly; tests: expand/collapse, sin entrada → sin ícono
+- [x] 2.3 Actualizar `frontend/src/api/types.ts`: agregar `SignalExplanation`, `ExplainSection`, `ExplainStep` espejo del schema Pydantic
+- [x] 2.4 RED→GREEN `frontend/src/components/SignalCard.tsx`: muestra fecha·partido, "Apostale a X", cuota+bookmaker, badge edge, stake, botón "¿Por qué? →"; usa formatters.ts existentes (sin aritmética); tests: escenario id=10 badge="14.7%", stake="$120.16", cuota="1.47 (gtbets)", texto "Apostale a México"
+- [x] 2.5 RED→GREEN `frontend/src/components/SignalCardGroup.tsx`: agrupa con `groupSignals`; hint "⚠ {n} señales sobre este partido — exposición correlacionada" solo si ≥2; tests: escenario Haiti(2 señales)+Brasil(1); orden server intacto
 
 ## Phase 3: Frontend drawer (strict TDD, docker-only vitest)
 
-- [ ] 3.1 RED→GREEN `frontend/src/components/ExplainDrawer.tsx`: `role=dialog aria-modal`, `fixed inset-0 z-50`; lazy `useQuery(['explain', id], enabled=open)`; skeleton de carga DENTRO del drawer; "Error al cargar explicación" en fallo; cierre X/Escape(keydown effect)/click-outside(backdrop onClick); autofocus en botón X (ref+useEffect); responsive bottom sheet en mobile (`< 640px`); renderiza secciones con `label_es` + `GlossaryTerm` inline; tests: open/close/Escape, skeleton, error banner, tooltip glosario
+- [x] 3.1 RED→GREEN `frontend/src/components/ExplainDrawer.tsx`: `role=dialog aria-modal`, `fixed inset-0 z-50`; lazy `useQuery(['explain', id], enabled=open)`; skeleton de carga DENTRO del drawer; "Error al cargar explicación" en fallo; cierre X/Escape(keydown effect)/click-outside(backdrop onClick); autofocus en botón X (ref+useEffect); responsive bottom sheet en mobile (`< 640px`); renderiza secciones con `label_es` + `GlossaryTerm` inline; tests: open/close/Escape, skeleton, error banner, tooltip glosario
 
 ## Phase 4: Integración
 
-- [ ] 4.1 `frontend/src/pages/SignalsPage.tsx`: reemplazar `SignalsTable` por `SignalCardGroup` + `ExplainDrawer`; conservar filtro `min_edge`; empty state "Sin señales con ese filtro"
-- [ ] 4.2 Eliminar `frontend/src/components/SignalsTable.tsx` y `SignalsTable.test.tsx`; verificar cero imports rotos: `docker compose run --rm frontend rg SignalsTable src/`
-- [ ] 4.3 Actualizar/agregar tests de integración de `SignalsPage` con explain mockeado; suite frontend completa verde + `npm run build` limpio (sin errores TS)
+- [x] 4.1 `frontend/src/pages/SignalsPage.tsx`: reemplazar `SignalsTable` por `SignalCardGroup` + `ExplainDrawer`; conservar filtro `min_edge`; empty state "Sin señales con ese filtro"
+- [x] 4.2 Eliminar `frontend/src/components/SignalsTable.tsx` y `SignalsTable.test.tsx`; verificar cero imports rotos: `docker compose run --rm frontend rg SignalsTable src/`
+- [x] 4.3 Actualizar/agregar tests de integración de `SignalsPage` con explain mockeado; suite frontend completa verde + `npm run build` limpio (sin errores TS)
 
 ## Phase 5: Cierre
 
-- [ ] 5.1 Smoke real desde contenedor: `curl http://localhost:8000/api/v1/signals/10/explain` (verificar secciones); abrir `http://localhost:5173` y pulsar "¿Por qué? →" en signal id=10 — documentar resultado en apply-progress
-- [ ] 5.2 Backend suite verde + ruff; frontend suite verde + build; commits conventional por unidad lógica (feat/refactor/test/chore)
-- [ ] 5.3 Marcar checkboxes en tasks.md; salvar apply-progress en engram (merge si existe `sdd/dashboard-ux-explicable/apply-progress`)
+- [x] 5.1 Smoke real desde contenedor: `curl http://localhost:8000/api/v1/signals/10/explain` (verificar secciones); abrir `http://localhost:5173` y pulsar "¿Por qué? →" en signal id=10 — documentar resultado en apply-progress
+- [x] 5.2 Backend suite verde + ruff; frontend suite verde + build; commits conventional por unidad lógica (feat/refactor/test/chore)
+- [x] 5.3 Marcar checkboxes en tasks.md; salvar apply-progress en engram (merge si existe `sdd/dashboard-ux-explicable/apply-progress`)
