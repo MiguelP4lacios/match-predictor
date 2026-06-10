@@ -7,7 +7,7 @@ mismo Team por nombre o por su propio alias. Cachea en memoria para no golpear l
 BD en cada una de las ~49k filas.
 """
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Team, TeamAlias
@@ -64,7 +64,11 @@ class TeamResolver:
         if key in self._name_cache:
             return self._session.get(Team, self._name_cache[key])
 
-        team = self._session.scalar(select(Team).where(Team.name == norm))
+        # Case-insensitive lookup usando el índice funcional uq_team_name_lower (D7).
+        # Evita duplicar "Argentina" y "argentina" como dos equipos distintos.
+        team = self._session.scalar(
+            select(Team).where(func.lower(Team.name) == norm.lower())
+        )
         if team is None:
             if not create_missing:
                 return None
