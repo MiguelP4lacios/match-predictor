@@ -1,0 +1,98 @@
+# Stack standalone de producción (Mundial 2026)
+#
+# Uso: docker compose -f docker-compose.prod.yml up -d --build
+#
+# Diferencias vs docker-compose.yml (dev):
+#   - api/ingest/migrate/scheduler: SIN bind-mount (.:/app); el código viene de la imagen
+#   - api: SIN --reload (usa el CMD del Dockerfile), SIN puerto público
+#   - db: SIN puerto público
+#   - scheduler: profiles: [manual] — no arranca con up -d por defecto
+#   - frontend: imagen nginx multi-stage (frontend/Dockerfile target:prod)
+#                único puerto expuesto: 127.0.0.1:8080:80
+#
+# Acceso: SOLO por túnel SSH → ssh -L 8080:localhost:8080 user@VPS_IP
+
+x-app: &app
+  build: .
+  image: match_predictor-app
+  environment: &app-env
+    # En la red interna de compose el host de la BD es `db`, no localhost.
+    DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/match_predictor
+    APP_NAME: match-predictor
+    DEBUG: "false"
+    # Leída del .env local (nunca commiteada).
+    ODDS_API_KEY: ${ODDS_API_KEY:-}
+  # Sin volumes: sin bind-mount de código (el código viene de la imagen).
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: match_predictor
+    # Sin ports: la BD no es accesible desde el host, solo desde la red interna.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d match_predictor"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    <<: *app
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: alembic upgrade head
+
+  ingest:
+    <<: *app
+    restart: "no"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # Sin --force: respeta sync_log (no re-descarga si ya está ingesta hecha).
+    # Para forzar manualmente: docker compose -f docker-compose.prod.yml run --rm ingest python -m app.ingestion.run --force
+    command: python -m app.ingestion.run
+
+  api:
+    <<: *app
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # Sin ports: accesible solo en la red interna (nginx hace el proxy desde :8080).
+    # Sin command: usa el CMD del Dockerfile (uvicorn sin --reload).
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  scheduler:
+    <<: *app
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: python -m app.scheduler.run
+    profiles:
+      - manual
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    ports:
+      - "127.0.0.1:8080:80"
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
