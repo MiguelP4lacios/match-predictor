@@ -56,6 +56,21 @@ migrations/    # Alembic
 docs/adr/      # decisiones de arquitectura
 ```
 
+## Deploy
+
+Para desplegar en producción (VPS DigitalOcean, Mundial 2026), ver el runbook completo:
+
+```bash
+# Desde el Mac, una sola vez:
+bash scripts/migrate_data.sh root@VPS_IP
+
+# Acceso al dashboard vía túnel SSH:
+ssh -L 8080:localhost:8080 root@VPS_IP
+# → http://localhost:8080
+```
+
+Documentación completa en [`docs/deploy.md`](docs/deploy.md).
+
 ## Estado
 
 Fase 1: esqueleto + modelos de datos. Próximo: capa `DataSource` + ingesta.
