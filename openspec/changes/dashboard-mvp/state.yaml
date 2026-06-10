@@ -1,0 +1,20 @@
+change: dashboard-mvp
+phase: tasks
+artifact_store: hybrid
+execution_mode: interactive
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  verify_report: false
+tasks_progress:
+  completed: []
+  pending: [Phase 1 (scaffolding+compose), Phase 2 (formatters+client TDD), Phase 3 (componentes TDD), Phase 4 (páginas+router), Phase 5 (prod artifacts), Phase 6 (verificación final)]
+last_updated: 2026-06-10
+notes: |
+  31 tasks. npm SIEMPRE en contenedor. Batching apply: A=Ph1-2 (scaffolding+core, bloqueante),
+  B=Ph3+5 (componentes+Dockerfile prod, paralelos), C=Ph4 (páginas), D=Ph6 (cierre).
+  Los 6 formatters numéricos del spec son tests VERBATIM (incl. formatMoney sobre STRING "120.16"
+  y formatRoi(null)→"—"). Esperando aprobación del usuario para apply (interactivo).
