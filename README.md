@@ -29,6 +29,20 @@ docker compose down                                 # bajar (datos quedan en pgd
 docker compose down -v                              # bajar y BORRAR datos
 ```
 
+> **ADVERTENCIA — `docker compose down -v` DESTRUYE todos los datos de Postgres**,
+> incluidas las cuotas capturadas en directo (son **irrecuperables**; no hay histórico
+> gratuito de odds de selecciones). Antes de cualquier operación destructiva ejecutá:
+>
+> ```bash
+> bash scripts/backup.sh   # pg_dump comprimido → backups/YYYY-MM-DD_HHMMSS.sql.gz
+> ```
+
+> **Nota durante el torneo**: el proceso de `docker compose` se ejecuta en segundo
+> plano, pero si tu Mac entra en suspensión la BD deja de recibir escrituras. Usá
+> `caffeinate -i docker compose up -d --build` o activá "Prevent your Mac from
+> automatically sleeping" en las preferencias de energía mientras el Mundial esté
+> en curso.
+
 
 ## Estructura
 

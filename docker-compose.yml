@@ -25,12 +25,13 @@ services:
   db:
     image: postgres:16-alpine
     container_name: match_predictor_db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: match_predictor
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -60,11 +61,12 @@ services:
   api:
     <<: *app
     container_name: match_predictor_api
+    restart: unless-stopped
     depends_on:
       migrate:
         condition: service_completed_successfully
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   scheduler:

@@ -39,17 +39,17 @@
 
 ## Phase 5: Backfill competition.kind
 
-- [ ] 5.1 Crear `scripts/backfill_kind.py`: snapshot distribución `kind` antes; reclasifica todas las filas con `classify_competition_kind`; snapshot después. Correr: `docker compose run --rm api python scripts/backfill_kind.py`. match-ingestion R1 (backfill)
-- [ ] 5.2 Verificar en output que torneos CONIFA/Viva/minor pasaron a `OTHER`; registrar distribución antes/después en el commit message.
+- [x] 5.1 Crear `scripts/backfill_kind.py`: snapshot distribución `kind` antes; reclasifica todas las filas con `classify_competition_kind`; snapshot después. Correr: `docker compose run --rm api python scripts/backfill_kind.py`. match-ingestion R1 (backfill)
+- [x] 5.2 Verificar en output que torneos CONIFA/Viva/minor pasaron a `OTHER`; registrar distribución antes/después en el commit message.
 
 ## Phase 6: Ops Hardening
 
-- [ ] 6.1 `docker-compose.yml`: `restart: unless-stopped` en `db` y `api`; binds `127.0.0.1:5432:5432` y `127.0.0.1:8000:8000`. ops-resilience R3.S1
-- [ ] 6.2 `Dockerfile`: añadir `COPY uv.lock .` antes de `RUN uv sync`; añadir flag `--frozen`. **MANUAL**: verificar que build falla con lock desincronizado. ops-resilience R3.S2
-- [ ] 6.3 `README.md`: warning `down -v elimina todos los datos de Postgres`; instrucción de ejecutar backup previo; nota `caffeinate` durante el torneo. ops-resilience R2, R3
+- [x] 6.1 `docker-compose.yml`: `restart: unless-stopped` en `db` y `api`; binds `127.0.0.1:5432:5432` y `127.0.0.1:8000:8000`. ops-resilience R3.S1
+- [x] 6.2 `Dockerfile`: añadir `COPY uv.lock .` antes de `RUN uv sync`; añadir flag `--frozen`. **MANUAL**: verificar que build falla con lock desincronizado. ops-resilience R3.S2
+- [x] 6.3 `README.md`: warning `down -v elimina todos los datos de Postgres`; instrucción de ejecutar backup previo; nota `caffeinate` durante el torneo. ops-resilience R2, R3
 
 ## Phase 7: Elo Recompute + Verificación Final
 
-- [ ] 7.1 Recompute Elo: `docker compose run --rm api python -c "from app.model.elo_engine import EloEngine; EloEngine().compute()"`. Verificar nueva fila `elo-vN` en `model_version`. ops-resilience R4
-- [ ] 7.2 Suite final: `docker compose run --rm api pytest` verde; `docker compose run --rm api ruff check .` sin errores.
-- [ ] 7.3 **MANUAL-OPTIONAL**: `SELECT kind, count(*) FROM competition GROUP BY kind ORDER BY count DESC` — confirmar 0 rows WORLD_CUP para torneos no-FIFA; sin kind NULL.
+- [x] 7.1 Recompute Elo: `docker compose run --rm api python -m app.model.run_elo`. Verificar nueva fila `elo-vN` en `model_version`. ops-resilience R4
+- [x] 7.2 Suite final: `docker compose run --rm api pytest` verde; `docker compose run --rm api ruff check .` sin errores.
+- [x] 7.3 **MANUAL-OPTIONAL**: `SELECT kind, count(*) FROM competition GROUP BY kind ORDER BY count DESC` — confirmar 0 rows WORLD_CUP para torneos no-FIFA; sin kind NULL.

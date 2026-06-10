@@ -16,10 +16,11 @@ ENV UV_COMPILE_BYTECODE=1 \
     PYTHONPATH=/app \
     PYTHONUNBUFFERED=1
 
-# Capa de deps cacheable: solo se reconstruye si cambia pyproject.
+# Capa de deps cacheable: solo se reconstruye si cambian pyproject/lockfile.
+# --frozen: falla si uv.lock no está en sync con pyproject.toml (detecta drift).
 # Incluye el extra `dev` (pytest, ruff): la misma imagen sirve dev + tests.
-COPY pyproject.toml ./
-RUN uv sync --extra dev --no-install-project
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --extra dev --no-install-project
 
 # En dev el código llega por bind-mount y pisa esto; en prod/CI la imagen ya lo trae.
 COPY app ./app
