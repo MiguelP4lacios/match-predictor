@@ -29,7 +29,7 @@ export default function SignalsTable({ items }: SignalsTableProps) {
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b bg-gray-50 text-left text-xs font-semibold uppercase text-gray-500">
-            <th className="px-3 py-2">Resultado</th>
+            <th className="px-3 py-2">Apostar a</th>
             <th className="px-3 py-2">P(model)</th>
             <th className="px-3 py-2">Mejor cuota</th>
             <th className="px-3 py-2">Edge</th>
