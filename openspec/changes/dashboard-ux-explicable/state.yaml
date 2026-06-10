@@ -1,5 +1,5 @@
 change: dashboard-ux-explicable
-phase: tasks
+phase: apply
 artifact_store: hybrid
 execution_mode: interactive
 artifacts:
@@ -7,15 +7,17 @@ artifacts:
   proposal: true
   specs: true
   design: true
-  tasks: true   # engram OK
+  tasks: true
+  apply_progress: true
   verify_report: false
 tasks_progress:
-  completed: []
-  pending: [Phase 1 (backend ratings+explain+router), Phase 2 (glossary+SignalCard), Phase 3 (ExplainDrawer), Phase 4 (integración+borrar tabla), Phase 5 (cierre)]
+  completed: [Phase 1 (backend ratings+explain+router, 15 tests), Phase 2 (glossary+SignalCard, 24 tests), Phase 3 (ExplainDrawer, 11 tests), Phase 4 (SignalsPage cards+drawer, tabla BORRADA, 7 tests), Phase 5 (smoke real + commits)]
+  pending: []
 last_updated: 2026-06-10
 notes: |
-  19 tasks. Batching apply: A=Phase 1 (backend), B=Phases 2-3 (frontend componentes, paralelo a A),
-  C=Phases 4-5 (integración+cierre, necesita A y B). Riesgos: extracción _lookup_rating con tests
-  de predict como safety net; reconstrucción del triple al captured_at exacto del odds_id (si no
-  matchea el snapshot, la reconciliación 1e-3 falla); borrado de SignalsTable con rg de imports
-  obligatorio. Esperando aprobación del usuario para apply (interactivo).
+  Apply COMPLETO en 3 batches (A backend / B componentes en paralelo / C integración).
+  Suites: 140 backend + 93 frontend (10 de SignalsTable borrados, +7 de SignalsPage), builds
+  limpios. Smoke real: GET /signals/10/explain por el proxy devuelve las 5 secciones con
+  glossary_term y los números reconciliando (p_model 0.83394, overround 0.99065). Tabla
+  retirada (rg limpio). 10 commits totales del change. Gotchas: NO aria-hidden en backdrop;
+  user-event no instalado → fireEvent. Esperando aprobación del usuario para verify.
