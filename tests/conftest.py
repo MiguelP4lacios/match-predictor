@@ -6,7 +6,7 @@ truncar tablas.
 """
 
 import pytest
-from sqlalchemy import create_engine, event
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 # La DATABASE_URL viene de la variable de entorno inyectada por docker compose

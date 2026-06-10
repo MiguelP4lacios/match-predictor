@@ -7,7 +7,6 @@ ROJO hasta que M4 agregue el label 'OTHER'.  Después de `alembic upgrade head`
 (que incluye M4) este test queda VERDE permanentemente.
 """
 
-import pytest
 
 from app.models.competition import Competition
 from app.models.enums import CompetitionKind

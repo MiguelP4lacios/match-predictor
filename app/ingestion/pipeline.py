@@ -8,8 +8,10 @@ sync_log para idempotencia (no re-cargar lo ya cargado).
 from datetime import UTC, datetime
 
 from sqlalchemy import select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.ingestion.classification import classify_competition_kind
 from app.ingestion.resolver import TeamResolver
 from app.ingestion.sources.base import GoalSource, ResultsSource, ShootoutSource
 from app.models import Competition, GoalEvent, Match, Shootout, SyncLog
@@ -19,18 +21,11 @@ _BATCH = 1000
 
 
 def infer_competition_kind(tournament: str) -> CompetitionKind:
-    """Mapea el texto libre de martj42 a un kind. El orden importa:
-    'FIFA World Cup qualification' contiene 'world cup' pero es QUALIFIER."""
-    t = tournament.lower()
-    if "qualification" in t or "qualifier" in t:
-        return CompetitionKind.QUALIFIER
-    if "nations league" in t:
-        return CompetitionKind.NATIONS_LEAGUE
-    if "world cup" in t:
-        return CompetitionKind.WORLD_CUP
-    if "friendly" in t:
-        return CompetitionKind.FRIENDLY
-    return CompetitionKind.CONTINENTAL
+    """Delegado a `classification.classify_competition_kind` — implementación única (D4).
+
+    Mantenido para compatibilidad con código que ya importa esta función.
+    """
+    return classify_competition_kind(tournament)
 
 
 def infer_stage(tournament: str) -> MatchStage | None:
@@ -75,7 +70,15 @@ class ResultsIngestionPipeline:
     # --- Load steps ---
 
     def _load_matches(self) -> int:
+        """Inserta o actualiza matches en lotes de _BATCH (D5).
+
+        Usa `ON CONFLICT (match_date, home_team_id, away_team_id) DO UPDATE`
+        sobre `uq_match_identity`.  Actualiza score/status/campos descriptivos;
+        preserva `id` y `competition_id` (evita doble conteo Elo en reclasif.).
+        """
+        rows: list[dict] = []
         count = 0
+
         for rm in self._source.fetch_matches():
             home = self._resolver.resolve(rm.source, rm.home_team)
             away = self._resolver.resolve(rm.source, rm.away_team)
@@ -84,26 +87,49 @@ class ResultsIngestionPipeline:
                 if rm.home_score is not None
                 else MatchStatus.SCHEDULED
             )
-            self._session.add(
-                Match(
-                    competition_id=self._competition_id(rm.tournament),
-                    match_date=rm.match_date,
-                    home_team_id=home.id,
-                    away_team_id=away.id,
-                    neutral_site=rm.neutral,
-                    stage=infer_stage(rm.tournament),
-                    status=status,
-                    home_score=rm.home_score,
-                    away_score=rm.away_score,
-                    city=rm.city,
-                    country=rm.country,
-                )
+            rows.append(
+                {
+                    "competition_id": self._competition_id(rm.tournament),
+                    "match_date": rm.match_date,
+                    "home_team_id": home.id,
+                    "away_team_id": away.id,
+                    "neutral_site": rm.neutral,
+                    "stage": infer_stage(rm.tournament),
+                    "status": status,
+                    "home_score": rm.home_score,
+                    "away_score": rm.away_score,
+                    "city": rm.city,
+                    "country": rm.country,
+                }
             )
             count += 1
-            if count % _BATCH == 0:
-                self._session.flush()
-        self._session.flush()
+            if len(rows) >= _BATCH:
+                self._upsert_match_batch(rows)
+                rows.clear()
+
+        if rows:
+            self._upsert_match_batch(rows)
+
         return count
+
+    def _upsert_match_batch(self, rows: list[dict]) -> None:
+        """Ejecuta el upsert en Postgres sobre el constraint uq_match_identity."""
+        stmt = pg_insert(Match).values(rows)
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_match_identity",
+            set_={
+                "home_score": stmt.excluded.home_score,
+                "away_score": stmt.excluded.away_score,
+                "status": stmt.excluded.status,
+                "neutral_site": stmt.excluded.neutral_site,
+                "city": stmt.excluded.city,
+                "country": stmt.excluded.country,
+                "stage": stmt.excluded.stage,
+                # competition_id e id se preservan (NO actualizar)
+            },
+        )
+        self._session.execute(stmt)
+        self._session.flush()
 
     def _load_goals(self) -> int:
         if not isinstance(self._source, GoalSource):
