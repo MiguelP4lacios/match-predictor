@@ -117,3 +117,28 @@ export interface PaperStats {
   settled: number
   roi: number | null
 }
+
+// ─── Explain endpoint types (espejo del schema Pydantic del backend) ───────────
+
+export interface ExplainStep {
+  key: string
+  label_es: string
+  /** Valor canónico raw: null → front aplica formatter; string → render verbatim */
+  raw: number | string | boolean | null
+  /** null → front formatea `raw` con formatters.ts; string → render verbatim */
+  formatted: string | null
+  /** Clave del glosario para mostrar ícono de ayuda; null → sin ícono */
+  glossary_term?: string | null
+}
+
+export interface ExplainSection {
+  key: string
+  titulo: string
+  steps: ExplainStep[]
+  /** Caveat ilustrativo o "no reconstruible desde el snapshot" */
+  note?: string | null
+}
+
+export interface SignalExplanation {
+  sections: ExplainSection[]
+}
