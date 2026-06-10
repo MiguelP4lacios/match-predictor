@@ -1,0 +1,23 @@
+change: dashboard-mvp
+phase: archived
+artifact_store: hybrid
+execution_mode: interactive
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+tasks_progress:
+  completed: [Phase 1 (scaffolding+compose), Phase 2 (formatters+client 14 tests), Phase 3 (componentes 18 tests), Phase 4 (5 páginas+router 13 tests), Phase 5 (Dockerfile prod+nginx), Phase 6 (45/45 + build + smoke real con proxy)]
+  pending: []
+last_updated: 2026-06-10
+notes: |
+  Archivado. Apply COMPLETO (2 agentes, final 59/59 frontend + 125/125 backend tras post-verify fixes).
+  Verify APPROVED-WITH-WARNINGS; 3 gaps cerradas post-verify (commit d46db89: Fragment key + empty state calibración + GroupDetailPage integration test).
+  Post-verify user-driven fixes (4 commits): limit=200 en Partidos (28fdb60), agrupación señales (0720b41), orden grupos cronológico (fa3b99a), columna "Apostar a" (01b798f).
+  Suite final verde. Dashboard vivo en http://localhost:5173 con proxy a http://api:8000.
+  Sucesor: dashboard-ux-explicable (cards + side panel para UX mejorada).
