@@ -23,7 +23,7 @@ A file `docker-compose.prod.yml` MUST exist that overrides `docker-compose.yml` 
 #### Scenario: Exactly one published port after merge
 
 - GIVEN `docker-compose.prod.yml` exists
-- WHEN `docker compose -f docker-compose.yml -f docker-compose.prod.yml config` is run
+- WHEN `docker compose -f docker-compose.prod.yml config` is run
 - THEN the merged config contains exactly one `published:` entry binding `127.0.0.1:8080`
 - AND no binding references `0.0.0.0`
 
@@ -41,7 +41,7 @@ A file `docker-compose.prod.yml` MUST exist that overrides `docker-compose.yml` 
 A script `scripts/migrate_data.sh` MUST implement the full Mac→VPS migration procedure:
 1. Run `bash scripts/backup.sh` locally (produces `backups/YYYY-MM-DD_HHMMSS.sql.gz`).
 2. `scp` the dump to the VPS.
-3. On the VPS, start `db` only: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d db`.
+3. On the VPS, start `db` only: `docker compose -f docker-compose.prod.yml up -d db`.
 4. Restore: `gunzip -c <dump> | docker compose exec -T db psql -U postgres match_predictor`.
 5. Assert row counts (MUST exit non-zero and abort if any assertion fails):
    - `match` table: ≥ 49,443
@@ -54,7 +54,7 @@ A script `scripts/migrate_data.sh` MUST implement the full Mac→VPS migration p
 - GIVEN a valid dump is restored into the VPS db container
 - WHEN `bash scripts/migrate_data.sh` verifies counts
 - THEN `match` ≥ 49,443, `odds_snapshot` > 5,800, `value_signal` ≥ 69 are confirmed
-- AND the script continues to `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build`
+- AND the script continues to `docker compose -f docker-compose.prod.yml up -d --build`
 
 #### Scenario: Incomplete restore blocks startup
 
@@ -69,13 +69,13 @@ A script `scripts/migrate_data.sh` MUST implement the full Mac→VPS migration p
 
 A script `scripts/tournament_update.sh` MUST chain the following steps using `set -e`
 (abort on first non-zero exit). The compose invocation MUST use
-`-f docker-compose.yml -f docker-compose.prod.yml`. Step 1 MUST be skipped if
+`-f docker-compose.prod.yml`. Step 1 MUST be skipped if
 `--skip-odds` flag is passed.
 
 | Step | Command |
 |------|---------|
 | 1 (optional) | `docker compose ... run --rm scheduler python -m app.scheduler.run --once` |
-| 2 | `docker compose ... run --rm api python -m app.ingestion.run --no-download` |
+| 2 | `docker compose ... run --rm ingest python -m app.ingestion.run --force  # upsert idempotente, seguro` |
 | 3 | `docker compose ... run --rm api python -m app.model.run_elo` |
 | 4 | `docker compose ... run --rm api python -m app.model.run_1x2 predict` |
 | 5 | `docker compose ... run --rm api python -m app.model.run_1x2 signals` |
@@ -107,8 +107,8 @@ sections in order:
 | Clone | HTTPS+token AND deploy key options (both documented) |
 | `.env` creation | File with `ODDS_API_KEY=<your_key>` — warn NEVER commit |
 | Data migration | Call `scripts/migrate_data.sh` with pre/post steps |
-| Stack up | `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build` |
-| Tunnel + verify | `ssh -L 8080:localhost:8080 user@VPS_IP` then `curl http://localhost:8080/api/health` |
+| Stack up | `docker compose -f docker-compose.prod.yml up -d --build` |
+| Tunnel + verify | `ssh -L 8080:localhost:8080 user@VPS_IP` then `curl http://localhost:8080/api/v1/signals  # /health no pasa por el proxy nginx` |
 | Daily ops | `scripts/tournament_update.sh` invocation + cron backup line |
 | Logs / troubleshoot | `docker compose logs -f api`, `db`, `frontend` commands |
 

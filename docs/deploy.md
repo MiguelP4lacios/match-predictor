@@ -308,3 +308,7 @@ ls -t backups/*.sql.gz | tail -n +8 | xargs rm -f
 | Backup | `bash scripts/backup.sh` |
 | Logs | `docker compose -f docker-compose.prod.yml logs -f api` |
 | Túnel SSH | `ssh -L 8080:localhost:8080 root@VPS_IP` |
+
+> **Nota de seguridad**: `docker compose config` imprime las variables de entorno
+> resueltas — incluida `ODDS_API_KEY`. No pegues su salida en issues/chats sin
+> redactarla primero.
