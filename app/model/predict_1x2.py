@@ -8,38 +8,14 @@ Upsert idempotente sobre uq_prediction_identity
   (model_version_id, match_id, market_type, outcome_code).
 """
 
-from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.model.probabilities import predict_proba
-from app.models import EloRating, Match, ModelVersion
+from app.model.ratings import HOME_ADVANTAGE, lookup_rating
+from app.models import Match, ModelVersion
 from app.models.enums import MarketType
 from app.models.model import Prediction
-
-_DEFAULT_RATING = 1500.0
-_HOME_ADVANTAGE = 100.0
-
-
-def _lookup_rating(session: Session, team_id: int, before_date) -> tuple[float, bool]:
-    """Devuelve (rating, low_confidence).
-
-    rating_date estrictamente < before_date (sin look-ahead).
-    Si no hay fila previa → (1500.0, True).
-    """
-    stmt = (
-        select(EloRating.rating)
-        .where(
-            EloRating.team_id == team_id,
-            EloRating.rating_date < before_date,
-        )
-        .order_by(EloRating.rating_date.desc())
-        .limit(1)
-    )
-    result = session.scalar(stmt)
-    if result is None:
-        return _DEFAULT_RATING, True
-    return float(result), False
 
 
 def predict_match(
@@ -63,14 +39,14 @@ def predict_match(
         raise ValueError(f"model_version_id={model_version_id} no encontrado")
 
     # Lookup point-in-time para cada equipo
-    home_rating, home_lc = _lookup_rating(session, match.home_team_id, match.match_date)
-    away_rating, away_lc = _lookup_rating(session, match.away_team_id, match.match_date)
+    home_rating, home_lc = lookup_rating(session, match.home_team_id, match.match_date)
+    away_rating, away_lc = lookup_rating(session, match.away_team_id, match.match_date)
 
     # low_confidence si CUALQUIERA de los dos equipos no tiene rating previo
     low_confidence = home_lc or away_lc
 
     # Diferencia de Elo con ventaja de localía (0 si sede neutral)
-    advantage = 0.0 if match.neutral_site else _HOME_ADVANTAGE
+    advantage = 0.0 if match.neutral_site else HOME_ADVANTAGE
     elo_diff = (home_rating + advantage) - away_rating
 
     probs = predict_proba(mv.params_json, elo_diff=elo_diff, neutral=match.neutral_site)
