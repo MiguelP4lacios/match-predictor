@@ -1,5 +1,5 @@
 change: dashboard-ux-explicable
-phase: apply
+phase: archived
 artifact_store: hybrid
 execution_mode: interactive
 artifacts:
@@ -9,15 +9,18 @@ artifacts:
   design: true
   tasks: true
   apply_progress: true
-  verify_report: false
+  verify_report: true
+  archive_report: true
+archived_at: 2026-06-10
 tasks_progress:
   completed: [Phase 1 (backend ratings+explain+router, 15 tests), Phase 2 (glossary+SignalCard, 24 tests), Phase 3 (ExplainDrawer, 11 tests), Phase 4 (SignalsPage cards+drawer, tabla BORRADA, 7 tests), Phase 5 (smoke real + commits)]
   pending: []
 last_updated: 2026-06-10
 notes: |
   Apply COMPLETO en 3 batches (A backend / B componentes en paralelo / C integración).
-  Suites: 140 backend + 93 frontend (10 de SignalsTable borrados, +7 de SignalsPage), builds
-  limpios. Smoke real: GET /signals/10/explain por el proxy devuelve las 5 secciones con
-  glossary_term y los números reconciliando (p_model 0.83394, overround 0.99065). Tabla
-  retirada (rg limpio). 10 commits totales del change. Gotchas: NO aria-hidden en backdrop;
-  user-event no instalado → fireEvent. Esperando aprobación del usuario para verify.
+  Suites: 140 backend + 94 frontend (post-verify fixes: +1 test de apuesta section).
+  Builds limpios. Smoke real: GET /signals/10/explain devuelve 6 secciones
+  ['apuesta','edge','origen_p_model','stake','calidad_modelo','metadata'].
+  Tabla retirada (rg limpio). 12 commits totales del change (incluyendo 2 fix post-verify).
+  Specs synced: signal-explanation (NEW) + dashboard-frontend delta (MERGED).
+  Ready for archive.

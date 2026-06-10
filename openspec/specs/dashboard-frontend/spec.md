@@ -39,94 +39,155 @@ La app MUST implementar react-router-dom v6 con las siguientes rutas:
 
 ### Requirement: R2 — Vista Señales
 
-La vista MUST consumir `GET /api/v1/signals` y renderizar tabla ordenada por
-`edge` DESC. Columnas: fecha, partido ("Home vs Away"), outcome (HOME→nombre equipo
-local, DRAW→"Empate", AWAY→nombre equipo visitante), p\_model, mejor cuota +
-bookmaker, edge, stake. MUST soportar filtro `min_edge` enviado como query param
-a la API.
+La vista MUST consumir `GET /api/v1/signals` y renderizar **`SignalCard`s** en el
+orden cronológico que devuelve el servidor. MUST NOT renderizar ningún elemento
+`<table>`, `<tr>` ni `<td>` en la página Señales.
+
+Cada `SignalCard` MUST mostrar:
+
+| Campo | Formato |
+|-------|---------|
+| Fecha + partido | "11/06/2026 · Mexico vs South Africa" |
+| Apuesta | "🎯 Apostale a México" (outcome humanizado, idioma del equipo) |
+| Cuota + bookmaker | "1.47 (gtbets)" |
+| Ventaja (edge) | barra/badge coloreado "14.7%" |
+| Stake sugerido | "$120.16" |
+| Botón CTA | "¿Por qué? →" |
 
 Formatters MUST cumplir exactamente:
 
 | Campo raw | Valor ejemplo | Formato renderizado |
 |---|---|---|
-| `edge` (float) | `0.0832` | `"8.3%"` (1 decimal) |
+| `edge` (float) | `0.0640` | `"6.4%"` (1 decimal) |
 | `p_model` (float) | `0.4202` | `"42.0%"` (1 decimal) |
-| `recommended_stake` (string) | `"112.7345"` | `"112.73"` (2 dec) |
-| `best_odds` (float) | `3.9` | `"3.90"` (2 dec) |
+| `recommended_stake` (string) | `"18.93"` | `"$18.93"` (2 dec, signo $) |
+| `best_odds` (float) | `1.47` | `"1.47"` (2 dec) |
 
-#### Scenario: Tabla señales (verificación orden)
+(Previously: tabla con columnas p_model/edge/stake ordenada por edge DESC; ahora
+cards en orden cronológico del server sin tabla)
 
-- GIVEN la API retorna items con edge `[0.14, 0.08, 0.20]`
+#### Scenario: Cards en orden cronológico — verificación
+
+- GIVEN la API retorna señales en orden del servidor:
+  Mexico HOME (2026-06-11, edge=14.7%), South Korea HOME (2026-06-11, edge=13.2%)
 - WHEN la vista renderiza
-- THEN las filas aparecen en orden `[0.20, 0.14, 0.08]` DESC
+- THEN SignalCard de Mexico aparece antes que la de South Korea — orden server intacto,
+  sin reordenar por edge
 
-#### Scenario: Formato edge — verificación numérica
+#### Scenario: Formato edge/stake — verificación numérica
 
-- GIVEN `edge = 0.0832`
-- WHEN `formatEdge(0.0832)` es invocado
-- THEN retorna la cadena `"8.3%"`
-
-#### Scenario: Formato stake — verificación numérica
-
-- GIVEN `recommended_stake = "112.7345"`
-- WHEN `formatStake("112.7345")` es invocado
-- THEN retorna la cadena `"112.73"`
+- GIVEN signal con `edge=0.064`, `recommended_stake="18.93"`, `best_odds=1.47`,
+  `bookmaker="gtbets"`
+- WHEN el card renderiza
+- THEN muestra badge "6.4%", stake "$18.93", cuota "1.47 (gtbets)"
 
 #### Scenario: Estado vacío
 
 - GIVEN la API retorna `{"items": [], "total": 0}`
 - WHEN la vista carga
-- THEN renderiza el texto "Sin señales con ese filtro", sin filas ni crash
+- THEN renderiza "Sin señales con ese filtro", sin cards ni crash
 
 ---
 
 ### Requirement: R2A — Agrupación por partido en vista Señales
 
-Las señales MUST mostrarse agrupadas por partido en la vista Señales. La agrupación
-es una responsabilidad de presentación exclusiva del cliente: el frontend reagrupa
-visualmente los items ya calculados por el servidor; NUNCA recalcula p\_model, edge
-ni stake.
+Las señales MUST agruparse visualmente por partido usando `SignalCard`s bajo un
+encabezado de grupo (sin tabla). La función pura
+`groupSignals(items: SignalItem[]): SignalGroup[]` MUST encapsular la lógica; el
+componente la llama y renderiza el resultado.
 
-Reglas de agrupación:
-- Las señales se agrupan por combinación `(match_date, home_team, away_team)`.
-- Los grupos preservan el orden de PRIMERA APARICIÓN en la respuesta del servidor
-  (el server ordena por `(match_date, id)` → lectura cronológica). El cliente NO
-  re-ordena — el servidor es la autoridad. *(Corregido 2026-06-10: la versión
-  inicial ordenaba por max edge DESC y rompía el orden cronológico.)*
-- Dentro de cada grupo, el orden de señales es el que entrega el servidor
-  (el cliente NO altera el orden relativo).
-- El encabezado de partido (fecha + "Home vs Away") se renderiza UNA SOLA VEZ
-  por grupo, como fila de cabecera antes de las filas de outcome del grupo.
-- Grupos con 2 o más señales MUST mostrar el texto de alerta de exposición
-  correlacionada: `"⚠ 2 señales sobre este partido — exposición correlacionada"`.
+Reglas de agrupación (comportamiento sin cambios):
+- Agrupación por clave `(match_date, home_team, away_team)`.
+- Orden de grupos = primera aparición en la respuesta del servidor.
+- Orden relativo dentro del grupo = el del servidor.
+- Grupos con ≥2 señales MUST mostrar `"⚠ {n} señales sobre este partido — exposición
+  correlacionada"` como subtítulo del grupo de cards.
 - Grupos con 1 señal NO muestran dicho texto.
 
-La función pura `groupSignals(items: SignalItem[]): SignalGroup[]` encapsula la
-lógica de agrupación y ordenación; el componente la llama y renderiza el resultado.
+(Previously: agrupación mediante fila de cabecera `<tr>` + filas de outcome en tabla;
+ahora cards agrupadas visualmente bajo encabezado de grupo, sin tabla)
 
-#### Scenario: Orden de grupos = orden del servidor (cronológico) — escenario numérico
+#### Scenario: Agrupación con hint de exposición — escenario numérico
 
-- GIVEN la API retorna 3 señales en orden del servidor (`match_date, id`):
-  - Partido A (Haiti vs Scotland, 2026-06-20): HOME edge=9.7%, DRAW edge=5.1%
-  - Partido B (Brasil vs Argentina, 2026-06-21): AWAY edge=14.1%
-  - Orden del servidor: A-HOME(9.7%), A-DRAW(5.1%), B-AWAY(14.1%)
+- GIVEN la API retorna: Haiti HOME (2026-06-20, edge=9.7%), Haiti DRAW (2026-06-20,
+  edge=5.1%), Brasil AWAY (2026-06-21, edge=14.1%)
 - WHEN la vista renderiza
-- THEN los grupos aparecen en este orden:
-  1. Grupo A (Haiti vs Scotland, 2026-06-20) — primero por fecha, con señales HOME(9.7%) y DRAW(5.1%) en ese orden
-  2. Grupo B (Brasil vs Argentina, 2026-06-21) — segundo por fecha, aunque su edge (14.1%) sea mayor
-
-#### Scenario: Hint de exposición correlacionada
-
-- GIVEN el partido A (Haiti vs Scotland) tiene 2 señales
-- WHEN la vista renderiza el grupo A
-- THEN muestra "⚠ 2 señales sobre este partido — exposición correlacionada"
-  junto al encabezado del grupo
+- THEN grupo Haiti muestra 2 cards con hint "⚠ 2 señales sobre este partido —
+  exposición correlacionada"; grupo Brasil muestra 1 card sin hint; orden: Haiti → Brasil
 
 #### Scenario: Sin hint para partido de señal única
 
-- GIVEN el partido B (Brasil vs Argentina) tiene 1 sola señal
-- WHEN la vista renderiza el grupo B
+- GIVEN el partido Brasil vs Argentina tiene 1 sola señal
+- WHEN la vista renderiza ese grupo
 - THEN NO muestra texto de exposición correlacionada para ese grupo
+
+---
+
+### Requirement: R2B — ExplainDrawer
+
+La vista Señales MUST incluir el componente `ExplainDrawer` que:
+- MUST abrirse al pulsar "¿Por qué? →" en cualquier `SignalCard`, cargando
+  `GET /api/v1/signals/{id}/explain`.
+- MUST mostrar skeleton de carga dentro del drawer (no overlay blanco ni spinner global).
+- MUST cerrarse con X, tecla Escape, o click fuera del drawer.
+- MUST renderizar las secciones de la respuesta con sus `label_es` como títulos y
+  valores `formatted` verbatim — MUST NOT interpretar ni recomputar números.
+- En error MUST mostrar "Error al cargar explicación" dentro del drawer.
+- En mobile (viewport < 640px) MUST renderizarse como bottom sheet a ancho completo.
+
+#### Scenario: Apertura y contenido
+
+- GIVEN signal id=10 con explain disponible (edge="14.7%", stake="120.16")
+- WHEN el usuario pulsa "¿Por qué? →" en la SignalCard de Mexico HOME
+- THEN el drawer se abre con skeleton, luego muestra bloques edge/p_model/stake/calidad
+  con p_model formatted="83.4%", edge formatted="14.7%", recommended_stake="$120.16"
+
+#### Scenario: Cierre por Escape
+
+- GIVEN el ExplainDrawer está abierto
+- WHEN el usuario presiona tecla Escape
+- THEN el drawer se cierra; foco retorna al botón "¿Por qué? →" del card
+
+#### Scenario: Error de fetch en drawer
+
+- GIVEN el endpoint retorna 500
+- WHEN el drawer intenta cargar la explicación
+- THEN muestra "Error al cargar explicación" dentro del drawer, sin pantalla en blanco
+
+---
+
+### Requirement: R2C — Glosario inline (lib/glossary.ts)
+
+El módulo `lib/glossary.ts` MUST exportar:
+```ts
+export const glossary: Record<string, string>
+```
+con estas entradas exactas (español de hincha):
+
+| Clave | Definición |
+|-------|-----------|
+| `edge` | "Ventaja — tu probabilidad estimada menos la implícita en la cuota" |
+| `de-vig` | "Quitar el margen de la casa para ver la probabilidad justa" |
+| `kelly` | "Fórmula para apostar justo lo que vale la ventaja" |
+| `elo` | "Puntaje de fuerza del equipo, actualizado tras cada partido" |
+| `brier` | "Error cuadrático de las predicciones (menor = mejor)" |
+| `calibración` | "Qué tan seguido se cumple lo que el modelo predice" |
+
+El `ExplainDrawer` MUST renderizar un ícono de ayuda (?) junto a cada `label_es` que
+coincida con una clave del glosario; al hacer hover/focus MUST mostrar su definición
+como tooltip.
+
+#### Scenario: Tooltip de glosario en drawer
+
+- GIVEN el drawer muestra el paso con label_es que contiene "edge"
+- WHEN el usuario hace hover/focus en el ícono (?) junto a ese label
+- THEN aparece tooltip: "Ventaja — tu probabilidad estimada menos la implícita en la cuota"
+
+#### Scenario: Términos sin entrada — sin tooltip
+
+- GIVEN un label_es sin coincidencia en `glossary`
+- WHEN el drawer renderiza ese paso
+- THEN no muestra ícono de ayuda para ese paso
 
 ---
 
@@ -288,19 +349,31 @@ bind-mount de `./frontend:/app`, y volumen anónimo para `/app/node_modules`
 
 ### Requirement: R10 — Testing
 
-Los tests MUST usar vitest + Testing Library. MUST cubrir:
+Los tests MUST usar vitest + Testing Library. Lista completa MUST cubrir:
 
 | Test | Tipo |
 |---|---|
 | `formatEdge(0.0832)` → `"8.3%"` | unit formatter |
 | `formatProbability(0.4202)` → `"42.0%"` | unit formatter |
-| `formatStake("112.7345")` → `"112.73"` | unit formatter |
-| `formatOdds(3.9)` → `"3.90"` | unit formatter |
+| `formatStake("18.93")` → `"$18.93"` | unit formatter |
+| `formatOdds(1.47)` → `"1.47"` | unit formatter |
 | `formatROI(null)` → `"—"` | unit formatter |
 | `formatROI(0.125)` → `"+12.5%"` | unit formatter |
-| `<SignalsTable items={...}>` renderiza filas en orden edge DESC | component |
-| `<SignalsTable items={[]}>` renderiza "Sin señales con ese filtro" | component |
-| `<GroupCard standings={...}>` respeta orden del servidor sin reordenar | component |
+| `<SignalCard signal={...}>` muestra "¿Por qué? →", edge="14.7%", stake="$120.16" | component |
+| `groupSignals([...])` retorna grupos en orden de primera aparición | unit |
+| `<ExplainDrawer>` cierra con Escape | component |
+| `<ExplainDrawer>` muestra skeleton mientras carga | component |
+| `<ExplainDrawer>` muestra "Error al cargar explicación" si fetch falla | component |
+| `glossary["edge"]` contiene la cadena "Ventaja" | unit |
+| `<GroupCard standings={...}>` respeta orden del servidor | component |
 | `<PaperStats roi={null}>` muestra `"—"` | component |
 
-E2E tests están FUERA de scope (no vitest-browser, no Playwright).
+(Previously: incluía tests de `<SignalsTable>` — reemplazados por tests de `<SignalCard>`
+y `<ExplainDrawer>`)
+
+#### Scenario: SignalCard renderiza ventaja y stake
+
+- GIVEN signal con `edge=0.14724`, `recommended_stake="120.16"`, `best_odds=1.47`,
+  `bookmaker="gtbets"`, `outcome_code="HOME"`, `home_team="Mexico"`
+- WHEN `<SignalCard signal={signal} onExplain={() => {}} />` renderiza
+- THEN muestra badge "14.7%", stake "$120.16", cuota "1.47 (gtbets)", texto "Apostale a México"
