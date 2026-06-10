@@ -12,11 +12,10 @@ Todos los tests usan db_session (SAVEPOINT isolation) definido en conftest.py.
 import datetime
 import decimal
 
-import pytest
 from sqlalchemy.orm import Session
 
 # RED: fallan porque app/model/explain.py no existe todavía
-from app.model.explain import Explanation, ExplainSection, ExplainStep, build_explanation
+from app.model.explain import ExplainSection, ExplainStep, Explanation, build_explanation
 from app.models.betting import ValueSignal
 from app.models.competition import Competition
 from app.models.enums import CompetitionKind, MarketType, MatchStatus
@@ -24,7 +23,6 @@ from app.models.match import Match
 from app.models.model import ModelVersion, Prediction
 from app.models.odds import Odds
 from app.models.team import Team
-
 
 # ---------------------------------------------------------------------------
 # Helpers de fixture sintéticos
@@ -158,7 +156,8 @@ def _make_signal(
 def _find_section(explanation: Explanation, key: str) -> ExplainSection:
     """Busca sección por key o falla con mensaje claro."""
     s = next((s for s in explanation.sections if s.key == key), None)
-    assert s is not None, f"Sección '{key}' no encontrada en {[s.key for s in explanation.sections]}"
+    keys = [s.key for s in explanation.sections]
+    assert s is not None, f"Sección '{key}' no encontrada en {keys}"
     return s
 
 
@@ -226,7 +225,10 @@ def test_reconciliation_canonical_raws_match_persisted_columns(db_session):
 
 
 def test_reconciliation_p_fair_equals_p_model_minus_edge(db_session):
-    """p_fair derivado = p_model − edge exactamente (segunda triangulación con valores distintos)."""
+    """p_fair derivado = p_model − edge exactamente.
+
+    Segunda triangulación con valores distintos para forzar lógica real.
+    """
     comp = _make_competition(db_session)
     home, away = _make_teams(db_session)
     match = _make_match(db_session, comp, home, away)
