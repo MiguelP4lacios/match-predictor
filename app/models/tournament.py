@@ -38,3 +38,4 @@ class GroupTeam(Base):
     team_id: Mapped[int] = mapped_column(ForeignKey("team.id"))
 
     group: Mapped["TournamentGroup"] = relationship(back_populates="members")
+    team: Mapped["Team"] = relationship()  # noqa: F821

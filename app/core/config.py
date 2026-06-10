@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     app_name: str = "match-predictor"
     debug: bool = False
 
+    # CORS: orígenes permitidos para el frontend.
+    # En .env: CORS_ORIGINS='["http://localhost:5173","http://example.com"]'
+    cors_origins: list[str] = ["http://localhost:5173"]
+
     # --- The Odds API (capturador de odds) ---
     odds_api_key: str | None = None
     odds_api_base_url: str = "https://api.the-odds-api.com/v4"
