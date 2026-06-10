@@ -79,8 +79,10 @@ export default function ModelPage() {
           </div>
 
           {/* Tabla de calibración */}
-          {data.backtest.calibration_table.length > 0 && (
+          {data.backtest.calibration_table.length > 0 ? (
             <CalibrationTable bins={data.backtest.calibration_table} />
+          ) : (
+            <p className="py-4 text-center text-gray-500">Sin datos de calibración</p>
           )}
         </>
       )}

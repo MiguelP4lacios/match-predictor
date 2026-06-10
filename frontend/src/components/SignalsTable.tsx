@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { formatEdge, formatProbability, formatStake, formatOdds } from '../lib/formatters'
 import { groupSignals } from '../lib/groupSignals'
 import type { SignalItem } from '../api/types'
@@ -37,16 +38,16 @@ export default function SignalsTable({ items }: SignalsTableProps) {
         </thead>
         <tbody>
           {groups.map((group) => (
-            <>
+            <Fragment key={group.match_key}>
               {/* Encabezado de grupo: fecha + partido + hint opcional */}
-              <tr key={group.match_key} className="border-b bg-blue-50">
+              <tr className="border-b bg-blue-50">
                 <td colSpan={5} className="px-3 py-2">
                   <span className="text-xs text-gray-500">{group.match_date}</span>
                   {' '}
                   <span className="font-semibold">{group.home_team} vs {group.away_team}</span>
                   {group.signals.length >= 2 && (
                     <span className="ml-2 text-xs font-medium text-amber-700">
-                      ⚠ 2 señales sobre este partido — exposición correlacionada
+                      ⚠ {group.signals.length} señales sobre este partido — exposición correlacionada
                     </span>
                   )}
                 </td>
@@ -72,7 +73,7 @@ export default function SignalsTable({ items }: SignalsTableProps) {
                   </tr>
                 )
               })}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
