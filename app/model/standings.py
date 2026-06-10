@@ -46,23 +46,19 @@ class StandingRow:
     """Fila de la tabla de posiciones de un grupo."""
 
     team_name: str
-    pj: int = 0   # partidos jugados
-    g: int = 0    # ganados
-    e: int = 0    # empatados
-    p: int = 0    # perdidos
-    gf: int = 0   # goles a favor
-    gc: int = 0   # goles en contra
-    dg: int = 0   # diferencia de goles (GF − GC)
+    pj: int = 0  # partidos jugados
+    g: int = 0  # ganados
+    e: int = 0  # empatados
+    p: int = 0  # perdidos
+    gf: int = 0  # goles a favor
+    gc: int = 0  # goles en contra
+    dg: int = 0  # diferencia de goles (GF − GC)
     pts: int = 0  # puntos
 
 
-def _accumulate(
-    members: list[TeamRef], results: list[MatchResult]
-) -> dict[int, StandingRow]:
+def _accumulate(members: list[TeamRef], results: list[MatchResult]) -> dict[int, StandingRow]:
     """Calcula estadísticas globales de cada equipo a partir de los resultados."""
-    rows: dict[int, StandingRow] = {
-        m.team_id: StandingRow(team_name=m.name) for m in members
-    }
+    rows: dict[int, StandingRow] = {m.team_id: StandingRow(team_name=m.name) for m in members}
 
     for r in results:
         h = rows.get(r.home_id)
@@ -110,9 +106,9 @@ def _h2h_stats(
             continue
         h = stats[r.home_id]
         a = stats[r.away_id]
-        h[2] += r.home_score   # gf H2H
+        h[2] += r.home_score  # gf H2H
         a[2] += r.away_score
-        h[1] += r.home_score - r.away_score   # dg H2H
+        h[1] += r.home_score - r.away_score  # dg H2H
         a[1] += r.away_score - r.home_score
         if r.home_score > r.away_score:
             h[0] += 3

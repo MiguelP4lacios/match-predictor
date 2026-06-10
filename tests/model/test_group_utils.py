@@ -63,9 +63,7 @@ def test_derive_components_valid_12x4():
 def test_derive_components_11_components_raises():
     """Solo 11 grupos (44 equipos) → AssertionError antes de retornar."""
     # Genera 11 grupos válidos de 4
-    groups_11 = [
-        [f"T{g}{i}" for i in range(1, 5)] for g in "ABCDEFGHIJK"
-    ]
+    groups_11 = [[f"T{g}{i}" for i in range(1, 5)] for g in "ABCDEFGHIJK"]
     edges = []
     for g in groups_11:
         for i in range(len(g)):
@@ -84,9 +82,7 @@ def test_derive_components_11_components_raises():
 def test_derive_components_group_of_5_raises():
     """Una componente tiene 5 nodos → AssertionError antes de retornar."""
     # 11 grupos de 4 + 1 grupo de 5 = 12 componentes pero una tiene 5
-    groups = [
-        [f"T{g}{i}" for i in range(1, 5)] for g in "ABCDEFGHIJK"
-    ]
+    groups = [[f"T{g}{i}" for i in range(1, 5)] for g in "ABCDEFGHIJK"]
     # El último grupo tiene 5 miembros
     groups.append(["L1", "L2", "L3", "L4", "L5"])
 

@@ -27,9 +27,7 @@ Aritmética verificada manualmente antes de escribir el test:
     D: pts=2 dg=-1 gf=1  (no empate)
 """
 
-import pytest
-
-from app.model.standings import MatchResult, StandingRow, TeamRef, compute_standings
+from app.model.standings import MatchResult, TeamRef, compute_standings
 
 # ---------------------------------------------------------------------------
 # Helpers de construcción de fixtures de test
@@ -47,9 +45,7 @@ _ID = {t.name: t.team_id for t in _TEAMS_ABCD}
 
 def _mr(h: str, a: str, hg: int, ag: int) -> MatchResult:
     """Shorthand para MatchResult usando letras."""
-    return MatchResult(
-        home_id=_ID[h], away_id=_ID[a], home_score=hg, away_score=ag
-    )
+    return MatchResult(home_id=_ID[h], away_id=_ID[a], home_score=hg, away_score=ag)
 
 
 # ---------------------------------------------------------------------------
@@ -198,9 +194,7 @@ _ID_XYZ = {t.name: t.team_id for t in _TEAMS_AXYZ}
 
 
 def _mr2(h: str, a: str, hg: int, ag: int) -> MatchResult:
-    return MatchResult(
-        home_id=_ID_XYZ[h], away_id=_ID_XYZ[a], home_score=hg, away_score=ag
-    )
+    return MatchResult(home_id=_ID_XYZ[h], away_id=_ID_XYZ[a], home_score=hg, away_score=ag)
 
 
 def test_s5_triple_tie_falls_to_alphabetical():

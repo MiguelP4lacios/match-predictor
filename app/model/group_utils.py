@@ -55,8 +55,7 @@ def derive_components(edges: list[tuple[str, str]]) -> list[frozenset[str]]:
     components = [frozenset(members) for members in groups.values()]
 
     assert len(components) == 12 and all(len(c) == 4 for c in components), (
-        f"Se esperaban 12 componentes de 4 equipos; "
-        f"se obtuvieron {len(components)} componente(s): "
+        f"Se esperaban 12 componentes de 4 equipos; se obtuvieron {len(components)} componente(s): "
         + ", ".join(f"{len(c)} equipos" for c in components if len(c) != 4)
         or f"todos de tamaño válido pero {len(components)} != 12"
     )
