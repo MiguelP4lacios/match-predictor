@@ -15,24 +15,25 @@
 
 ## Phase 3: TDD RED
 
-- [ ] 3.1 `tests/test_classification.py`: FIFA WC→WORLD_CUP; CONIFA/CECAFA→OTHER; Copa América→CONTINENTAL; WC qualification→QUALIFIER; k_factor correcto por kind. match-ingestion R1.S1–S5
-- [ ] 3.2 `tests/test_upsert.py`: re-ingest no duplica (count fijo); status SCHEDULED→FINISHED se aplica. match-ingestion R2.S1–S3
-- [ ] 3.3 `tests/test_odds_persist.py`: sin fixture → `match_id IS NULL`, `unlinked_events > 0`; con fixture → `match_id NOT NULL`. odds-capture R1.S1–S2
-- [ ] 3.4 `tests/test_odds_relink.py`: `relink_orphan_odds` linkea fila NULL; commence_time desambigua entre dos fixtures del mismo par. odds-capture R1.S3, R2.S3
-- [ ] 3.5 `tests/test_outcome_code.py`: `outcome_name == "Draw"` → DRAW; equipo sin resolver → descartar + log warning. odds-capture R2.S1–S2
-- [ ] 3.6 `tests/test_resolver.py`: `"argentina"` → `Team("Argentina")` existente, sin duplicado. ops-resilience R3.S3
-- [ ] 3.7 `tests/test_model_version.py`: params cambiados → INSERT `elo-v2`; `elo-v1` y sus predictions intactos. ops-resilience R4.S1
+- [x] 3.1 `tests/test_classification.py`: FIFA WC→WORLD_CUP; CONIFA/CECAFA→OTHER; Copa América→CONTINENTAL; WC qualification→QUALIFIER; k_factor correcto por kind. match-ingestion R1.S1–S5
+- [x] 3.2 `tests/test_upsert.py`: re-ingest no duplica (count fijo); status SCHEDULED→FINISHED se aplica. match-ingestion R2.S1–S3
+- [x] 3.3 `tests/test_odds_persist.py`: sin fixture → `match_id IS NULL`, `unlinked_events > 0`; con fixture → `match_id NOT NULL`. odds-capture R1.S1–S2
+- [x] 3.4 `tests/test_odds_relink.py`: `relink_orphan_odds` linkea fila NULL; commence_time desambigua entre dos fixtures del mismo par. odds-capture R1.S3, R2.S3
+- [x] 3.5 `tests/test_outcome_code.py`: `outcome_name == "Draw"` → DRAW; equipo sin resolver → descartar + log warning. odds-capture R2.S1–S2
+- [x] 3.6 `tests/test_resolver.py`: `"argentina"` → `Team("Argentina")` existente, sin duplicado. ops-resilience R3.S3
+- [x] 3.7 `tests/test_model_version.py`: params cambiados → INSERT `elo-v2`; `elo-v1` y sus predictions intactos. ops-resilience R4.S1
 
 > Confirmar RED: `docker compose run --rm api pytest -x` — todos deben fallar aquí.
 
 ## Phase 4: TDD GREEN
 
-- [ ] 4.1 Crear `app/ingestion/classification.py`: `classify_competition_kind(name) → CompetitionKind` + `CONTINENTAL_CHAMPIONSHIPS` frozenset; actualizar `pipeline.py` para importarlo. D4
-- [ ] 4.2 `app/ingestion/pipeline.py` `_load_matches`: upsert `ON CONFLICT(match_date, home_team_id, away_team_id) DO UPDATE` (score, status, neutral, stage) en lotes de 1000. D5
-- [ ] 4.3 `app/model/elo_engine.py`: `OTHER: 30` explícito en `_K_BY_KIND`; `_record_version` → INSERT nuevo row si `params_json` difiere, reusar si idéntico. D6
-- [ ] 4.4 `app/ingestion/odds_pipeline.py`: persistir siempre (`match_id` nullable); guardar `source_event_id`/`commence_time`; DRAW estricto; discard + log si equipo no resuelto; `relink_orphan_odds(session)` con ventana ±1d. D3
-- [ ] 4.5 `app/ingestion/resolver.py`: lookup `WHERE lower(team.name) = lower(:norm)`. D7
-- [ ] 4.6 `app/ingestion/sources/odds_api.py`: `_raise_for_status_redacted(resp)` — enmascara `apiKey` query param y `X-RapidAPI-Key` con `***`. D8
+- [x] 4.0 (añadida) M4: `ALTER TYPE competition_kind ADD VALUE IF NOT EXISTS 'OTHER'` (uppercase) — SQLAlchemy serializa NOMBRES de miembros; el label `'other'` de M1 queda como cruft inofensivo. Verificado con round-trip ORM.
+- [x] 4.1 Crear `app/ingestion/classification.py`: `classify_competition_kind(name) → CompetitionKind` + `CONTINENTAL_CHAMPIONSHIPS` frozenset; actualizar `pipeline.py` para importarlo. D4
+- [x] 4.2 `app/ingestion/pipeline.py` `_load_matches`: upsert `ON CONFLICT(match_date, home_team_id, away_team_id) DO UPDATE` (score, status, neutral, stage) en lotes de 1000. D5
+- [x] 4.3 `app/model/elo_engine.py`: `OTHER: 30` explícito en `_K_BY_KIND`; `_record_version` → INSERT nuevo row si `params_json` difiere, reusar si idéntico. D6
+- [x] 4.4 `app/ingestion/odds_pipeline.py`: persistir siempre (`match_id` nullable); guardar `source_event_id`/`commence_time`; DRAW estricto; discard + log si equipo no resuelto; `relink_orphan_odds(session)` con ventana ±1d. D3
+- [x] 4.5 `app/ingestion/resolver.py`: lookup `WHERE lower(team.name) = lower(:norm)`. D7
+- [x] 4.6 `app/ingestion/sources/odds_api.py`: `_raise_for_status_redacted(resp)` — enmascara `apiKey` query param y `X-RapidAPI-Key` con `***`. D8
 
 > Confirmar GREEN: `docker compose run --rm api pytest` — todos deben pasar.
 
