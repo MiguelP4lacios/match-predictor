@@ -1,0 +1,29 @@
+change: deploy-vps
+phase: archived
+archived_at: 2026-06-10
+artifact_store: hybrid
+
+phases:
+  explore:
+    status: completed
+  propose:
+    status: completed
+  spec:
+    status: completed
+  design:
+    status: completed
+  tasks:
+    status: completed
+  apply:
+    status: completed
+  verify:
+    status: completed
+    result: PASS WITH WARNINGS
+    issues_fixed: 3
+    critical_issues: 0
+  archive:
+    status: completed
+    archived_to: openspec/changes/archive/2026-06-10-deploy-vps
+    main_specs_merged: true
+    domains:
+      - prod-deploy
