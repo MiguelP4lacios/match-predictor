@@ -81,13 +81,17 @@ def seed_groups(
     # 1. Seleccionar fixtures SCHEDULED (idempotente: acepta también stage=GROUP)
     from sqlalchemy import or_, select
 
-    fixtures = session.execute(
-        select(Match).where(
-            Match.competition_id == competition_id,
-            Match.status == MatchStatus.SCHEDULED,
-            or_(Match.stage.is_(None), Match.stage == MatchStage.GROUP),
+    fixtures = (
+        session.execute(
+            select(Match).where(
+                Match.competition_id == competition_id,
+                Match.status == MatchStatus.SCHEDULED,
+                or_(Match.stage.is_(None), Match.stage == MatchStage.GROUP),
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     if not fixtures:
         raise ValueError(
@@ -103,9 +107,7 @@ def seed_groups(
 
     teams_by_id: dict[int, str] = {
         t.id: t.name
-        for t in session.execute(
-            select(Team).where(Team.id.in_(team_ids))
-        ).scalars().all()
+        for t in session.execute(select(Team).where(Team.id.in_(team_ids))).scalars().all()
     }
 
     # 3. Construir aristas (nombre_local, nombre_visitante)
@@ -182,13 +184,13 @@ def seed_groups(
     session.flush()
 
     # 8. Imprimir tabla para verificación del usuario
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Seed grupos WC{season_year} — competition_id={competition_id}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     for letter in sorted(letter_to_teams):
         teams_sorted = sorted(letter_to_teams[letter])
         print(f"  Grupo {letter}: {', '.join(teams_sorted)}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Total: {len(letter_to_teams)} grupos × 4 equipos\n")
 
 

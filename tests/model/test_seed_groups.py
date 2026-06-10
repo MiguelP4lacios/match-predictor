@@ -37,7 +37,9 @@ def test_seed_valid_graph_inserts_groups(db_session):
         )
     )
     n_members = db_session.scalar(
-        select(func.count(GroupTeam.id)).join(TournamentGroup).where(
+        select(func.count(GroupTeam.id))
+        .join(TournamentGroup)
+        .where(
             TournamentGroup.competition_id == WC_COMPETITION_ID,
             TournamentGroup.season_year == WC_SEASON_YEAR,
         )
