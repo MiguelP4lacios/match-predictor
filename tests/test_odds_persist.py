@@ -137,3 +137,26 @@ def test_odds_with_fixture_gets_match_id(db_session):
     odds_row = db_session.scalar(select(Odds).where(Odds.source_event_id == "evt-wc-home"))
     assert odds_row is not None
     assert odds_row.match_id == match.id
+
+
+def test_capture_commitea_la_transaccion(db_session, monkeypatch):
+    """REGRESIÓN (bug de producción 2026-06-10): capture() debe COMMITEAR.
+
+    El rewrite de F3 perdió el commit: jobs.py cierra la sesión sin commitear
+    → rollback silencioso. 2 créditos gastados, 5.339 filas perdidas en la VPS.
+    El fixture SAVEPOINT no lo caza consultando: se espía el commit explícito.
+    """
+    source = FakeOddsSource([])  # sin odds: el commit debe ocurrir igual
+
+    commits = {"n": 0}
+    original_commit = db_session.commit
+
+    def spy_commit():
+        commits["n"] += 1
+        original_commit()
+
+    monkeypatch.setattr(db_session, "commit", spy_commit)
+
+    OddsCapturePipeline(db_session, source).capture()
+
+    assert commits["n"] >= 1, "capture() no commiteó — rollback silencioso al cerrar la sesión"

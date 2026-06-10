@@ -156,7 +156,8 @@ def relink_orphan_odds(session: Session) -> dict[str, int]:
 
         linked += len(rows)
 
-    session.flush()
+    # Mismo criterio que capture(): el re-link es frontera de transacción.
+    session.commit()
     return {"linked": linked, "skipped": skipped}
 
 
@@ -184,7 +185,10 @@ class OddsCapturePipeline:
             if row.match_id is None and ro.market_key in ("h2h", "totals"):
                 unlinked.add(ro.event_id)
 
-        self._session.flush()
+        # COMMIT acá, no en el caller: jobs.py cierra la sesión sin commitear y un
+        # flush sin commit es rollback silencioso (bug de producción 2026-06-10:
+        # 5.339 filas perdidas + 2 créditos quemados).
+        self._session.commit()
         return {
             "inserted": inserted,
             "unlinked_events": len(unlinked),
