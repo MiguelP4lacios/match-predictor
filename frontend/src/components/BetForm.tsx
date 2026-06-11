@@ -10,6 +10,8 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { fetchAPI, ApiError, type FieldErrors } from '../api/client'
 import type { UpcomingMatch, BetCreate, BetItem } from '../api/types'
+import { Card } from '../ui/Card'
+import { Button } from '../ui/Button'
 
 interface BetFormProps {
   matches: UpcomingMatch[]
@@ -100,133 +102,129 @@ export default function BetForm({ matches, onSuccess }: BetFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border bg-white p-4 shadow-sm">
-      <h2 className="text-base font-semibold text-gray-800">Registrar apuesta</h2>
-
-      {globalError && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{globalError}</p>
-      )}
-
-      {/* Partido */}
-      <div>
-        <label htmlFor="bet-match" className="block text-sm font-medium text-gray-700">
-          Partido
-        </label>
-        <select
-          id="bet-match"
-          aria-label="Partido"
-          value={matchId}
-          onChange={(e) => {
-            setMatchId(e.target.value)
-            setOutcome('')
-          }}
-          required
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="">— seleccioná un partido —</option>
-          {matches.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.match_date} · {m.home_team} vs {m.away_team}
-            </option>
-          ))}
-        </select>
-        {fieldErrors.match_id && (
-          <p className="mt-1 text-xs text-red-600">{fieldErrors.match_id}</p>
+    <Card title="Registrar apuesta">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {globalError && (
+          <p className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">{globalError}</p>
         )}
-      </div>
 
-      {/* Resultado */}
-      {selectedMatch && (
+        {/* Partido */}
         <div>
-          <label htmlFor="bet-outcome" className="block text-sm font-medium text-gray-700">
-            Resultado
+          <label htmlFor="bet-match" className="block text-sm font-medium text-text">
+            Partido
           </label>
           <select
-            id="bet-outcome"
-            aria-label="Resultado"
-            value={outcome}
-            onChange={(e) => setOutcome(e.target.value)}
+            id="bet-match"
+            aria-label="Partido"
+            value={matchId}
+            onChange={(e) => {
+              setMatchId(e.target.value)
+              setOutcome('')
+            }}
             required
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded border border-border bg-surface px-3 py-1.5 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">— elegí resultado —</option>
-            <option value="HOME">{getOutcomeLabel('HOME')}</option>
-            <option value="DRAW">{getOutcomeLabel('DRAW')}</option>
-            <option value="AWAY">{getOutcomeLabel('AWAY')}</option>
+            <option value="">— seleccioná un partido —</option>
+            {matches.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.match_date} · {m.home_team} vs {m.away_team}
+              </option>
+            ))}
           </select>
-          {fieldErrors.outcome_code && (
-            <p className="mt-1 text-xs text-red-600">{fieldErrors.outcome_code}</p>
+          {fieldErrors.match_id && (
+            <p className="mt-1 text-xs text-danger">{fieldErrors.match_id}</p>
           )}
         </div>
-      )}
 
-      {/* Cuota */}
-      <div>
-        <label htmlFor="bet-odds" className="block text-sm font-medium text-gray-700">
-          Cuota
-        </label>
-        <input
-          id="bet-odds"
-          type="number"
-          step="0.01"
-          min="1.01"
-          aria-label="Cuota"
-          value={odds}
-          onChange={(e) => setOdds(e.target.value)}
-          placeholder="ej. 1.85"
-          required
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        {fieldErrors.odds_taken && (
-          <p className="mt-1 text-xs text-red-600">{fieldErrors.odds_taken}</p>
+        {/* Resultado */}
+        {selectedMatch && (
+          <div>
+            <label htmlFor="bet-outcome" className="block text-sm font-medium text-text">
+              Resultado
+            </label>
+            <select
+              id="bet-outcome"
+              aria-label="Resultado"
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value)}
+              required
+              className="mt-1 block w-full rounded border border-border bg-surface px-3 py-1.5 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">— elegí resultado —</option>
+              <option value="HOME">{getOutcomeLabel('HOME')}</option>
+              <option value="DRAW">{getOutcomeLabel('DRAW')}</option>
+              <option value="AWAY">{getOutcomeLabel('AWAY')}</option>
+            </select>
+            {fieldErrors.outcome_code && (
+              <p className="mt-1 text-xs text-danger">{fieldErrors.outcome_code}</p>
+            )}
+          </div>
         )}
-      </div>
 
-      {/* Stake COP */}
-      <div>
-        <label htmlFor="bet-stake" className="block text-sm font-medium text-gray-700">
-          Stake (COP)
-        </label>
-        <input
-          id="bet-stake"
-          type="number"
-          step="100"
-          min="1"
-          aria-label="Stake"
-          value={stake}
-          onChange={(e) => setStake(e.target.value)}
-          placeholder="ej. 12000"
-          required
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        {fieldErrors.stake && (
-          <p className="mt-1 text-xs text-red-600">{fieldErrors.stake}</p>
-        )}
-      </div>
+        {/* Cuota */}
+        <div>
+          <label htmlFor="bet-odds" className="block text-sm font-medium text-text">
+            Cuota
+          </label>
+          <input
+            id="bet-odds"
+            type="number"
+            step="0.01"
+            min="1.01"
+            aria-label="Cuota"
+            value={odds}
+            onChange={(e) => setOdds(e.target.value)}
+            placeholder="ej. 1.85"
+            required
+            className="mt-1 block w-full rounded border border-border bg-surface px-3 py-1.5 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {fieldErrors.odds_taken && (
+            <p className="mt-1 text-xs text-danger">{fieldErrors.odds_taken}</p>
+          )}
+        </div>
 
-      {/* Nota opcional */}
-      <div>
-        <label htmlFor="bet-note" className="block text-sm font-medium text-gray-700">
-          Nota (opcional)
-        </label>
-        <input
-          id="bet-note"
-          type="text"
-          aria-label="Nota"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="ej. valor detectado por modelo"
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+        {/* Stake COP */}
+        <div>
+          <label htmlFor="bet-stake" className="block text-sm font-medium text-text">
+            Stake (COP)
+          </label>
+          <input
+            id="bet-stake"
+            type="number"
+            step="100"
+            min="1"
+            aria-label="Stake"
+            value={stake}
+            onChange={(e) => setStake(e.target.value)}
+            placeholder="ej. 12000"
+            required
+            className="mt-1 block w-full rounded border border-border bg-surface px-3 py-1.5 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {fieldErrors.stake && (
+            <p className="mt-1 text-xs text-danger">{fieldErrors.stake}</p>
+          )}
+        </div>
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        {submitting ? 'Registrando…' : 'Registrar apuesta'}
-      </button>
-    </form>
+        {/* Nota opcional */}
+        <div>
+          <label htmlFor="bet-note" className="block text-sm font-medium text-text">
+            Nota (opcional)
+          </label>
+          <input
+            id="bet-note"
+            type="text"
+            aria-label="Nota"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="ej. valor detectado por modelo"
+            className="mt-1 block w-full rounded border border-border bg-surface px-3 py-1.5 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+
+        <Button type="submit" variant="primary" size="md" loading={submitting}>
+          Registrar apuesta
+        </Button>
+      </form>
+    </Card>
   )
 }

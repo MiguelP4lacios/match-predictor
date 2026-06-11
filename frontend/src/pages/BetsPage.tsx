@@ -1,18 +1,16 @@
 /**
  * BetsPage — página principal de apuestas (reemplaza PaperPage).
  * Ruta: /apuestas
- * Muestra:
- *   - 2 ModeStatsBlock (PAPER / REAL)
- *   - BetForm (registro de nueva apuesta)
- *   - BetList component (lista de apuestas existentes, GET /v1/bets → BetItem[])
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchAPI } from '../api/client'
 import type { BetsPageStats, BetItem, UpcomingMatch } from '../api/types'
 import BetForm from '../components/BetForm'
 import BetListComponent from '../components/BetList'
-import Loading from '../components/Loading'
-import ErrorBanner from '../components/ErrorBanner'
+import { Card } from '../ui/Card'
+import { Stat } from '../ui/Stat'
+import { Spinner } from '../ui/Spinner'
+import { ErrorState } from '../ui/ErrorState'
 import { formatROI, formatCop } from '../lib/formatters'
 
 // ─── ModeStatsBlock ──────────────────────────────────────────────────────────
@@ -31,35 +29,22 @@ function ModeStatsBlock({ title, stats, isCop }: ModeStatsBlockProps) {
     return isCop ? formatCop(n) : n.toFixed(2)
   }
 
+  const roiValue = formatROI(stats.roi)
+  const roiTone = stats.roi === null ? 'neutral' : stats.roi > 0 ? 'success' : 'danger'
+
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-600">{title}</h3>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <Card title={title}>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Apuestas" value={String(stats.total)} />
         <Stat label="Pendientes" value={String(stats.pending)} />
         <Stat label="Cerradas" value={String(stats.settled)} />
-        <Stat
-          label="ROI"
-          value={formatROI(stats.roi)}
-          highlight={stats.roi !== null && stats.roi > 0}
-        />
+        <Stat label="ROI" value={roiValue} tone={roiTone} />
         <Stat label="Staked" value={formatValue(stats.staked)} />
         <Stat label="Returns" value={formatValue(stats.returns)} />
-        <Stat label="Ganadas" value={String(stats.won)} />
-        <Stat label="Perdidas" value={String(stats.lost)} />
+        <Stat label="Ganadas" value={String(stats.won)} tone={stats.won > 0 ? 'success' : 'neutral'} />
+        <Stat label="Perdidas" value={String(stats.lost)} tone={stats.lost > 0 ? 'danger' : 'neutral'} />
       </div>
-    </div>
-  )
-}
-
-function Stat({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div>
-      <p className="text-xs font-medium uppercase text-gray-500">{label}</p>
-      <p className={`mt-0.5 text-lg font-bold ${highlight ? 'text-green-600' : 'text-gray-800'}`}>
-        {value}
-      </p>
-    </div>
+    </Card>
   )
 }
 
@@ -96,10 +81,10 @@ export default function BetsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">Apuestas</h1>
+      <h1 className="text-xl font-bold text-text">Apuestas</h1>
 
-      {isLoading && <Loading />}
-      {isError && <ErrorBanner onRetry={invalidateAll} />}
+      {isLoading && <Spinner />}
+      {isError && <ErrorState onRetry={invalidateAll} />}
 
       {pageStats && (
         <div className="grid gap-4 md:grid-cols-2">
