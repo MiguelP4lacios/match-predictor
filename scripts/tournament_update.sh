@@ -63,13 +63,19 @@ $COMPOSE run --rm api python -m app.model.run_elo
 # ---------------------------------------------------------------------------
 # Paso 5: Generar predicciones 1X2
 # ---------------------------------------------------------------------------
-echo "[5/6] Generando predicciones 1X2..."
+echo "[5/7] Generando predicciones 1X2..."
 $COMPOSE run --rm api python -m app.model.run_1x2 predict
 
 # ---------------------------------------------------------------------------
-# Paso 6: Generar señales +EV
+# Paso 6: Simular futuros Monte Carlo (WC2026 champion/advance probabilities)
 # ---------------------------------------------------------------------------
-echo "[6/6] Generando señales +EV PAPER..."
+echo "[6/7] Simulando futuros Monte Carlo..."
+$COMPOSE run --rm api python -m app.model.run_futures simulate
+
+# ---------------------------------------------------------------------------
+# Paso 7: Generar señales +EV
+# ---------------------------------------------------------------------------
+echo "[7/7] Generando señales +EV PAPER..."
 $COMPOSE run --rm api python -m app.model.run_1x2 signals
 
 # ---------------------------------------------------------------------------

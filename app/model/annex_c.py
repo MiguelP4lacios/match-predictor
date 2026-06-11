@@ -538,7 +538,7 @@ def _build() -> dict[frozenset[str], dict[str, str]]:
         assert len(raw) == 8, f"Fila de longitud inválida: {raw!r}"
         key = frozenset(raw)
         assert len(key) == 8, f"Fila con letras duplicadas: {raw!r}"
-        slotmap = dict(zip(_SLOTS, raw))
+        slotmap = dict(zip(_SLOTS, raw, strict=True))
         if key in result:
             # Clave duplicada = error en los datos fuente
             raise ValueError(f"Clave duplicada en ANNEX_C: {key}")

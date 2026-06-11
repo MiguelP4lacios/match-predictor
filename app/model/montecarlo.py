@@ -17,8 +17,10 @@ porque los empates ocurren más en partidos parejos.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
-from numpy.random import Generator, PCG64
+from numpy.random import PCG64, Generator
 
 from app.model.annex_c import ANNEX_C
 from app.model.probabilities import predict_proba
@@ -186,7 +188,9 @@ def simulate_tournament(
 
     # Índice rápido: (group_letter, home_id, away_id) → columna en outcomes
     unplayed_idx: dict[tuple[str, int, int], int] = {}
-    for col, (gl, hid, aid) in enumerate(zip(unplayed_letter, unplayed_home, unplayed_away)):
+    for col, (gl, hid, aid) in enumerate(
+        zip(unplayed_letter, unplayed_home, unplayed_away, strict=True)
+    ):
         unplayed_idx[(gl, hid, aid)] = col
 
     # -----------------------------------------------------------------------
@@ -206,7 +210,6 @@ def simulate_tournament(
     # Bucle por iteración (fase de grupos→clasificados→eliminatorias)
     # -----------------------------------------------------------------------
     for it in range(n_iterations):
-        it_outcomes = outcomes[it]  # (n_unplayed,)
         it_hg = hg[it]
         it_ag = ag[it]
 
@@ -225,11 +228,15 @@ def simulate_tournament(
                 if (home_id, away_id) in completed_pairs[gl]:
                     continue
                 col = unplayed_idx[(gl, home_id, away_id)]
-                out = int(it_outcomes[col])
                 h_goals = int(it_hg[col])
                 a_goals = int(it_ag[col])
                 results.append(
-                    MatchResult(home_id=home_id, away_id=away_id, home_score=h_goals, away_score=a_goals)
+                    MatchResult(
+                        home_id=home_id,
+                        away_id=away_id,
+                        home_score=h_goals,
+                        away_score=a_goals,
+                    )
                 )
 
             # Calcular tabla
@@ -264,19 +271,16 @@ def simulate_tournament(
 
         # Determinar profundidad de competición por equipo
         # según cuántas rondas hay: log2(n_qual) rondas totales
-        import math
-
         n_rounds = math.floor(math.log2(n_qual)) if n_qual >= 2 else 0
 
         # Llenar hasta potencia de 2 si no es exacta (BYE al equipo 0)
         # En WC2026: siempre 32 → 5 rondas
         round_teams = teams
-        round_idx = 0
 
         for rnd in range(n_rounds):
             next_round: list[int] = []
             u_ko = rng.random(len(round_teams) // 2)
-            for m, (t1, t2) in enumerate(zip(round_teams[::2], round_teams[1::2])):
+            for m, (t1, t2) in enumerate(zip(round_teams[::2], round_teams[1::2], strict=True)):
                 i1 = team_idx[t1]
                 i2 = team_idx[t2]
                 p_t1_wins = ko_matrix[i1, i2]
@@ -334,8 +338,6 @@ def _build_bracket(
     Returns:
         lista de team_ids en orden de bracket (pares consecutivos se enfrentan).
     """
-    letter_to_idx = {gl: i for i, gl in enumerate(group_letters)}
-
     if n_groups >= 8 and len(group_thirds) >= 8:
         # Ranking cross-grupo de 3eros: Pts desc, GD desc, GF desc
         thirds_sorted = sorted(
@@ -353,7 +355,7 @@ def _build_bracket(
             # Slots definidos en Annex C: "1A","1B","1D","1E","1G","1I","1K","1L"
             # Los ganadores de esos grupos juegan contra el 3er del grupo indicado
             bracket: list[int] = []
-            for gl, winner, runner in zip(group_letters, group_winners, group_runners):
+            for gl, winner, runner in zip(group_letters, group_winners, group_runners, strict=True):
                 slot = f"1{gl}"
                 if slot in slot_map:
                     # Ganador del grupo gl vs el 3ro del grupo slot_map[slot]

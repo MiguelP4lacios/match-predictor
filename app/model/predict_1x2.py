@@ -4,11 +4,13 @@ Lookup anti-look-ahead:
   SELECT rating WHERE team_id=:t AND rating_date < :d ORDER BY rating_date DESC LIMIT 1
   Si no hay fila previa → rating=1500, low_confidence=True.
 
-Upsert idempotente sobre uq_prediction_identity
-  (model_version_id, match_id, market_type, outcome_code).
+Idempotencia mediante SELECT + UPDATE / INSERT explícito.
+Nota: el constraint uq_prediction_identity incluye outcome_team_id (nullable) desde m9.
+PostgreSQL trata NULLs como distintos en UNIQUE, por lo que el ON CONFLICT clásico
+no funciona para 1X2 (outcome_team_id=NULL). Se usa SELECT-before-write en su lugar.
 """
 
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.model.probabilities import predict_proba
@@ -59,9 +61,23 @@ def predict_match(
 
     ids: list[int] = []
     for outcome_code, probability in outcomes:
-        stmt = (
-            pg_insert(Prediction)
-            .values(
+        # SELECT primero para idempotencia (ON CONFLICT no funciona con outcome_team_id NULL)
+        existing = session.scalar(
+            select(Prediction).where(
+                Prediction.model_version_id == model_version_id,
+                Prediction.match_id == match_id,
+                Prediction.market_type == MarketType.MATCH_1X2,
+                Prediction.outcome_code == outcome_code,
+                Prediction.outcome_team_id.is_(None),
+            )
+        )
+        if existing is not None:
+            existing.probability = round(probability, 5)
+            existing.low_confidence = low_confidence
+            session.flush()
+            ids.append(existing.id)
+        else:
+            pred = Prediction(
                 match_id=match_id,
                 competition_id=match.competition_id,
                 model_version_id=model_version_id,
@@ -69,18 +85,10 @@ def predict_match(
                 outcome_code=outcome_code,
                 probability=round(probability, 5),
                 low_confidence=low_confidence,
+                outcome_team_id=None,
             )
-            .on_conflict_do_update(
-                constraint="uq_prediction_identity",
-                set_={
-                    "probability": round(probability, 5),
-                    "low_confidence": low_confidence,
-                },
-            )
-            .returning(Prediction.id)
-        )
-        row_id = session.execute(stmt).scalar_one()
-        ids.append(row_id)
+            session.add(pred)
+            session.flush()
+            ids.append(pred.id)
 
-    session.flush()
     return ids
