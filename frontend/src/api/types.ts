@@ -166,6 +166,73 @@ export interface BetsPageStats {
   real: ModeStats
 }
 
+// ─── Parlays (cupón de bloques) ───────────────────────────────────────────────
+
+/**
+ * Una pierna enviada al endpoint preview/create.
+ * CRÍTICO: el campo es `odds` (no `odds_taken`) — verificado con curl.
+ */
+export interface ParlayLegInput {
+  match_id: number
+  outcome_code: 'HOME' | 'DRAW' | 'AWAY'
+  /** Cuota decimal > 1 — campo `odds` en la API */
+  odds: number
+  label?: string
+}
+
+/**
+ * Diagnóstico de una pierna en la respuesta preview.
+ * `odds` viene como string (Decimal serializado por Pydantic).
+ */
+export interface LegDiagnostic {
+  match_id: number
+  outcome_code: string
+  /** Decimal serializado como string */
+  odds: string
+  p_model: number | null
+  ev: number | null
+  is_negative_ev: boolean
+}
+
+/**
+ * Respuesta de POST /parlays/preview.
+ * CRÍTICO: `retorno` (no `potential_return`) y `legs` (no `legs_diagnostics`) — verificado con curl.
+ */
+export interface ParlayPreview {
+  /** Decimal serializado como string */
+  combined_odds: string
+  model_prob: number | null
+  ev: number | null
+  /** Decimal serializado como string */
+  stake: string
+  /** stake × combined_odds — Decimal serializado como string */
+  retorno: string
+  legs: LegDiagnostic[]
+  suggested_without_negatives: LegDiagnostic[]
+}
+
+/** Body para POST /parlays */
+export interface ParlayCreate {
+  legs: ParlayLegInput[]
+  stake: number
+  note?: string
+}
+
+/** Ítem de parlay en respuesta de lista GET /parlays */
+export interface ParlayItem {
+  id: number
+  mode: 'real' | 'paper' | string
+  status: 'pending' | 'won' | 'lost' | string
+  bet_kind: string
+  /** Decimal serializado como string */
+  stake: string
+  odds_taken: number
+  pnl: string | null
+  settled_at: string | null
+  placed_at: string | null
+  note: string | null
+}
+
 // ─── Explain endpoint types (espejo del schema Pydantic del backend) ───────────
 
 export interface ExplainStep {
