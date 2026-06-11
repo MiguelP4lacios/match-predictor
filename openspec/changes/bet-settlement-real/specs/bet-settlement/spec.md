@@ -88,17 +88,17 @@ los penales NO afectan el outcome 1X2.
 
 ### Requirement: CLI Standalone
 
-MUST existir un runner `python -m app.betting.settle` que invoque `settle()` e
+MUST existir un runner `python -m app.model.run_settle` que invoque `settle()` e
 imprima el número de filas liquidadas. Exit 0 en éxito, non-zero en excepción.
 
 #### Scenario: Ejecución imprime conteo
 
 - GIVEN 3 apuestas PENDING con partidos FINISHED
-- WHEN `python -m app.betting.settle` corre
+- WHEN `python -m app.model.run_settle` corre
 - THEN imprime `"Settled: 3 bets"`, exit 0
 
 #### Scenario: Sin nada que liquidar
 
 - GIVEN todas las apuestas PENDING tienen partidos SCHEDULED
-- WHEN `python -m app.betting.settle` corre
+- WHEN `python -m app.model.run_settle` corre
 - THEN imprime `"Settled: 0 bets"`, exit 0

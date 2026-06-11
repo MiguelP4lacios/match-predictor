@@ -19,7 +19,7 @@ MUST validar el body antes de persistir.
 |-------|------|-----------|
 | `match_id` | int | MUST existir en `match`; MUST tener `status=SCHEDULED` |
 | `outcome_code` | str | MUST ser `HOME`, `DRAW`, o `AWAY` (case-insensitive) |
-| `odds_taken` | float | MUST ser > 1.01 |
+| `odds_taken` | float | MUST ser > 1 |
 | `stake` | float/Decimal | MUST ser > 0 (COP) |
 | `note` | str? | Opcional; se almacena en `bet_log.note` |
 | `value_signal_id` | int? | FK nullable; si provisto, MUST existir en `value_signal` |
