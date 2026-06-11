@@ -6,10 +6,11 @@ interface SheetProps {
   onClose: () => void
   title?: string
   side?: 'left' | 'right' | 'bottom'
+  footer?: ReactNode
   children: ReactNode
 }
 
-export function Sheet({ open, onClose, title, side = 'right', children }: SheetProps) {
+export function Sheet({ open, onClose, title, side = 'right', footer, children }: SheetProps) {
   useEffect(() => {
     if (!open) return
     function handleKeyDown(e: KeyboardEvent) {
@@ -41,7 +42,7 @@ export function Sheet({ open, onClose, title, side = 'right', children }: SheetP
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`absolute bg-surface shadow-xl ${PANEL_CLASSES[side]}`}
+        className={`absolute flex flex-col bg-surface shadow-xl ${PANEL_CLASSES[side]}`}
       >
         {title && (
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -55,7 +56,10 @@ export function Sheet({ open, onClose, title, side = 'right', children }: SheetP
             </button>
           </div>
         )}
-        <div className="overflow-y-auto p-4">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        {footer && (
+          <div className="border-t border-border p-4">{footer}</div>
+        )}
       </div>
     </div>
   )

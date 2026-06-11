@@ -165,7 +165,8 @@ describe('ExplainDrawer', () => {
       mockFetchAPI.mockReturnValue(new Promise(() => {}))
       const onClose = vi.fn()
       renderWithQuery(<ExplainDrawer signalId={10} onClose={onClose} />)
-      fireEvent.keyDown(window, { key: 'Escape' })
+      // Sheet usa document.addEventListener — disparar en document.body
+      fireEvent.keyDown(document.body, { key: 'Escape' })
       expect(onClose).toHaveBeenCalledOnce()
     })
 
@@ -181,7 +182,8 @@ describe('ExplainDrawer', () => {
       mockFetchAPI.mockReturnValue(new Promise(() => {}))
       const onClose = vi.fn()
       renderWithQuery(<ExplainDrawer signalId={10} onClose={onClose} />)
-      fireEvent.click(screen.getByTestId('drawer-backdrop'))
+      // Sheet usa data-testid="sheet-backdrop"
+      fireEvent.click(screen.getByTestId('sheet-backdrop'))
       expect(onClose).toHaveBeenCalledOnce()
     })
   })
