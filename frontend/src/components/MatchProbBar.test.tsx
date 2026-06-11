@@ -46,8 +46,11 @@ describe('MatchProbBar', () => {
     expect(screen.queryByText(/\d+\.\d+%/)).not.toBeInTheDocument()
   })
 
-  it('muestra el nombre del partido en todo caso', () => {
+  it('muestra los nombres de los equipos del partido en todo caso', () => {
     render(<MatchProbBar match={makeMatch({ p_home: null, p_draw: null, p_away: null })} />)
-    expect(screen.getByText('España vs Brasil')).toBeInTheDocument()
+    // With FlagLabel, team names are in separate spans but still in the DOM
+    const header = screen.getByTestId('match-header')
+    expect(header).toHaveTextContent('España')
+    expect(header).toHaveTextContent('Brasil')
   })
 })

@@ -3,8 +3,8 @@ import { fetchAPI } from '../api/client'
 import type { UpcomingMatch } from '../api/types'
 import MatchProbBar from '../components/MatchProbBar'
 import AddToCuponButton from '../components/AddToCuponButton'
-import Loading from '../components/Loading'
-import ErrorBanner from '../components/ErrorBanner'
+import { Spinner } from '../ui/Spinner'
+import { ErrorState } from '../ui/ErrorState'
 
 /** Agrupa partidos por fecha (ISODate string). Server es autoridad de orden. */
 function groupByDate(matches: UpcomingMatch[]): [string, UpcomingMatch[]][] {
@@ -30,18 +30,21 @@ export default function MatchesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">Partidos</h1>
+      <h1 className="text-xl font-bold text-text">Partidos</h1>
 
-      {isLoading && <Loading />}
-      {isError && <ErrorBanner onRetry={() => refetch()} />}
+      {isLoading && <Spinner />}
+      {isError && <ErrorState onRetry={() => refetch()} />}
 
       {data && data.length === 0 && (
-        <p className="py-8 text-center text-gray-500">No hay partidos próximos.</p>
+        <p className="py-8 text-center text-text-muted">No hay partidos próximos.</p>
       )}
 
       {groups.map(([date, matches]) => (
         <div key={date} className="space-y-2">
-          <h2 className="border-b pb-1 text-sm font-semibold text-gray-500">{date}</h2>
+          {/* Sticky date header */}
+          <h2 className="sticky top-16 z-10 border-b border-border bg-bg pb-1 text-sm font-semibold text-text-muted">
+            {date}
+          </h2>
           {matches.map((match) => (
             <div key={match.id}>
               <MatchProbBar match={match} />

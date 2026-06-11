@@ -66,11 +66,14 @@ describe('MatchesPage', () => {
 
     renderWithQuery(<MatchesPage />)
 
+    // Uzbekistan appears only in match 1 — unique identifier
     await waitFor(() => {
-      expect(screen.getByText(/Uzbekistan vs Colombia/)).toBeInTheDocument()
+      expect(screen.getByText('Uzbekistan')).toBeInTheDocument()
     })
-    expect(screen.getByText(/Colombia vs DR Congo/)).toBeInTheDocument()
-    expect(screen.getByText(/Colombia vs Portugal/)).toBeInTheDocument()
+    // DR Congo and Portugal each appear once
+    expect(screen.getByText('DR Congo')).toBeInTheDocument()
+    expect(screen.getByText('Portugal')).toBeInTheDocument()
+    // Date header for the last date group
     expect(screen.getByText('2026-06-27')).toBeInTheDocument()
   })
 })
