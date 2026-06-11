@@ -1,27 +1,56 @@
 /**
  * Integration tests — Routing
  * MemoryRouter + AppRoutes → 404 "Página no encontrada"
+ * Actualizado en Phase 3 (centro-de-control): AppShell requiere ThemeProvider
+ * y CuponProvider; StatusBadge se mockea para evitar fetch de /health/full.
  */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppRoutes } from '../App'
+import { ThemeProvider } from '../context/ThemeContext'
+import { CuponProvider } from '../context/CuponContext'
 
 // Las páginas hacen useQuery; mock fetchAPI para no causar errores de red
 vi.mock('../api/client', () => ({
   fetchAPI: vi.fn().mockResolvedValue({ items: [], total: 0 }),
 }))
 
+// StatusBadge hace poll a /health/full — mock para tests de routing
+vi.mock('../ui/StatusBadge', () => ({
+  StatusBadge: () => <span data-testid="status-badge-mock">🟢</span>,
+}))
+
+function mockMatchMedia() {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((q: string) => ({
+      matches: false,
+      media: q,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    })),
+  })
+}
+
 function renderAtPath(path: string) {
+  mockMatchMedia()
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[path]}>
-        <AppRoutes />
-      </MemoryRouter>
+      <ThemeProvider>
+        <CuponProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </CuponProvider>
+      </ThemeProvider>
     </QueryClientProvider>,
   )
 }
@@ -32,13 +61,16 @@ describe('Router', () => {
     expect(screen.getByText('Página no encontrada')).toBeInTheDocument()
   })
 
-  it('renderiza la barra de navegación con los 5 links', () => {
+  it('renderiza la barra de navegación con los 6 links (incluyendo Estado)', () => {
     renderAtPath('/')
-    expect(screen.getByRole('link', { name: 'Señales' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Grupos' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Partidos' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Modelo' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Apuestas' })).toBeInTheDocument()
+    // Nav top y nav bottom tienen los links — getByRole puede devolver múltiples
+    const topNav = screen.getByTestId('nav-top')
+    expect(topNav).toHaveTextContent('Señales')
+    expect(topNav).toHaveTextContent('Grupos')
+    expect(topNav).toHaveTextContent('Partidos')
+    expect(topNav).toHaveTextContent('Modelo')
+    expect(topNav).toHaveTextContent('Apuestas')
+    expect(topNav).toHaveTextContent('Estado')
   })
 
   it('/paper redirige a /apuestas', () => {
