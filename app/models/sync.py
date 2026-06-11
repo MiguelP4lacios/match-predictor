@@ -20,3 +20,5 @@ class SyncLog(Base, TimestampMixin):
     source: Mapped[DataSource] = mapped_column(data_source_type)
     last_fetched_at: Mapped[datetime | None] = mapped_column()
     status: Mapped[str | None] = mapped_column(String(40))
+    rows_inserted: Mapped[int | None] = mapped_column()
+    credits_remaining: Mapped[int | None] = mapped_column()
