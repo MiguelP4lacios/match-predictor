@@ -8,6 +8,7 @@ veces y fallaría la migración. Compartir la instancia evita ese gotcha.
 from sqlalchemy import Enum
 
 from app.models.enums import (
+    BetKind,
     BetMode,
     BetStatus,
     CompetitionKind,
@@ -26,3 +27,4 @@ match_stage_type = Enum(MatchStage, name="match_stage")
 market_type_type = Enum(MarketType, name="market_type")
 bet_mode_type = Enum(BetMode, name="bet_mode")
 bet_status_type = Enum(BetStatus, name="bet_status")
+bet_kind_type = Enum(BetKind, name="bet_kind")

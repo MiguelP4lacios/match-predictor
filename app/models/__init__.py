@@ -1,7 +1,7 @@
 """Modelos SQLAlchemy. Importar todo acá puebla Base.metadata para Alembic."""
 
 from app.models.base import Base
-from app.models.betting import BetLog, ValueSignal
+from app.models.betting import BetLeg, BetLog, ValueSignal
 from app.models.competition import Competition
 from app.models.match import GoalEvent, Match, Shootout
 from app.models.model import ModelVersion, Prediction
@@ -28,5 +28,6 @@ __all__ = [
     "Prediction",
     "ValueSignal",
     "BetLog",
+    "BetLeg",
     "SyncLog",
 ]

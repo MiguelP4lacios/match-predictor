@@ -27,6 +27,7 @@ class DataSource(enum.StrEnum):
     API_FOOTBALL = "api_football"
     STATSBOMB = "statsbomb"
     ODDS_API = "odds_api"
+    KAMBI = "kambi"
 
 
 class MatchStatus(enum.StrEnum):
@@ -64,3 +65,8 @@ class BetStatus(enum.StrEnum):
     WON = "won"
     LOST = "lost"
     VOID = "void"
+
+
+class BetKind(enum.StrEnum):
+    SINGLE = "single"
+    PARLAY = "parlay"
