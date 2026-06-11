@@ -21,8 +21,8 @@ from decimal import ROUND_HALF_UP, Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.betting import BetLog, ValueSignal
-from app.models.enums import BetStatus, MatchStatus
+from app.models.betting import BetLeg, BetLog, ValueSignal
+from app.models.enums import BetKind, BetStatus, MatchStatus
 from app.models.match import Match
 from app.models.model import Prediction
 
@@ -103,6 +103,89 @@ def settle_bets(session: Session) -> dict[str, int]:
             won_count += 1
         else:
             lost_count += 1
+
+    session.commit()
+
+    return {"settled": settled_count, "won": won_count, "lost": lost_count}
+
+
+def settle_parlays(session: Session) -> dict[str, int]:
+    """Liquida todos los parlays PENDING cuyos legs estén resolubles.
+
+    Lógica:
+    - Si ALGÚN leg LOST (partido FINISHED, outcome distinto) → parlay LOST, pnl=-stake.
+    - Si TODOS los legs WON (partido FINISHED, outcome correcto) → parlay WON,
+      pnl = stake × (combined_odds - 1).
+    - Si algún partido no está FINISHED → parlay sigue PENDING.
+
+    Idempotente: filtra solo bet_kind=PARLAY y status=PENDING.
+    COMMITEA al final (frontera de transacción explícita).
+
+    Returns:
+        dict con claves settled, won, lost.
+    """
+    # Obtener parlays PENDING
+    stmt = select(BetLog).where(
+        BetLog.bet_kind == BetKind.PARLAY,
+        BetLog.status == BetStatus.PENDING,
+    )
+    parlays = session.scalars(stmt).all()
+
+    settled_count = 0
+    won_count = 0
+    lost_count = 0
+    now = datetime.now(tz=UTC)
+
+    for parlay in parlays:
+        # Cargar legs con sus partidos
+        legs_stmt = (
+            select(BetLeg, Match)
+            .join(Match, BetLeg.match_id == Match.id)
+            .where(BetLeg.bet_log_id == parlay.id)
+        )
+        leg_rows = session.execute(legs_stmt).all()
+
+        if not leg_rows:
+            continue
+
+        # Determinar estado de cada leg
+        any_lost = False
+        all_finished_and_won = True
+
+        for leg, match in leg_rows:
+            if match.status != MatchStatus.FINISHED:
+                # Partido sin jugar → parlay sigue PENDING
+                all_finished_and_won = False
+                break
+
+            if match.home_score is None or match.away_score is None:
+                all_finished_and_won = False
+                break
+
+            result = _derive_result(match.home_score, match.away_score)
+            if leg.outcome_code != result:
+                any_lost = True
+                all_finished_and_won = False
+                break
+        else:
+            # Loop completed without break → all legs checked and FINISHED
+            pass
+
+        if any_lost:
+            parlay.status = BetStatus.LOST
+            parlay.pnl = (-parlay.stake).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            parlay.settled_at = now
+            settled_count += 1
+            lost_count += 1
+        elif all_finished_and_won:
+            combined_odds = Decimal(str(parlay.odds_taken))
+            profit = parlay.stake * (combined_odds - Decimal("1"))
+            parlay.pnl = profit.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            parlay.status = BetStatus.WON
+            parlay.settled_at = now
+            settled_count += 1
+            won_count += 1
+        # else: still PENDING (some leg not played yet)
 
     session.commit()
 
