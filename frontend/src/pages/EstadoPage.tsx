@@ -1,11 +1,11 @@
 /**
  * EstadoPage — observabilidad del sistema en español de hincha.
- * Muestra métricas de /api/v1/health/full; no calcula veredictos.
+ * Muestra métricas de /api/v1/health/full; no calcula veredictos (vienen del server).
  */
 
 import { useQuery } from '@tanstack/react-query'
 import { getHealthFull } from '../api/health'
-import type { HealthMetric, Verdict } from '../api/health'
+import type { Verdict } from '../api/health'
 import { Spinner } from '../ui/Spinner'
 import { ErrorState } from '../ui/ErrorState'
 import { Badge } from '../ui/Badge'
@@ -18,49 +18,43 @@ function verdictToBadge(v: Verdict): BadgeVariant {
 }
 
 function verdictLabel(v: Verdict): string {
-  if (v === 'ok') return 'ok'
-  if (v === 'warn') return 'warn'
-  return 'stale'
+  if (v === 'ok') return 'Al día'
+  if (v === 'warn') return 'Atención'
+  return 'Desactualizado'
 }
 
-interface MetricRowProps {
+/** "hace 2h", "hace 5 min", "—" si no hay dato. */
+function hace(ageHours: number | null): string {
+  if (ageHours === null) return '—'
+  if (ageHours < 1) {
+    const min = Math.round(ageHours * 60)
+    return min <= 0 ? 'recién' : `hace ${min} min`
+  }
+  return `hace ${Math.round(ageHours)}h`
+}
+
+interface MetricCardProps {
   label: string
-  metric: HealthMetric
+  value: string
+  detail: string
+  verdict: Verdict
 }
 
-function MetricRow({ label, metric }: MetricRowProps) {
-  const displayValue =
-    metric.value === null ? '—' : String(metric.value)
-
+function MetricCard({ label, value, detail, verdict }: MetricCardProps) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-border bg-surface p-4">
       <div>
-        <p className="text-sm font-medium text-text">{label}</p>
-        <p className="mt-0.5 text-xl font-bold text-text">{displayValue}</p>
-        <p className="mt-0.5 text-xs text-text-muted">Umbral: {metric.threshold}</p>
+        <p className="text-sm font-medium text-text-muted">{label}</p>
+        <p className="mt-0.5 text-xl font-bold text-text">{value}</p>
+        <p className="mt-0.5 text-xs text-text-muted">{detail}</p>
       </div>
-      <Badge variant={verdictToBadge(metric.verdict)}>
-        {verdictLabel(metric.verdict)}
-      </Badge>
+      <Badge variant={verdictToBadge(verdict)}>{verdictLabel(verdict)}</Badge>
     </div>
   )
 }
 
-const METRIC_LABELS: Record<string, string> = {
-  last_odds_capture: 'Última captura de cuotas',
-  odds_age: 'Antigüedad de cuotas',
-  credits_remaining: 'Créditos restantes',
-  model_version: 'Versión del modelo',
-  last_finished: 'Último partido finalizado',
-}
-
 export default function EstadoPage() {
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['health-full'],
     queryFn: getHealthFull,
     staleTime: 30_000,
@@ -68,26 +62,40 @@ export default function EstadoPage() {
   })
 
   if (isLoading) return <Spinner />
-
-  if (isError || !data) {
-    return <ErrorState onRetry={() => void refetch()} />
-  }
+  if (isError || !data) return <ErrorState onRetry={() => void refetch()} />
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold text-text">Estado del sistema</h1>
-        <Badge variant={verdictToBadge(data.overall)}>
-          {verdictLabel(data.overall)}
-        </Badge>
+        <Badge variant={verdictToBadge(data.overall)}>{verdictLabel(data.overall)}</Badge>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <MetricRow label={METRIC_LABELS.last_odds_capture} metric={data.last_odds_capture} />
-        <MetricRow label={METRIC_LABELS.odds_age} metric={data.odds_age} />
-        <MetricRow label={METRIC_LABELS.credits_remaining} metric={data.credits_remaining} />
-        <MetricRow label={METRIC_LABELS.model_version} metric={data.model_version} />
-        <MetricRow label={METRIC_LABELS.last_finished} metric={data.last_finished} />
+        <MetricCard
+          label="📡 Captura de cuotas"
+          value={hace(data.odds_capture.age_hours)}
+          detail="Cada 8h automático · ideal < 10h"
+          verdict={data.odds_capture.verdict}
+        />
+        <MetricCard
+          label="💳 Créditos de The Odds API"
+          value={data.odds_credits.remaining === null ? '—' : `${data.odds_credits.remaining} / 500`}
+          detail="Alerta si bajan de 100"
+          verdict={data.odds_credits.verdict}
+        />
+        <MetricCard
+          label="🎯 Modelo activo"
+          value={data.model.name ?? '—'}
+          detail="Backtest aprobado"
+          verdict={data.model.verdict}
+        />
+        <MetricCard
+          label="⚽ Resultados al día"
+          value={data.results.latest_date ?? '—'}
+          detail="Último partido finalizado en la BD"
+          verdict={data.results.verdict}
+        />
       </div>
     </div>
   )

@@ -15,20 +15,26 @@ vi.mock('../api/health', () => ({
 import { getHealthFull } from '../api/health'
 const mockGetHealthFull = vi.mocked(getHealthFull)
 
+import type { HealthFull } from '../api/health'
+
+/** StatusBadge solo lee `overall`; el resto cumple el contrato anidado real. */
+function health(overall: HealthFull['overall']): HealthFull {
+  return {
+    overall,
+    odds_capture: { last_at: '2026-06-11T07:00:00', age_hours: 2, verdict: 'ok' },
+    odds_credits: { remaining: 200, verdict: 'ok' },
+    model: { name: '1x2-olm-v1', verdict: 'ok' },
+    results: { latest_date: '2026-06-09', verdict: 'ok' },
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
 
 describe('StatusBadge — veredictos', () => {
   it('muestra 🟢 cuando overall=ok', async () => {
-    mockGetHealthFull.mockResolvedValue({
-      overall: 'ok',
-      last_odds_capture: { value: '2h', verdict: 'ok', threshold: '<6h' },
-      odds_age: { value: '2h', verdict: 'ok', threshold: '<6h' },
-      credits_remaining: { value: 200, verdict: 'ok', threshold: '>50' },
-      model_version: { value: 'v1', verdict: 'ok', threshold: 'exists' },
-      last_finished: { value: '2026-06-10', verdict: 'ok', threshold: 'info' },
-    })
+    mockGetHealthFull.mockResolvedValue(health('ok'))
     render(<StatusBadge />)
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('🟢')
@@ -36,14 +42,7 @@ describe('StatusBadge — veredictos', () => {
   })
 
   it('muestra 🟡 cuando overall=warn', async () => {
-    mockGetHealthFull.mockResolvedValue({
-      overall: 'warn',
-      last_odds_capture: { value: '8h', verdict: 'warn', threshold: '<24h' },
-      odds_age: { value: '8h', verdict: 'warn', threshold: '<24h' },
-      credits_remaining: { value: 80, verdict: 'ok', threshold: '>50' },
-      model_version: { value: 'v1', verdict: 'ok', threshold: 'exists' },
-      last_finished: { value: '2026-06-10', verdict: 'ok', threshold: 'info' },
-    })
+    mockGetHealthFull.mockResolvedValue(health('warn'))
     render(<StatusBadge />)
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('🟡')
@@ -51,14 +50,7 @@ describe('StatusBadge — veredictos', () => {
   })
 
   it('muestra 🔴 cuando overall=stale', async () => {
-    mockGetHealthFull.mockResolvedValue({
-      overall: 'stale',
-      last_odds_capture: { value: '30h', verdict: 'stale', threshold: '≥24h' },
-      odds_age: { value: '30h', verdict: 'stale', threshold: '≥24h' },
-      credits_remaining: { value: 5, verdict: 'stale', threshold: '≤10' },
-      model_version: { value: null, verdict: 'stale', threshold: 'exists' },
-      last_finished: { value: '2026-06-08', verdict: 'ok', threshold: 'info' },
-    })
+    mockGetHealthFull.mockResolvedValue(health('stale'))
     render(<StatusBadge />)
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('🔴')

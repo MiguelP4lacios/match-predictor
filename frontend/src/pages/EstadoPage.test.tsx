@@ -1,7 +1,5 @@
 /**
- * TDD — EstadoPage
- * RED tests escritos ANTES de la implementación.
- * Cubre: render métricas, tiempo relativo, veredicto coloreado.
+ * TDD — EstadoPage. Forma anidada REAL del backend (fix C1 del verify).
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -9,6 +7,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import EstadoPage from './EstadoPage'
+import type { HealthFull } from '../api/health'
 
 vi.mock('../api/health', () => ({
   getHealthFull: vi.fn(),
@@ -18,9 +17,7 @@ import { getHealthFull } from '../api/health'
 const mockGetHealthFull = vi.mocked(getHealthFull)
 
 function renderEstado() {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
       <MemoryRouter>
@@ -30,13 +27,12 @@ function renderEstado() {
   )
 }
 
-const HEALTH_ALL_OK = {
-  overall: 'ok' as const,
-  last_odds_capture: { value: '2026-06-11T04:00:00Z', verdict: 'ok' as const, threshold: '<6h' },
-  odds_age: { value: '2026-06-11T04:00:00Z', verdict: 'ok' as const, threshold: '<6h' },
-  credits_remaining: { value: 200, verdict: 'ok' as const, threshold: '>50' },
-  model_version: { value: 'dixon-coles-v1', verdict: 'ok' as const, threshold: 'exists' },
-  last_finished: { value: '2026-06-10', verdict: 'ok' as const, threshold: 'info' },
+const HEALTH_ALL_OK: HealthFull = {
+  overall: 'ok',
+  odds_capture: { last_at: '2026-06-11T07:00:00', age_hours: 2, verdict: 'ok' },
+  odds_credits: { remaining: 486, verdict: 'ok' },
+  model: { name: '1x2-olm-v1', verdict: 'ok' },
+  results: { latest_date: '2026-06-09', verdict: 'ok' },
 }
 
 beforeEach(() => {
@@ -52,58 +48,57 @@ describe('EstadoPage — render métricas', () => {
     })
   })
 
-  it('muestra el label de créditos restantes (español hincha)', async () => {
+  it('muestra el label de créditos (español hincha) y su valor', async () => {
     mockGetHealthFull.mockResolvedValue(HEALTH_ALL_OK)
     renderEstado()
     await waitFor(() => {
       expect(screen.getByText(/créditos/i)).toBeInTheDocument()
     })
-  })
-
-  it('muestra el valor de créditos restantes', async () => {
-    mockGetHealthFull.mockResolvedValue(HEALTH_ALL_OK)
-    renderEstado()
-    await waitFor(() => {
-      expect(screen.getByText('200')).toBeInTheDocument()
-    })
+    expect(screen.getByText('486 / 500')).toBeInTheDocument()
   })
 
   it('muestra la versión del modelo', async () => {
     mockGetHealthFull.mockResolvedValue(HEALTH_ALL_OK)
     renderEstado()
     await waitFor(() => {
-      expect(screen.getByText('dixon-coles-v1')).toBeInTheDocument()
+      expect(screen.getByText('1x2-olm-v1')).toBeInTheDocument()
+    })
+  })
+
+  it('muestra la antigüedad de la captura como tiempo relativo', async () => {
+    mockGetHealthFull.mockResolvedValue(HEALTH_ALL_OK)
+    renderEstado()
+    await waitFor(() => {
+      expect(screen.getByText('hace 2h')).toBeInTheDocument()
     })
   })
 })
 
 describe('EstadoPage — veredictos coloreados', () => {
-  it('muestra badge ok cuando el overall es ok', async () => {
+  it('muestra "Al día" cuando overall es ok', async () => {
     mockGetHealthFull.mockResolvedValue(HEALTH_ALL_OK)
     renderEstado()
     await waitFor(() => {
-      expect(screen.getAllByText(/ok/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/al día/i).length).toBeGreaterThan(0)
     })
   })
 
-  it('muestra badge stale cuando credits son stale', async () => {
+  it('muestra "Desactualizado" cuando la captura está stale', async () => {
     mockGetHealthFull.mockResolvedValue({
       ...HEALTH_ALL_OK,
-      credits_remaining: { value: 5, verdict: 'stale' as const, threshold: '≤10' },
-      overall: 'stale' as const,
+      odds_capture: { last_at: null, age_hours: null, verdict: 'stale' },
+      overall: 'stale',
     })
     renderEstado()
     await waitFor(() => {
-      // badge con texto 'stale' visible en la página
-      const badges = screen.getAllByText(/stale/i)
-      expect(badges.length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/desactualizado/i).length).toBeGreaterThan(0)
     })
   })
 })
 
-describe('EstadoPage — estado de carga y error', () => {
+describe('EstadoPage — carga y error', () => {
   it('muestra indicador de carga inicialmente', () => {
-    mockGetHealthFull.mockReturnValue(new Promise(() => {})) // never resolves
+    mockGetHealthFull.mockReturnValue(new Promise(() => {}))
     renderEstado()
     expect(screen.getByRole('status', { name: /cargando/i })).toBeInTheDocument()
   })
