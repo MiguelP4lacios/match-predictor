@@ -7,7 +7,7 @@ sync_log para idempotencia (no re-cargar lo ya cargado).
 
 from datetime import UTC, datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -140,6 +140,10 @@ class ResultsIngestionPipeline:
     def _load_goals(self) -> int:
         if not isinstance(self._source, GoalSource):
             return 0
+        # goal_event deriva 100% del CSV y no tiene clave natural (varios goles por
+        # partido): delete+reload es la única recarga idempotente (un INSERT puro
+        # duplicaba en silencio en cada re-ingest — producción 2026-06-10).
+        self._session.execute(delete(GoalEvent))
         count = skipped = 0
         for rg in self._source.fetch_goals():
             home = self._resolver.resolve(rg.source, rg.home_team)
@@ -168,6 +172,9 @@ class ResultsIngestionPipeline:
     def _load_shootouts(self) -> int:
         if not isinstance(self._source, ShootoutSource):
             return 0
+        # Igual que goal_event: recarga delete+reload (el unique de shootout.match_id
+        # hacía explotar el re-ingest con IntegrityError — producción 2026-06-10).
+        self._session.execute(delete(Shootout))
         count = 0
         for rs in self._source.fetch_shootouts():
             home = self._resolver.resolve(rs.source, rs.home_team)

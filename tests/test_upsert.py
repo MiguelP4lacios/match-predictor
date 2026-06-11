@@ -196,3 +196,66 @@ def test_duplicados_intra_batch_no_explotan(db_session):
     home = db_session.scalar(select(Team).where(Team.name == "TEST_DupFC"))
     match = db_session.scalar(select(Match).where(Match.home_team_id == home.id))
     assert match.home_score == 4  # la última aparición gana
+
+
+class FakeFullSource(FakeResultsSource):
+    """Source con goles y shootouts (GoalSource + ShootoutSource)."""
+
+    def __init__(self, matches, goals, shootouts) -> None:
+        super().__init__(matches)
+        self._goals = goals
+        self._shootouts = shootouts
+
+    def fetch_goals(self):
+        yield from self._goals
+
+    def fetch_shootouts(self):
+        yield from self._shootouts
+
+
+def test_reingest_no_duplica_goles_ni_shootouts(db_session):
+    """REGRESIÓN (producción 2026-06-10, segundo intento del loop): goles y
+    shootouts eran INSERT puro → re-ingest con force chocaba con el unique de
+    shootout.match_id y DUPLICABA goal_event en silencio. Tablas que derivan
+    100% del CSV se recargan con delete+reload (idempotente).
+    """
+    from app.ingestion.dto import RawGoal, RawShootout
+    from app.models import GoalEvent, Shootout
+
+    raw = _make_raw_match(
+        home_team="TEST_PenalFC", away_team="TEST_PenalRivalFC", home_score=1, away_score=1
+    )
+    goal = RawGoal(
+        source=DataSource.MARTJ42,
+        match_date=raw.match_date,
+        home_team=raw.home_team,
+        away_team=raw.away_team,
+        scoring_team=raw.home_team,
+        scorer="Testino",
+        minute=45,
+        own_goal=False,
+        penalty=False,
+    )
+    shootout = RawShootout(
+        source=DataSource.MARTJ42,
+        match_date=raw.match_date,
+        home_team=raw.home_team,
+        away_team=raw.away_team,
+        winner=raw.home_team,
+    )
+    source = FakeFullSource([raw], [goal], [shootout])
+
+    ResultsIngestionPipeline(db_session, source).run(force=True)
+    ResultsIngestionPipeline(db_session, source).run(force=True)  # segundo run: no debe explotar
+
+    home = db_session.scalar(select(Team).where(Team.name == "TEST_PenalFC"))
+    match = db_session.scalar(select(Match).where(Match.home_team_id == home.id))
+    n_goals = db_session.scalar(
+        select(func.count(GoalEvent.id)).where(GoalEvent.match_id == match.id)
+    )
+    n_shootouts = db_session.scalar(
+        select(func.count(Shootout.id)).where(Shootout.match_id == match.id)
+    )
+    assert n_goals == 1, f"goles duplicados: {n_goals}"
+    assert n_shootouts == 1, f"shootouts duplicados: {n_shootouts}"
+    assert match.went_to_penalties is True
