@@ -332,45 +332,113 @@ def _build_bracket(
 ) -> list[int]:
     """Construye el bracket de eliminatorias.
 
-    Para WC2026 (n_groups==12): top-2 de cada grupo + 8 mejores 3eros via Annex C.
+    Para WC2026 (n_groups==12):
+      - top-2 de cada grupo (24 equipos) + 8 mejores 3eros via Annex C (8 equipos)
+      - = exactamente 32 equipos en bracket oficial de 16 partidos de R32.
+      - Orden del bracket reproduce el árbol oficial FIFA (R16→QF→SF→Final).
+
     Para torneos menores: solo top-2 de cada grupo con emparejamiento cruzado simple.
 
     Returns:
         lista de team_ids en orden de bracket (pares consecutivos se enfrentan).
+        WC2026 (n_groups==12): exactamente 32 equipos.
+        Otros: n_groups × 2 equipos.
     """
-    if n_groups >= 8 and len(group_thirds) >= 8:
-        # Ranking cross-grupo de 3eros: Pts desc, GD desc, GF desc
+    winner_by_letter = dict(zip(group_letters, group_winners, strict=True))
+    runner_by_letter = dict(zip(group_letters, group_runners, strict=True))
+
+    if n_groups == 12 and len(group_thirds) >= 8:
+        # -----------------------------------------------------------------------
+        # WC2026: 32-team bracket
+        #   12 winners + 12 runners + 8 best-thirds = 32 qualifiers
+        # -----------------------------------------------------------------------
+
+        # Seleccionar los 8 mejores 3eros: Pts desc, GD desc, GF desc
         thirds_sorted = sorted(
             group_thirds,
-            key=lambda x: (-x[2], -x[3], -x[4]),  # -pts, -gd, -gf
+            key=lambda x: (-x[2], -x[3], -x[4]),
         )[:8]
         third_letters = frozenset(t[0] for t in thirds_sorted)
         third_by_letter = {t[0]: t[1] for t in thirds_sorted}
 
+        # Annex C: frozenset({8 group letters}) → {"1A": "X", ...}
         slot_map = ANNEX_C.get(third_letters, {})
-        # slot_map: {"1A": group_letter_of_third, ...}
 
-        # Usar emparejamiento Annex C si está disponible, de lo contrario empate cruzado
         if slot_map:
-            # Slots definidos en Annex C: "1A","1B","1D","1E","1G","1I","1K","1L"
-            # Los ganadores de esos grupos juegan contra el 3er del grupo indicado
-            bracket: list[int] = []
-            for gl, winner, runner in zip(group_letters, group_winners, group_runners, strict=True):
-                slot = f"1{gl}"
-                if slot in slot_map:
-                    # Ganador del grupo gl vs el 3ro del grupo slot_map[slot]
-                    third_group = slot_map[slot]
-                    third_tid = third_by_letter.get(third_group)
-                    if third_tid is not None:
-                        bracket.append(winner)
-                        bracket.append(third_tid)
-                        continue
-                # Si no hay slot de Annex C: ganador vs subcampeón cruzado
-                bracket.append(winner)
-                bracket.append(runner)
-            return bracket
+            # slot_map[slot] = letra del grupo cuyo 3er clasificado ocupa ese slot.
+            # _SLOTS = ("1A","1B","1D","1E","1G","1I","1K","1L")
+            # 8 de los 12 ganadores de grupo juegan vs un 3er clasificado en R32.
+            # Los otros 4 ganadores (C, F, H, J) juegan vs subcampeones cruzados.
+            #
+            # Bracket en orden de árbol single-elimination (pares consecutivos
+            # se enfrentan en R32; la estructura garantiza R16/QF/SF/F correctos).
+            #
+            # Árbol de R16 (fuente: FIFA reglamentos Art. 12.7 Annex):
+            #   M89: W74 vs W77 → QF1   M90: W73 vs W75 → QF1
+            #   M93: W83 vs W84 → QF2   M94: W81 vs W82 → QF2
+            #   M91: W76 vs W78 → QF3   M92: W79 vs W80 → QF3
+            #   M95: W86 vs W88 → QF4   M96: W85 vs W87 → QF4
 
-    # Bracket genérico: 1A vs 2B, 1B vs 2A, etc. (cross-paired)
+            def _third(slot: str) -> int:
+                """team_id del 3er clasificado asignado al slot dado."""
+                return third_by_letter[slot_map[slot]]
+
+            return [
+                # --- SF1 → QF1 (M97: W89 vs W90) ---
+                # R16 M89 (W74 vs W77)
+                winner_by_letter["E"], _third("1E"),           # R32 M74: 1E vs 3rd(1E)
+                winner_by_letter["I"], _third("1I"),           # R32 M77: 1I vs 3rd(1I)
+                # R16 M90 (W73 vs W75)
+                runner_by_letter["A"], runner_by_letter["B"],  # R32 M73: 2A vs 2B
+                winner_by_letter["F"], runner_by_letter["C"],  # R32 M75: 1F vs 2C
+                # --- SF1 → QF2 (M98: W93 vs W94) ---
+                # R16 M93 (W83 vs W84)
+                runner_by_letter["K"], runner_by_letter["L"],  # R32 M83: 2K vs 2L
+                winner_by_letter["H"], runner_by_letter["J"],  # R32 M84: 1H vs 2J
+                # R16 M94 (W81 vs W82)
+                winner_by_letter["D"], _third("1D"),           # R32 M81: 1D vs 3rd(1D)
+                winner_by_letter["G"], _third("1G"),           # R32 M82: 1G vs 3rd(1G)
+                # --- SF2 → QF3 (M99: W91 vs W92) ---
+                # R16 M91 (W76 vs W78)
+                winner_by_letter["C"], runner_by_letter["F"],  # R32 M76: 1C vs 2F
+                runner_by_letter["E"], runner_by_letter["I"],  # R32 M78: 2E vs 2I
+                # R16 M92 (W79 vs W80)
+                winner_by_letter["A"], _third("1A"),           # R32 M79: 1A vs 3rd(1A)
+                winner_by_letter["L"], _third("1L"),           # R32 M80: 1L vs 3rd(1L)
+                # --- SF2 → QF4 (M100: W95 vs W96) ---
+                # R16 M95 (W86 vs W88)
+                winner_by_letter["J"], runner_by_letter["H"],  # R32 M86: 1J vs 2H
+                runner_by_letter["D"], runner_by_letter["G"],  # R32 M88: 2D vs 2G
+                # R16 M96 (W85 vs W87)
+                winner_by_letter["B"], _third("1B"),           # R32 M85: 1B vs 3rd(1B)
+                winner_by_letter["K"], _third("1K"),           # R32 M87: 1K vs 3rd(1K)
+            ]
+
+        # Fallback: miss de Annex C (no debe ocurrir si ANNEX_C tiene las 495 entradas).
+        # Bracket simplificado pero válido de 32 equipos:
+        #   - 8 partidos ganador+3ero (grupos con tercero clasificado)
+        #   - 4 partidos ganador+subcampeón (grupos sin tercero)
+        #   - 4 partidos subcampeón+subcampeón (subcampeones de grupos con 3ero)
+        # NOTE: orden no refleja el árbol oficial FIFA.
+        third_groups = sorted(third_letters)
+        non_third_groups = sorted(set(group_letters) - third_letters)
+        bracket: list[int] = []
+        for gl in third_groups:
+            bracket.append(winner_by_letter[gl])
+            bracket.append(third_by_letter[gl])
+        for gl in non_third_groups:
+            bracket.append(winner_by_letter[gl])
+            bracket.append(runner_by_letter[gl])
+        third_runners = [runner_by_letter[gl] for gl in third_groups]
+        for i in range(0, len(third_runners), 2):
+            bracket.append(third_runners[i])
+            bracket.append(third_runners[i + 1])
+        return bracket  # 8×2 + 4×2 + 4×2 = 32 equipos
+
+    # -----------------------------------------------------------------------
+    # Bracket genérico: solo top-2, emparejamiento cruzado simple
+    # Válido para 2, 4, 8 grupos (todos potencias de 2 → n×2 equipos).
+    # -----------------------------------------------------------------------
     bracket = []
     n = n_groups
     for i in range(0, n, 2):
