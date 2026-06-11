@@ -37,6 +37,7 @@ from app.models.tournament import GroupTeam, TournamentGroup
 # Nombre canónico de la ModelVersion de Monte Carlo
 # ---------------------------------------------------------------------------
 _MC_MODEL_NAME = "montecarlo-v1"
+_OLM_MODEL_NAME = "1x2-olm-v1"  # coeficientes (cutpoints/beta) para predict_proba
 _MC_N_ITERATIONS = 20_000
 _MC_SEED = 42
 
@@ -182,12 +183,19 @@ def run_futures_simulate(
     if not groups or competition_id is None:
         return 0
 
-    # Cargar parámetros del ModelVersion
+    # model_version_id es 'montecarlo-v1' (solo etiqueta las predicciones de futuros).
+    # Los coeficientes para predict_proba (cutpoints/beta) viven en el modelo 1X2 OLM.
     mv = session.get(ModelVersion, model_version_id)
     if mv is None:
         raise ValueError(f"ModelVersion id={model_version_id} no existe")
 
-    model_params = mv.params_json or {}
+    olm = session.scalar(select(ModelVersion).where(ModelVersion.name == _OLM_MODEL_NAME))
+    if olm is None or not (olm.params_json or {}).get("cutpoints"):
+        raise ValueError(
+            f"Modelo OLM '{_OLM_MODEL_NAME}' no encontrado o sin coeficientes; "
+            "corré primero `run_1x2 fit`."
+        )
+    model_params = olm.params_json
 
     # Simular
     sim_results = simulate_tournament(

@@ -222,3 +222,40 @@ def test_mc5_twelve_group_wc2026_no_crash():
     # Los 8 terceros clasifican también pero con p_advance_group ya contado.
     # Solo los top-2 de cada grupo tienen cnt_advance incrementado.
     assert total_advance > 0.0, "p_advance_group total debe ser > 0"
+
+
+def test_reach_semi_final_jerarquia(monkeypatch):
+    """reach_semi >= reach_final >= champion para cada equipo (jerarquía de profundidad).
+
+    Antes del fix los contadores estaban desfasados (sf contaba finalistas).
+    """
+    # 4 grupos de 4 equipos (16 → 8 avanzan top2, sin terceros) — bracket de 8.
+    import string
+
+    from app.model.montecarlo import simulate_tournament
+    groups = {}
+    elo = {}
+    tid = 1
+    for g in string.ascii_uppercase[:4]:
+        members = []
+        for _ in range(4):
+            elo[tid] = 1500 + tid  # Elos crecientes
+            members.append(tid)
+            tid += 1
+        groups[g] = members
+
+    params = {
+        "cutpoints": {"a1": -0.7389, "delta": 0.1756},
+        "beta_diff": 0.00495,
+        "beta_neutral": 0.0239,
+    }
+    res = simulate_tournament(
+        groups=groups, elo_ratings=elo, model_params=params,
+        completed_results={}, n_iterations=500, seed=7,
+    )
+    for team_id, probs in res.items():
+        sf = probs["p_reach_sf"]
+        fn = probs["p_reach_final"]
+        ch = probs["p_champion"]
+        assert sf >= fn - 1e-9, f"equipo {team_id}: reach_sf {sf} < reach_final {fn}"
+        assert fn >= ch - 1e-9, f"equipo {team_id}: reach_final {fn} < champion {ch}"

@@ -21,6 +21,26 @@ from app.models.team import Team
 
 _MC_MODEL_NAME = "montecarlo-v1"
 
+# Mercados de futuros (para aislar los tests de datos reales ya committeados en
+# la BD de dev por una corrida de `run_futures simulate`).
+_FUTURES_MARKETS = [
+    MarketType.OUTRIGHT_WINNER,
+    MarketType.GROUP_ADVANCE,
+    MarketType.REACH_SEMI_FINAL,
+    MarketType.REACH_FINAL,
+]
+
+
+def _clear_futures(session) -> None:
+    """Borra (dentro del SAVEPOINT) las predicciones de futuros reales para que el
+    test controle exactamente qué ve el endpoint. El rollback deja la BD intacta."""
+    from sqlalchemy import delete
+
+    from app.models.model import Prediction
+
+    session.execute(delete(Prediction).where(Prediction.market_type.in_(_FUTURES_MARKETS)))
+    session.flush()
+
 
 def _make_wc(session) -> Competition:
     comp = Competition(name="FIFA World Cup 2026", kind=CompetitionKind.WORLD_CUP)
@@ -38,12 +58,14 @@ def _make_teams(session) -> tuple[Team, Team]:
 
 
 def _make_mv(session) -> ModelVersion:
-    mv = ModelVersion(
-        name=_MC_MODEL_NAME,
-        params_json={"seed": 42, "n": 20_000},
-    )
-    session.add(mv)
-    session.flush()
+    # get-or-create: la BD de dev ya puede tener un montecarlo-v1 real (name unique).
+    from sqlalchemy import select
+
+    mv = session.scalar(select(ModelVersion).where(ModelVersion.name == _MC_MODEL_NAME))
+    if mv is None:
+        mv = ModelVersion(name=_MC_MODEL_NAME, params_json={"seed": 42, "n": 20_000})
+        session.add(mv)
+        session.flush()
     return mv
 
 
@@ -93,6 +115,7 @@ class TestFuturesProbabilities:
 
     def test_200_ranked_desc(self, client, db_session):
         """F1: retorna 200; champions rankeados por p_champion DESC."""
+        _clear_futures(db_session)
         comp = _make_wc(db_session)
         t1, t2 = _make_teams(db_session)
         mv = _make_mv(db_session)
@@ -116,6 +139,7 @@ class TestFuturesProbabilities:
 
     def test_p_champion_ranked(self, client, db_session):
         """F1 triangulación: p_champion del primero > p_champion del segundo."""
+        _clear_futures(db_session)
         comp = _make_wc(db_session)
         t1, t2 = _make_teams(db_session)
         mv = _make_mv(db_session)
@@ -131,6 +155,7 @@ class TestFuturesProbabilities:
 
     def test_empty_when_no_predictions(self, client, db_session):
         """F2: sin predicciones → champions vacío (no 404)."""
+        _clear_futures(db_session)
         resp = client.get("/api/v1/futures/probabilities")
 
         assert resp.status_code == 200
@@ -139,6 +164,7 @@ class TestFuturesProbabilities:
 
     def test_probabilities_in_range(self, client, db_session):
         """F3: todas las probabilidades en [0, 1]."""
+        _clear_futures(db_session)
         comp = _make_wc(db_session)
         t1, t2 = _make_teams(db_session)
         mv = _make_mv(db_session)
@@ -163,6 +189,7 @@ class TestFuturesSignals:
 
     def test_200_empty_when_no_signals(self, client, db_session):
         """F4: sin ValueSignal de futuros → items=[] (no 404)."""
+        _clear_futures(db_session)
         resp = client.get("/api/v1/futures/signals")
 
         assert resp.status_code == 200
@@ -172,6 +199,7 @@ class TestFuturesSignals:
 
     def test_200_with_futures_signal(self, client, db_session):
         """F5: con ValueSignal de futuros → retorna ítems con edge."""
+        _clear_futures(db_session)
         from datetime import UTC, datetime
 
         from app.models.betting import ValueSignal

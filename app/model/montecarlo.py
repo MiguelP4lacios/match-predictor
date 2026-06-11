@@ -277,7 +277,7 @@ def simulate_tournament(
         # En WC2026: siempre 32 → 5 rondas
         round_teams = teams
 
-        for rnd in range(n_rounds):
+        for _rnd in range(n_rounds):
             next_round: list[int] = []
             u_ko = rng.random(len(round_teams) // 2)
             for m, (t1, t2) in enumerate(zip(round_teams[::2], round_teams[1::2], strict=True)):
@@ -287,13 +287,15 @@ def simulate_tournament(
                 winner = t1 if u_ko[m] < p_t1_wins else t2
                 next_round.append(winner)
 
-            # Actualizar contadores de profundidad
-            remaining_rounds = n_rounds - rnd - 1
-            if remaining_rounds == 1:  # próxima ronda es la final → SF
+            # Contadores por TAMAÑO de la ronda resultante (robusto sin importar
+            # cuántas rondas haya). next_round = ganadores que avanzan:
+            #   4 ganadores  -> jugarán las SEMIS  (llegaron a semifinal)
+            #   2 ganadores  -> jugarán la FINAL   (llegaron a la final)
+            #   1 ganador    -> CAMPEÓN (se cuenta abajo)
+            if len(next_round) == 4:
                 for tid in next_round:
                     cnt_sf[team_idx[tid]] += 1
-            elif remaining_rounds == 0:  # próxima ronda es la siguiente → Final → se resuelve abajo
-                # Esta es la final: los 2 equipos que quedan llegan a la final
+            elif len(next_round) == 2:
                 for tid in next_round:
                     cnt_final[team_idx[tid]] += 1
 
