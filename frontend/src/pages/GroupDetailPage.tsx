@@ -4,8 +4,8 @@ import { fetchAPI } from '../api/client'
 import type { GroupDetail } from '../api/types'
 import GroupCard from '../components/GroupCard'
 import MatchProbBar from '../components/MatchProbBar'
-import Loading from '../components/Loading'
-import ErrorBanner from '../components/ErrorBanner'
+import { Spinner } from '../ui/Spinner'
+import { ErrorState } from '../ui/ErrorState'
 
 export default function GroupDetailPage() {
   const { letra } = useParams<{ letra: string }>()
@@ -19,18 +19,18 @@ export default function GroupDetailPage() {
   })
 
   if (!letra) {
-    return <p className="py-8 text-center text-gray-500">Grupo no especificado.</p>
+    return <p className="py-8 text-center text-text-muted">Grupo no especificado.</p>
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">Grupo {letra.toUpperCase()}</h1>
+      <h1 className="text-xl font-bold text-text">Grupo {letra.toUpperCase()}</h1>
 
-      {isLoading && <Loading />}
+      {isLoading && <Spinner />}
       {isError && (
         <div className="space-y-2">
-          <p className="text-gray-600">Grupo desconocido o sin datos.</p>
-          <ErrorBanner onRetry={() => refetch()} />
+          <p className="text-text-muted">Grupo desconocido o sin datos.</p>
+          <ErrorState onRetry={() => refetch()} />
         </div>
       )}
 
@@ -40,7 +40,7 @@ export default function GroupDetailPage() {
 
           {data.fixtures && data.fixtures.length > 0 && (
             <div className="space-y-3">
-              <h2 className="font-semibold text-gray-700">Partidos</h2>
+              <h2 className="font-semibold text-text">Partidos</h2>
               {data.fixtures.map((match) => (
                 <MatchProbBar
                   key={match.id}
