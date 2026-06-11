@@ -21,9 +21,12 @@ La app MUST implementar react-router-dom v6 con las siguientes rutas:
 | `/partidos` | Fixtures próximos |
 | `/modelo` | Transparencia del modelo |
 | `/apuestas` | Registro y seguimiento de apuestas |
+| `/futures` | Futuros: campeón, avance, señales EV |
 | `*` | 404 — "Página no encontrada" |
 
-(Previously: ruta `/paper` → Vista "Registro paper-betting".)
+(Previously: sin ruta `/futures`; ruta `/paper` → Vista "Registro paper-betting".)
+
+La navegación principal MUST incluir una entrada "Futuros" que enlace a `/futures`.
 
 #### Scenario: Deep-link directo a grupo
 
@@ -42,6 +45,12 @@ La app MUST implementar react-router-dom v6 con las siguientes rutas:
 - GIVEN el usuario navega a `/paper` (ruta vieja)
 - WHEN la app carga
 - THEN redirige a `/apuestas` con `<Navigate replace />`
+
+#### Scenario: Ruta /futures accesible desde nav
+
+- GIVEN la app está montada
+- WHEN el usuario hace click en "Futuros" en la navegación
+- THEN navega a `/futures` y renderiza `FuturesDashboard` sin crash
 
 ---
 
@@ -443,6 +452,38 @@ mismo comportamiento.
 
 ---
 
+### Requirement: R13 — Futures Page
+
+La app MUST incluir una página `FuturesDashboard` en `/futures` que muestre:
+
+1. **Tabla de probabilidades campeón**: 48 equipos ordenados por `p_champion` DESC, con columnas `Pos`, `🏳 Equipo` (via `FlagLabel`), `P(Campeón)`, `P(Final)`, `P(Semi)`, `P(Clasifica)`. Los valores MUST formatearse como porcentaje con 1 decimal (ej. `"18.0%"`).
+2. **Panel por grupo**: un `Card` por grupo (A–L) con tabla de `p_advance_group` por equipo.
+3. **Señales +EV futuros**: tabla de `value_signal` con `OUTRIGHT_WINNER` — columnas Equipo, P(Modelo), Cuota, P(Justa), Ventaja. Si no hay señales: "Sin señales de futuros disponibles".
+
+Todos los nombres de equipo MUST usar `FlagLabel`. La página MUST usar primitivas del design system: `Card`, `Stat`, `Badge`, `FlagLabel`. MUST NOT usar colores hardcodeados.
+
+Data fetching: `GET /api/v1/futures/probabilities` con `staleTime: 55_000`; `GET /api/v1/futures/signals` con el mismo intervalo. Ambos MUST mostrar skeleton de carga y banner de error con botón "Reintentar".
+
+#### Scenario: Tabla campeón ordenada con banderas
+
+- GIVEN `/api/v1/futures/probabilities` retorna 48 equipos; Brazil `p_champion=0.18` (1er lugar), Argentina `p_champion=0.15` (2do)
+- WHEN `FuturesDashboard` renderiza
+- THEN Brazil aparece en posición 1 con "🇧🇷 Brazil" (FlagLabel) y "18.0%"; Argentina en posición 2
+
+#### Scenario: Estado vacío sin señales
+
+- GIVEN `/api/v1/futures/signals` retorna `{"items": [], "total": 0}`
+- WHEN la sección de señales renderiza
+- THEN muestra "Sin señales de futuros disponibles", sin crash ni tabla vacía
+
+#### Scenario: Error de fetch — banner y reintentar
+
+- GIVEN `/api/v1/futures/probabilities` retorna 500
+- WHEN la página carga
+- THEN muestra skeleton luego banner "API no disponible" con botón "Reintentar"; sin pantalla en blanco
+
+---
+
 ### Requirement: R7 — TypeScript Types
 
 El proyecto MUST definir tipos hand-written que reflejen los campos de la API.
@@ -466,20 +507,29 @@ Tipos críticos (grounded en shapes reales de la API):
 | `LegDiagnostic` | `leg_ev: number, is_negative_ev: boolean` |
 | `ParlayPreview` | `combined_odds: number, model_prob: number, ev: number, potential_return: number\|null, legs_diagnostics: LegDiagnostic[]` |
 | `ParlayItem` | `id: number, stake: string, odds_taken: number, status: 'pending'\|'won'\|'lost', pnl: string\|null, placed_at: string, legs: ParlayLegInput[]` |
+| `FutureTeamRow` | `team_id: number, team_name: string, p_champion: number, p_reach_final: number, p_reach_semi: number, p_advance_group: number` |
+| `FuturesList` | `items: FutureTeamRow[], total: number` |
+| `FutureSignal` | `team_id: number, team_name: string, p_model: number, p_fair: number, edge: number, best_odds: number, bookmaker: string` |
 
 `recommended_stake` MUST ser typed como `string` — la API lo retorna como string
 (ej. `"120.16"`). `UpcomingMatch` se tipea como array directo, no envuelto.
 `BetItem.mode` y `BetItem.status` MUST tipificar los valores en minúscula como
 retorna la API (ej. `'real'`, `'pending'`). `BetItem.stake` y `BetItem.pnl` se
-tipean como `string` para preservar precisión decimal sin pérdida.
+tipean como `string` para preservar precisión decimal sin pérdida. `FutureTeamRow` fields son `number` (nunca `null` si la simulación corrió; endpoint retorna vacío si no hay datos).
 
-(Previously: sin tipos de parlay — `ParlayLegInput`, `LegDiagnostic`, `ParlayPreview`, `ParlayItem` son nuevos.)
+(Previously: sin tipos de parlay ni futuros — `ParlayLegInput`, `LegDiagnostic`, `ParlayPreview`, `ParlayItem`, `FutureTeamRow`, `FuturesList`, `FutureSignal` son nuevos.)
 
 #### Scenario: ParlayPreview tipado correctamente
 
 - GIVEN respuesta del preview endpoint con `combined_odds=7.084`, `ev=1.2627`, `potential_return=35420`
 - WHEN el componente accede a `preview.legs_diagnostics[0].is_negative_ev`
 - THEN TypeScript no lanza error de tipo; valor es `boolean`
+
+#### Scenario: FutureTeamRow tipado correctamente
+
+- GIVEN respuesta de `/api/v1/futures/probabilities` con `p_champion=0.18`
+- WHEN el componente accede a `row.p_champion`
+- THEN TypeScript infiere `number`; no hay error de tipo
 
 ---
 

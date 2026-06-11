@@ -64,7 +64,7 @@ EV is pre-computed (stored in `value_signal.ev`). The endpoint MUST NOT re-compu
 Migration `m9` MUST:
 1. ADD column `outcome_team_id INTEGER REFERENCES team(id)` (nullable) to `prediction`.
 2. ADD values `REACH_SEMI_FINAL` and `REACH_FINAL` to the `MarketType` PostgreSQL enum.
-3. DROP constraint `uq_prediction_identity` and recreate as UNIQUE on `(model_version_id, match_id, market_type, outcome_code, outcome_team_id)`.
+3. DROP constraint `uq_prediction_identity` and recreate as UNIQUE on `(model_version_id, match_id, competition_id, market_type, outcome_code, outcome_team_id)`.
 
 The migration MUST be reversible (downgrade drops `outcome_team_id`, removes enum values, restores old constraint).
 

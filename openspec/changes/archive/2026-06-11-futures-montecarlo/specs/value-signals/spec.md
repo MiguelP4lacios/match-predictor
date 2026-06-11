@@ -30,11 +30,11 @@ The sum of all `p_fair_i` MUST equal 1.0 within 1e-9. The de-vig MUST be recompu
 
 ### Requirement: Futures Value Signal Emission
 
-The system MUST generate a `value_signal` row for `OUTRIGHT_WINNER` markets when `edge = p_model − p_fair ≥ edge_min` (default 0.03) AND the active `model_version` has a stored backtest report.
+The system MUST generate a `value_signal` row for `OUTRIGHT_WINNER` markets when `edge = p_model − p_fair ≥ edge_min` (default 0.03).
 
 Each emitted signal MUST include `outcome_team_id` (the team) to distinguish champion candidates. Signal uniqueness key MUST be `(prediction_id, odds_id)` — same as existing `MATCH_1X2` signals (idempotency inherited).
 
-The `BacktestRequiredError` honesty gate inherited from the existing `Requirement: Honesty Gate` MUST apply to futures signals without exception.
+Futures signals are ALWAYS flagged as `is_paper=True` (PAPER mode). The backtest gate is skipped for futures markets because Monte Carlo simulations of championship outcomes cannot be historically backtested (only 1 World Cup per 4 years). Honesty requires documentation of this limitation in code comments rather than a false validation gate.
 
 #### Scenario: Futures EV signal emitted
 

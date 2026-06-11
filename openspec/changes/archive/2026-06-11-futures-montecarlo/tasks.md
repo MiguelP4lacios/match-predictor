@@ -38,7 +38,7 @@
 
 ## Phase 7: Cierre
 
-- [ ] 7.1 Run full test suite + ruff check/format + frontend build; fix any failures.
-- [ ] 7.2 Run `docker compose run --rm scheduler python -m app.model.run_futures simulate`; capture and report top-10 champion probabilities.
-- [ ] 7.3 DEPLOY VPS — rsync, build API + frontend, `docker compose up`; apply m9 via `alembic upgrade head`; smoke `GET /api/v1/futures/probabilities` with auth.
-- [ ] 7.4 Commit all changes (conventional commits, no AI attribution); push to remote; save `sdd/futures-montecarlo/apply-progress` to engram.
+- [x] 7.1 Run full test suite + ruff check/format + frontend build; fix any failures.
+- [x] 7.2 Run `docker compose run --rm scheduler python -m app.model.run_futures simulate`; capture and report top-10 champion probabilities.
+- [x] 7.3 DEPLOY VPS — rsync, build API + frontend, `docker compose up`; apply m9 via `alembic upgrade head`; smoke `GET /api/v1/futures/probabilities` with auth.
+- [x] 7.4 Commit all changes (conventional commits, no AI attribution); push to remote; save `sdd/futures-montecarlo/apply-progress` to engram.
