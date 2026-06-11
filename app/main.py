@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.health import router as health_router
 from app.api.routers.bets import router as bets_router
 from app.api.routers.groups import router as groups_router
+from app.api.routers.health_full import router as health_full_router
 from app.api.routers.matches import router as matches_router
 from app.api.routers.model import router as model_router
 from app.api.routers.paper import router as paper_router
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(health_full_router, prefix="/api/v1")
 app.include_router(signals_router, prefix="/api/v1")
 app.include_router(matches_router, prefix="/api/v1")
 app.include_router(model_router, prefix="/api/v1")
