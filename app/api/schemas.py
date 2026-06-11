@@ -15,8 +15,9 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------------------------------------------------------------------
 # Base compartida con from_attributes=True
@@ -135,12 +136,73 @@ class ModelInfo(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Paper (apuestas modo papel)
+# Apuestas (BetLog write + read)
 # ---------------------------------------------------------------------------
 
 
+class BetCreate(BaseModel):
+    """Body para POST /api/v1/bets."""
+
+    match_id: int
+    outcome_code: Literal["HOME", "DRAW", "AWAY"]
+    odds_taken: Annotated[float, Field(gt=1)]
+    stake: Annotated[Decimal, Field(gt=0)]
+    note: str | None = None
+    value_signal_id: int | None = None
+
+
+class BetItem(_ORMBase):
+    """Ítem de apuesta en respuesta de lista/creación."""
+
+    id: int
+    mode: str
+    status: str
+    match_id: int | None
+    outcome_code: str | None
+    odds_taken: float
+    stake: Decimal
+    pnl: Decimal | None
+    settled_result: str | None
+    settled_at: datetime | None
+    placed_at: datetime | None
+    note: str | None
+    value_signal_id: int | None
+
+
+class BetList(BaseModel):
+    """Lista de apuestas."""
+
+    items: list[BetItem]
+    total: int
+
+
+# ---------------------------------------------------------------------------
+# Paper (apuestas modo papel — ahora per-mode)
+# ---------------------------------------------------------------------------
+
+
+class ModeStats(BaseModel):
+    """Estadísticas de apuestas para un modo (PAPER o REAL)."""
+
+    total: int
+    pending: int
+    settled: int
+    won: int
+    lost: int
+    staked: Decimal | None
+    returns: Decimal | None
+    roi: float | None
+
+
+class BetsPageStats(BaseModel):
+    """Respuesta de GET /api/v1/paper — stats por modo."""
+
+    paper: ModeStats
+    real: ModeStats
+
+
 class PaperStats(BaseModel):
-    """Estadísticas de apuestas en modo papel."""
+    """Estadísticas de apuestas en modo papel (legacy — sustituido por BetsPageStats)."""
 
     total: int
     open: int

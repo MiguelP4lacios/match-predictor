@@ -130,11 +130,12 @@ def test_paper_roi_numeric(client, db_session):
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["total"] == 3
-    assert body["open"] == 1
-    assert body["settled"] == 2
-    assert body["roi"] is not None
-    assert abs(body["roi"] - 0.125) < 1e-4
+    paper = body["paper"]
+    assert paper["total"] == 3
+    assert paper["pending"] == 1
+    assert paper["settled"] == 2
+    assert paper["roi"] is not None
+    assert abs(paper["roi"] - 0.125) < 1e-4
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +160,7 @@ def test_paper_roi_null_when_no_settled(client, db_session):
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["roi"] is None
-    assert body["open"] >= 1
-    assert body["settled"] == 0
+    paper = body["paper"]
+    assert paper["roi"] is None
+    assert paper["pending"] >= 1
+    assert paper["settled"] == 0
