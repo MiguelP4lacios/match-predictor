@@ -5,7 +5,7 @@
  * y CuponProvider; StatusBadge se mockea para evitar fetch de /health/full.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppRoutes } from '../App'
@@ -61,7 +61,7 @@ describe('Router', () => {
     expect(screen.getByText('Página no encontrada')).toBeInTheDocument()
   })
 
-  it('renderiza la barra de navegación con los 6 links (incluyendo Estado)', () => {
+  it('renderiza la barra de navegación con los 7 links (incluyendo Futuros y Estado)', () => {
     renderAtPath('/')
     // Nav top y nav bottom tienen los links — getByRole puede devolver múltiples
     const topNav = screen.getByTestId('nav-top')
@@ -70,7 +70,15 @@ describe('Router', () => {
     expect(topNav).toHaveTextContent('Partidos')
     expect(topNav).toHaveTextContent('Modelo')
     expect(topNav).toHaveTextContent('Apuestas')
+    expect(topNav).toHaveTextContent('Futuros')
     expect(topNav).toHaveTextContent('Estado')
+  })
+
+  it('/futures renderiza FuturesDashboard (h1 "Futuros WC2026")', async () => {
+    renderAtPath('/futures')
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /futuros wc2026/i })).toBeInTheDocument()
+    })
   })
 
   it('/paper redirige a /apuestas', () => {

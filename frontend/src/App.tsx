@@ -7,6 +7,7 @@ import MatchesPage from './pages/MatchesPage'
 import ModelPage from './pages/ModelPage'
 import BetsPage from './pages/BetsPage'
 import EstadoPage from './pages/EstadoPage'
+import FuturesDashboard from './pages/FuturesDashboard'
 import NotFound from './pages/NotFound'
 import { CuponProvider } from './context/CuponContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -36,6 +37,7 @@ export function AppRoutes() {
         <Route path="/modelo" element={<ModelPage />} />
         <Route path="/apuestas" element={<BetsPage />} />
         <Route path="/estado" element={<EstadoPage />} />
+        <Route path="/futures" element={<FuturesDashboard />} />
         {/* Redirect de /paper → /apuestas para retrocompatibilidad */}
         <Route path="/paper" element={<Navigate to="/apuestas" replace />} />
         <Route path="*" element={<NotFound />} />

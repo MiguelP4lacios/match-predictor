@@ -1,0 +1,25 @@
+change: futures-montecarlo
+phase: proposal
+artifact_store: hybrid
+execution_mode: auto
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  verify_report: false
+tasks_progress:
+  completed: []
+  pending: []
+last_updated: 2026-06-11
+notes: |
+  Monte Carlo del bracket WC2026 (48 equipos, formato nuevo). Mercados: p_champion + p_advance_group
+  + p_reach_semi + p_reach_final por equipo. N=20000 con RNG sembrada (reproducible). Grupos: 1X2
+  sample + Poisson goals para DG; knockout P(adv)=P(H)+0.5*P(D); Elo estático. Annex C = tabla de
+  495 filas (8 mejores terceros) del reglamento FIFA oficial, en app/model/annex_c.py + test de
+  validación (8 letras distintas A-L, cubre C(12,8)=495). standings.py fix: +team_id a StandingRow.
+  m9: +outcome_team_id FK a prediction + MarketType REACH_SEMI_FINAL/REACH_FINAL (PG enum uppercase) +
+  uq_prediction_identity. Captura futures: job diario soccer_fifa_world_cup_winner (1 crédito/run) +
+  fetch_futures() + manual BetPlay para advance/reach-final (no free tier). EV: de-vig proporcional
+  sobre 48 outcomes → value_signal OUTRIGHT_WINNER. Front: FuturesDashboard. Next: sdd-spec + sdd-design.

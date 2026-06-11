@@ -327,6 +327,50 @@ class ParlayItem(_ORMBase):
 
 
 # ---------------------------------------------------------------------------
+# Futuros Monte Carlo (WC2026)
+# ---------------------------------------------------------------------------
+
+
+class FuturesProbItem(BaseModel):
+    """Probabilidades Monte Carlo para un equipo en futuros WC2026."""
+
+    team_id: int
+    team: str
+    group: str | None = None
+    p_champion: float
+    p_advance_group: float
+    p_reach_sf: float
+    p_reach_final: float
+
+
+class FuturesProbResponse(BaseModel):
+    """Respuesta de GET /api/v1/futures/probabilities.
+
+    champions: lista completa rankeada por p_champion DESC.
+    """
+
+    champions: list[FuturesProbItem]
+
+
+class FuturesSignalItem(BaseModel):
+    """Señal +EV sobre futuros (OUTRIGHT_WINNER, pre-computada)."""
+
+    signal_id: int
+    team_id: int
+    team: str
+    p_champion: float
+    edge: float
+    best_odds: float
+    bookmaker: str
+
+
+class FuturesSignalResponse(BaseModel):
+    """Respuesta de GET /api/v1/futures/signals."""
+
+    items: list[FuturesSignalItem]
+
+
+# ---------------------------------------------------------------------------
 # Explicación de señal (+EV)
 # ---------------------------------------------------------------------------
 

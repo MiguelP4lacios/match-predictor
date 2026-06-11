@@ -233,6 +233,44 @@ export interface ParlayItem {
   note: string | null
 }
 
+// ─── Futuros Monte Carlo (WC2026) ────────────────────────────────────────────
+
+/**
+ * Probabilidades de futuros para un equipo (model=montecarlo-v1).
+ * group: letra del grupo (A–L), puede ser null si no hay datos de grupo.
+ */
+export interface FutureTeamRow {
+  team_id: number
+  team: string
+  group: string | null
+  p_champion: number
+  p_advance_group: number
+  p_reach_sf: number
+  p_reach_final: number
+}
+
+/** Respuesta de GET /api/v1/futures/probabilities. */
+export interface FuturesList {
+  /** Champions rankeados por p_champion DESC */
+  champions: FutureTeamRow[]
+}
+
+/** Señal +EV sobre OUTRIGHT_WINNER (pre-computada por futures_signals.py). */
+export interface FutureSignal {
+  signal_id: number
+  team_id: number
+  team: string
+  p_champion: number
+  edge: number
+  best_odds: number
+  bookmaker: string
+}
+
+/** Respuesta de GET /api/v1/futures/signals. */
+export interface FuturesSignalResponse {
+  items: FutureSignal[]
+}
+
 // ─── Explain endpoint types (espejo del schema Pydantic del backend) ───────────
 
 export interface ExplainStep {

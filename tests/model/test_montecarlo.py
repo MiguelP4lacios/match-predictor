@@ -9,8 +9,6 @@ Escenarios del spec (verbatim):
 
 import time
 
-import pytest
-
 # ---------------------------------------------------------------------------
 # MC1: fórmula P(home_adv) en knockout — test puro sin simulación
 # ---------------------------------------------------------------------------
@@ -35,7 +33,6 @@ def test_mc1_knockout_proba_formula():
 def test_mc2_seed_42_is_reproducible():
     """MC2: simulate_tournament con seed=42 produce resultados byte-idénticos."""
     from app.model.montecarlo import simulate_tournament
-    from app.model.standings import MatchResult
 
     # Parámetros mínimos del OLM (valores plausibles)
     params = {

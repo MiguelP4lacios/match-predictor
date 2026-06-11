@@ -8,7 +8,6 @@ Escenarios:
   A5: validate_annex_c() no lanza excepción (internamente verifica invariantes)
 """
 
-import pytest
 
 from app.model.annex_c import ANNEX_C, validate_annex_c
 

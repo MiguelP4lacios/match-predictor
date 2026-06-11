@@ -15,6 +15,7 @@ export const APP_ROUTES: RouteConfig[] = [
   { to: '/partidos', label: 'Partidos' },
   { to: '/modelo', label: 'Modelo' },
   { to: '/apuestas', label: 'Apuestas' },
+  { to: '/futures', label: 'Futuros' },
   { to: '/estado', label: 'Estado' },
 ]
 
