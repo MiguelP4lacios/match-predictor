@@ -6,12 +6,14 @@ truncar tablas.
 """
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 # La DATABASE_URL viene de la variable de entorno inyectada por docker compose
 # (db:5432 dentro de la red).  En CI usa la misma env var.
-from app.core.database import engine
+from app.core.database import engine, get_session
+from app.main import app
 
 
 @pytest.fixture()
@@ -40,3 +42,16 @@ def db_session():
     session.close()
     outer_tx.rollback()
     connection.close()
+
+
+@pytest.fixture()
+def client(db_session):
+    """TestClient con la sesión de BD inyectada (SAVEPOINT isolation).
+
+    Duplicado del fixture en tests/api/conftest.py para que los tests en el
+    directorio raíz (tests/) también puedan usar el cliente HTTP.
+    """
+    app.dependency_overrides[get_session] = lambda: db_session
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
