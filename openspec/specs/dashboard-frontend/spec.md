@@ -499,6 +499,94 @@ Cada vista MUST mostrar skeleton de carga y banner "API no disponible" + botón
 
 ---
 
+### Requirement: R-DS — Aplicación del Design System
+
+Todas las vistas (Señales, Grupos, Partidos, Modelo, Apuestas) y los drawers (CuponDrawer,
+ExplainDrawer) MUST ser re-estilados usando las primitivas del design system
+(`Card`, `Badge`, `Stat`, `Button`, `Sheet`, `FlagLabel`, `StatusBadge`).
+
+El rediseño MUST ser exclusivamente presentacional: contratos de API, hooks de datos,
+formatters y escenarios numéricos existentes MUST permanecer sin cambios.
+Los componentes MUST usar tokens CSS (`--bg`, `--surface`, etc.) via clases Tailwind
+semánticas — MUST NOT usar colores hardcodeados (ej. `bg-white`, `text-gray-900`).
+
+#### Scenario: Colores desde tokens, no hardcodeados
+
+- GIVEN la vista Señales renderiza en tema dark
+- WHEN se inspecciona el fondo de un SignalCard
+- THEN el color proviene de `var(--surface)` (clase `bg-surface`), no de un valor hardcodeado
+
+#### Scenario: Comportamiento existente preservado
+
+- GIVEN señales con edge=0.064 y stake="18.93"
+- WHEN la vista Señales renderiza después del rediseño
+- THEN muestra "6.4%" y "$18.93" — idéntico al comportamiento pre-rediseño
+
+---
+
+### Requirement: R-FLAGS — Banderas en Equipos
+
+Todos los lugares donde se muestra un nombre de equipo (SignalCard, standings, fixtures,
+lista de apuestas, CuponDrawer) MUST usar el componente `FlagLabel`.
+El front MUST NOT mostrar nombres de equipo sin bandera en ninguna vista post-rediseño.
+
+#### Scenario: FlagLabel en SignalCard
+
+- GIVEN SignalCard para "Mexico vs South Korea"
+- WHEN renderiza
+- THEN home team muestra "🇲🇽 Mexico" y away team muestra "🇰🇷 South Korea"
+
+#### Scenario: Fallback para equipo sin mapeo
+
+- GIVEN un equipo con nombre no mapeado en lib/flags.ts
+- WHEN FlagLabel renderiza
+- THEN muestra "🏳 {nombre}" sin crash
+
+---
+
+### Requirement: R-GROUPS-RESPONSIVE — Tabla de Grupos sin Scroll Lateral
+
+La tabla de standings de grupos MUST implementar un layout responsive SIN scroll
+horizontal (`overflow-x` MUST NOT ser el mecanismo de adaptación en mobile).
+
+En viewport < 640px (mobile), la tabla MUST mostrar columnas condensadas:
+`Pos`, `🏳 Equipo`, `PJ`, `DG`, `Pts`.
+
+Al tocar/hacer click en una fila, MUST expandir la fila para revelar las columnas
+adicionales: `G`, `E`, `P`, `GF`, `GC` — inline bajo la fila o como acordeón.
+
+En viewport ≥ 640px (desktop), MUST mostrar todas las columnas sin expansión.
+
+Las dos primeras posiciones de cada grupo MUST tener color de fondo diferenciado
+(zona de clasificación). El orden de filas MUST seguir siendo el del servidor (sin
+re-ordenar por el front).
+
+#### Scenario: Mobile — columnas condensadas, sin scroll lateral
+
+- GIVEN viewport 360px
+- WHEN GroupCard renderiza la tabla del Grupo A
+- THEN solo se ven Pos/🏳 Equipo/PJ/DG/Pts; no hay scroll horizontal; `overflow-x` no está en `scroll` ni `auto`
+
+#### Scenario: Mobile — expansión de fila revela detalle
+
+- GIVEN viewport 390px, tabla condensada del Grupo K
+- WHEN el usuario toca la fila de Colombia
+- THEN la fila muestra G/E/P/GF/GC de Colombia; las demás filas sin expandir no los muestran
+
+#### Scenario: Desktop — tabla completa
+
+- GIVEN viewport 1280px
+- WHEN GroupCard renderiza
+- THEN todas las columnas (Pos, Equipo, PJ, G, E, P, GF, GC, DG, Pts) son visibles sin acción
+
+#### Scenario: Zona de clasificación coloreada
+
+- GIVEN grupo con 4 equipos, standings `[Colombia, DR Congo, Portugal, Uzbekistan]`
+- WHEN la tabla renderiza
+- THEN Colombia y DR Congo tienen fondo diferenciado; Portugal y Uzbekistan no
+
+---
+
 ### Requirement: R9 — Build e Integración Docker
 
 El vite dev server MUST configurar proxy `/api` → `http://api:8000` (red compose).

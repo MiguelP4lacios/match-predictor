@@ -1,0 +1,57 @@
+change: centro-de-control
+phase: archived
+artifact_store: hybrid
+execution_mode: auto
+artifacts:
+  exploration: false
+  proposal: true
+  specs: true
+  design: true
+  tasks: true
+  apply_progress: true
+  verify_report: true
+  archive_report: true
+tasks_progress:
+  completed: 36
+  pending: 0
+last_updated: 2026-06-11
+archived_at: 2026-06-11
+notes: |
+  Rediseño UX/UI profesional + observabilidad. COMPLETADO Y DEPLOYADO EN VPS.
+
+  Tema AUTO light+dark (script inline sin flash, ThemeContext, tokens CSS, Tailwind darkMode:class).
+  48 banderas reales de group_team (England/Scotland tag sequences, fallback 🏳).
+  12 primitivas en src/ui/ (Card, Badge, Stat, Button, Tabs, Sheet, FlagLabel, ThemeToggle,
+  StatusBadge, AppShell, Spinner, ErrorState).
+  Nav responsive (bottom-tab teléfono <md / top laptop ≥md, StatusBadge header siempre visible).
+  GroupCard reflow hidden md:table-cell + expandedRow estado JS (SIN scroll lateral 360px).
+
+  OBSERVABILIDAD: GET /api/v1/health/full + health_status.py (verdictos por umbral:
+  odds age ≤4h ok / 4-10h warn / >10h stale; credits ≥100 ok / <100 warn).
+  m8 migración SyncLog: rows_inserted + credits_remaining nullable, reversible.
+  capture_odds_job upsert sync_log(resource=odds_api:capture, rows_inserted, credits_remaining)
+  tras pipeline.capture (frontera transacción, solución del bug 2026-06-10).
+  StatusBadge poll 60s /health/full, muestra 🟢/🟡/🔴.
+  Página /estado (ruta nueva) con 4 métricas + verdictos + tiempo relativo.
+
+  APLICACIÓN: 36 tasks ejecutadas en 3 agentes paralelos (A: 12 tests BE observabilidad;
+  B: 66 tests design-system+shell; C: re-estilado todas las páginas). ~160 tests FE
+  reescritos por markup (lógica intacta, selectores RTL actualizados).
+
+  VERIFICACIÓN: FAIL inicial por mismatch de contrato BE/FE en health.ts (expected flat
+  HealthMetric[], backend retorna nested {odds_capture, odds_credits, model, results}).
+  FIXED post-verify: health.ts + EstadoPage.tsx + EstadoPage.test.tsx + StatusBadge.test.tsx
+  reescritos a forma real. 232 frontend + 207 backend tests verdes. Ruff check: ok.
+  npm run build: ok. Deployed VPS con m8 upgrade. Smoke /estado HTTP 200, health overall:ok.
+
+  COSMÉTICOS (no-bloqueantes, sin impacto funcional):
+  W1: flags.ts exports nameToFlag (spec: getFlag) — nombre, lógica funcional
+  W2: CSS tokens divergen de spec DS1 (spec: --bg/--surface/--text/--text-muted/--border/--accent/--positive/--negative;
+       impl: --bg/--bg-elevated/--fg/--fg-muted/--border/--primary/--primary-fg/--success/--warn/--danger/--qualify).
+       Tailwind semantic mapping consistent. Implementación correcta per spec HO/D.
+  W3: Ivory Coast vs Côte d'Ivoire canonical — spec requiere Côte d'Ivoire, DB/impl usa Ivory Coast.
+  S1: Primitivas en src/ui/ vs spec src/components/ui/ — design.md pivot, spec no actualizado.
+
+  LINEAGE: proposal → specs (5 dominios: design-system NEW, health-observability NEW, api-readonly DELTA,
+  dashboard-frontend DELTA, odds-capture DELTA) → design (8 decisiones) → tasks (36) →
+  apply (3 agentes) → verify (1 CRITICAL → FIXED) → archive.
