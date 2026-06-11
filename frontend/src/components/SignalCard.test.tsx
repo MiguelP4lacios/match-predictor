@@ -1,10 +1,18 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import SignalCard from './SignalCard'
 import type { SignalItem } from '../api/types'
 
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+  return { ...actual, useNavigate: () => mockNavigate }
+})
+
 const makeSignal = (overrides: Partial<SignalItem> = {}): SignalItem => ({
   id: 10,
+  match_id: 99,
   match_date: '2026-06-11',
   kickoff_at: null,
   home_team: 'México',
@@ -91,5 +99,44 @@ describe('SignalCard', () => {
       render(<SignalCard signal={makeSignal({ edge: 0.064, recommended_stake: '18.93' })} onExplain={vi.fn()} />)
       expect(screen.getByText('$18.93')).toBeInTheDocument()
     })
+  })
+})
+
+describe('Registrar apuesta button (4.8)', () => {
+  it('el badge de edge dice "la cuota paga de más" — nunca "ventaja" a secas (ambiguo)', () => {
+    render(
+      <MemoryRouter>
+        <SignalCard signal={makeSignal({ edge: 0.064 })} onExplain={vi.fn()} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('la cuota paga de más')).toBeInTheDocument()
+    expect(screen.queryByText(/^ventaja$/)).not.toBeInTheDocument()
+  })
+
+  it('botón "Registrar apuesta" navega a /apuestas con match_id, outcome y odds', () => {
+    mockNavigate.mockClear()
+    render(
+      <MemoryRouter>
+        <SignalCard
+          signal={makeSignal({ match_id: 99, outcome_code: 'HOME', best_odds: 1.47 })}
+          onExplain={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /registrar apuesta/i }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/apuestas?match_id=99&outcome=HOME&odds=1.47',
+    )
+  })
+
+  it('NO muestra botón "Registrar apuesta" cuando match_id es null', () => {
+    render(
+      <MemoryRouter>
+        <SignalCard signal={makeSignal({ match_id: null })} onExplain={vi.fn()} />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByRole('button', { name: /registrar apuesta/i })).not.toBeInTheDocument()
   })
 })
