@@ -53,6 +53,8 @@ class MarketType(enum.StrEnum):
     OVER_UNDER = "OVER_UNDER"
     OUTRIGHT_WINNER = "OUTRIGHT_WINNER"
     GROUP_ADVANCE = "GROUP_ADVANCE"
+    REACH_SEMI_FINAL = "REACH_SEMI_FINAL"
+    REACH_FINAL = "REACH_FINAL"
 
 
 class BetMode(enum.StrEnum):

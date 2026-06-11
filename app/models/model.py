@@ -29,8 +29,10 @@ class Prediction(Base):
         UniqueConstraint(
             "model_version_id",
             "match_id",
+            "competition_id",
             "market_type",
             "outcome_code",
+            "outcome_team_id",
             name="uq_prediction_identity",
         ),
     )
@@ -41,6 +43,9 @@ class Prediction(Base):
     )
     competition_id: Mapped[int | None] = mapped_column(ForeignKey("competition.id"))
     model_version_id: Mapped[int] = mapped_column(ForeignKey("model_version.id"))
+    # FK al equipo para predicciones de futuros (CHAMPION, ADVANCE_GROUP, REACH_*).
+    # NULL en predicciones 1X2 / Over-Under basadas en partido.
+    outcome_team_id: Mapped[int | None] = mapped_column(ForeignKey("team.id"), nullable=True)
 
     market_type: Mapped[MarketType] = mapped_column(market_type_type)
     outcome_code: Mapped[str | None] = mapped_column(String(20))

@@ -46,6 +46,7 @@ class StandingRow:
     """Fila de la tabla de posiciones de un grupo."""
 
     team_name: str
+    team_id: int = 0  # ID numérico del equipo (necesario para el Monte Carlo)
     pj: int = 0  # partidos jugados
     g: int = 0  # ganados
     e: int = 0  # empatados
@@ -58,7 +59,9 @@ class StandingRow:
 
 def _accumulate(members: list[TeamRef], results: list[MatchResult]) -> dict[int, StandingRow]:
     """Calcula estadísticas globales de cada equipo a partir de los resultados."""
-    rows: dict[int, StandingRow] = {m.team_id: StandingRow(team_name=m.name) for m in members}
+    rows: dict[int, StandingRow] = {
+        m.team_id: StandingRow(team_name=m.name, team_id=m.team_id) for m in members
+    }
 
     for r in results:
         h = rows.get(r.home_id)

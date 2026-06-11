@@ -212,3 +212,31 @@ def test_s5_triple_tie_falls_to_alphabetical():
     # A primero (9 pts), luego X < Y < Z alfabéticamente
     assert table[0].team_name == "A"
     assert [r.team_name for r in table[1:]] == ["X", "Y", "Z"]
+
+
+# ---------------------------------------------------------------------------
+# Scenario S6: team_id must be populated (non-zero) in every row
+# ---------------------------------------------------------------------------
+
+
+def test_s6_team_id_populated_for_each_row():
+    """S6: compute_standings debe propagar team_id del TeamRef a cada StandingRow."""
+    results = [
+        _mr("A", "B", 1, 0),
+        _mr("C", "D", 2, 1),
+        _mr("A", "C", 0, 0),
+        _mr("B", "D", 1, 1),
+        _mr("A", "D", 2, 0),
+        _mr("B", "C", 0, 1),
+    ]
+    table = compute_standings(_TEAMS_ABCD, results)
+
+    assert len(table) == 4
+    # Every row must carry a non-zero team_id
+    for row in table:
+        assert row.team_id != 0, f"team_id es 0 para {row.team_name}"
+
+    # team_ids must match the fixture team_ids: 1=A, 2=B, 3=C, 4=D
+    name_to_id = {t.name: t.team_id for t in _TEAMS_ABCD}
+    for row in table:
+        assert row.team_id == name_to_id[row.team_name]
