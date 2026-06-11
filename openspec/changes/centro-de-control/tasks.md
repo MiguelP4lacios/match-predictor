@@ -33,13 +33,13 @@
 
 ## Phase 4: Re-estilado de Páginas [Agent C, depende de B]
 
-- [ ] 4.1 Modificar `frontend/src/components/GroupCard.tsx`: reflow `hidden md:table-cell` + `expandedRow` (estado JS); zona classify top-2 con `var(--qualify)`; sin `overflow-x-scroll`. Tests RTL: columnas condensadas 360px; expand tap revela G/E/P; desktop muestra todo.
-- [ ] 4.2 Re-estilizar `SignalsPage`, `SignalCard`, `SignalCardGroup`: usar `Card/Badge/FlagLabel`; edge fuerte destacado. Tests actualizados (formatters y escenarios numéricos intactos).
-- [ ] 4.3 Re-estilizar `GroupsPage`, `GroupDetailPage`: usar `Card/FlagLabel`. Tests de render actualizados.
-- [ ] 4.4 Re-estilizar `MatchesPage`, `MatchProbBar`: usar `FlagLabel`, sticky date-headers, tokens. Tests actualizados.
-- [ ] 4.5 Re-estilizar `ModelPage`: stat cards + tabla calibración con `Stat/Card`. Tests actualizados.
-- [ ] 4.6 Re-estilizar `BetsPage`, `BetForm`, `BetList`: ROI hero con `Stat`; tokens light/dark. Tests actualizados.
-- [ ] 4.7 Modificar `CuponDrawer`, `ExplainDrawer`: chrome vía `<Sheet>`, lógica y estado intactos. Tests `ExplainDrawer` cierra con Escape; skeleton mientras carga. Eliminar `ErrorBanner.tsx` y `Loading.tsx` (reemplazados por `ui/ErrorState`, `ui/Spinner`).
+- [x] 4.1 Modificar `frontend/src/components/GroupCard.tsx`: reflow `hidden md:table-cell` + `expandedRow` (estado JS); zona classify top-2 con `var(--qualify)`; sin `overflow-x-scroll`. Tests RTL: columnas condensadas 360px; expand tap revela G/E/P; desktop muestra todo.
+- [x] 4.2 Re-estilizar `SignalsPage`, `SignalCard`, `SignalCardGroup`: usar `Card/Badge/FlagLabel`; edge fuerte destacado. Tests actualizados (formatters y escenarios numéricos intactos).
+- [x] 4.3 Re-estilizar `GroupsPage`, `GroupDetailPage`: usar `Card/FlagLabel`. Tests de render actualizados.
+- [x] 4.4 Re-estilizar `MatchesPage`, `MatchProbBar`: usar `FlagLabel`, sticky date-headers, tokens. Tests actualizados.
+- [x] 4.5 Re-estilizar `ModelPage`: stat cards + tabla calibración con `Stat/Card`. Tests actualizados.
+- [x] 4.6 Re-estilizar `BetsPage`, `BetForm`, `BetList`: ROI hero con `Stat`; tokens light/dark. Tests actualizados.
+- [x] 4.7 Modificar `CuponDrawer`, `ExplainDrawer`: chrome vía `<Sheet>`, lógica y estado intactos. Tests `ExplainDrawer` cierra con Escape; skeleton mientras carga. Eliminar `ErrorBanner.tsx` y `Loading.tsx` (reemplazados por `ui/ErrorState`, `ui/Spinner`).
 
 ## Phase 5: Cierre [secuencial, tras A+B+C]
 
