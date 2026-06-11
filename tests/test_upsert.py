@@ -174,3 +174,25 @@ def test_run_force_false_skips_if_already_synced(db_session):
     result = pipeline.run(force=False)
 
     assert result.get("skipped") is True
+
+
+def test_duplicados_intra_batch_no_explotan(db_session):
+    """REGRESIÓN (producción 2026-06-10): el CSV de martj42 trae filas DUPLICADAS
+    (ej. Gibraltar vs Cayman Islands 2026-06-06). Dos filas con la misma identidad
+    en el MISMO batch rompen el upsert con CardinalityViolation. El batch debe
+    dedupearse conservando la ÚLTIMA aparición (dato más reciente gana).
+    """
+    dup_a = _make_raw_match(
+        home_team="TEST_DupFC", away_team="TEST_DupRivalFC", home_score=1, away_score=1
+    )
+    dup_b = _make_raw_match(
+        home_team="TEST_DupFC", away_team="TEST_DupRivalFC", home_score=4, away_score=1
+    )
+    pipeline = ResultsIngestionPipeline(db_session, FakeResultsSource([dup_a, dup_b]))
+
+    pipeline.run(force=True)  # no debe lanzar CardinalityViolation
+
+    assert _count_test_matches(db_session, "TEST_DupFC", "TEST_DupRivalFC") == 1
+    home = db_session.scalar(select(Team).where(Team.name == "TEST_DupFC"))
+    match = db_session.scalar(select(Match).where(Match.home_team_id == home.id))
+    assert match.home_score == 4  # la última aparición gana

@@ -109,8 +109,18 @@ class ResultsIngestionPipeline:
         return count
 
     def _upsert_match_batch(self, rows: list[dict]) -> None:
-        """Ejecuta el upsert en Postgres sobre el constraint uq_match_identity."""
-        stmt = pg_insert(Match).values(rows)
+        """Ejecuta el upsert en Postgres sobre el constraint uq_match_identity.
+
+        Dedupe intra-batch: el CSV de origen trae filas duplicadas (ej. Gibraltar
+        vs Cayman 2026-06-06) y Postgres rechaza tocar la misma fila dos veces en
+        un solo ON CONFLICT DO UPDATE (CardinalityViolation, visto en producción
+        2026-06-10). El dict conserva la ÚLTIMA aparición — el dato más reciente
+        gana. Duplicados ENTRE batches no rompen (comandos separados).
+        """
+        deduped = {
+            (r["match_date"], r["home_team_id"], r["away_team_id"]): r for r in rows
+        }
+        stmt = pg_insert(Match).values(list(deduped.values()))
         stmt = stmt.on_conflict_do_update(
             constraint="uq_match_identity",
             set_={
