@@ -128,3 +128,44 @@ describe('AddToCuponButton — soporte de distintos outcomes', () => {
     expect(legs[0].match_id).toBe(20)
   })
 })
+
+describe('AddToCuponButton — etiqueta del pick (fix UX: 3 botones idénticos)', () => {
+  it('HOME muestra el equipo local, no "Agregar al cupón" genérico', () => {
+    render(
+      <CuponProvider>
+        <AddToCuponButton matchId={1} outcomeCode="HOME" homeTeam="Mexico" awayTeam="South Africa" matchDate="2026-06-11" />
+      </CuponProvider>,
+    )
+    expect(screen.getByRole('button')).toHaveTextContent('+ Mexico')
+  })
+
+  it('DRAW muestra "Empate"', () => {
+    render(
+      <CuponProvider>
+        <AddToCuponButton matchId={1} outcomeCode="DRAW" homeTeam="Mexico" awayTeam="South Africa" matchDate="2026-06-11" />
+      </CuponProvider>,
+    )
+    expect(screen.getByRole('button')).toHaveTextContent('+ Empate')
+  })
+
+  it('AWAY muestra el equipo visitante', () => {
+    render(
+      <CuponProvider>
+        <AddToCuponButton matchId={1} outcomeCode="AWAY" homeTeam="Mexico" awayTeam="South Africa" matchDate="2026-06-11" />
+      </CuponProvider>,
+    )
+    expect(screen.getByRole('button')).toHaveTextContent('+ South Africa')
+  })
+
+  it('los tres botones del mismo partido tienen textos DISTINTOS', () => {
+    render(
+      <CuponProvider>
+        <AddToCuponButton matchId={1} outcomeCode="HOME" homeTeam="Mexico" awayTeam="South Africa" matchDate="2026-06-11" />
+        <AddToCuponButton matchId={1} outcomeCode="DRAW" homeTeam="Mexico" awayTeam="South Africa" matchDate="2026-06-11" />
+        <AddToCuponButton matchId={1} outcomeCode="AWAY" homeTeam="Mexico" awayTeam="South Africa" matchDate="2026-06-11" />
+      </CuponProvider>,
+    )
+    const texts = screen.getAllByRole('button').map((b) => b.textContent)
+    expect(new Set(texts).size).toBe(3)
+  })
+})
