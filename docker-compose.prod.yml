@@ -103,8 +103,9 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # Hash bcrypt de la contraseña (en el .env del VPS, jamás commiteado).
+      # Hashes bcrypt de las contraseñas (en el .env del VPS, jamás commiteados).
       CADDY_BASIC_AUTH_HASH: ${CADDY_BASIC_AUTH_HASH:?falta CADDY_BASIC_AUTH_HASH en .env}
+      CADDY_BASIC_AUTH_HASH_JUNIOR: ${CADDY_BASIC_AUTH_HASH_JUNIOR:?falta CADDY_BASIC_AUTH_HASH_JUNIOR en .env}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

@@ -4,6 +4,7 @@
 162-243-163-165.nip.io {
 	basic_auth {
 		miguel {$CADDY_BASIC_AUTH_HASH}
+		junior {$CADDY_BASIC_AUTH_HASH_JUNIOR}
 	}
 	reverse_proxy frontend:80
 }
