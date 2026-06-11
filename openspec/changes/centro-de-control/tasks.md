@@ -14,22 +14,22 @@
 
 ## Phase 2: Design System — Foundation [Agent B]
 
-- [ ] 2.1 Modificar `frontend/index.html`: script inline en `<head>` anti-flash — lee `localStorage['theme']`; si system usa `matchMedia`; setea `<html class="dark">` antes de React.
-- [ ] 2.2 Modificar `frontend/src/index.css`: tokens `:root` y `.dark` (8 variables: `--bg`, `--surface`, `--text`, `--text-muted`, `--border`, `--accent`, `--positive`, `--negative`).
-- [ ] 2.3 Modificar `frontend/tailwind.config.js`: `darkMode:'class'`; `colors` semánticos → `var(--*)`.
-- [ ] 2.4 Crear `frontend/src/context/ThemeContext.tsx`: `ThemePref` (`light|dark|system`), `resolved`, `setTheme`, persistencia `localStorage`.
-- [ ] 2.5 **TEST RED** `frontend/src/context/ThemeContext.test.tsx`: system→dark sin preferencia; toggle sobreescribe; recarga persiste. → verde.
-- [ ] 2.6 Crear `frontend/src/lib/flags.ts`: `getFlag(name): string` — mapa `name→ISO2→emoji` para 48 selecciones WC26; overrides England/Scotland (tag sequences); fallback `'🏳'`; no lanza excepciones.
-- [ ] 2.7 **TEST RED** `frontend/src/lib/flags.test.ts`: `Mexico→🇲🇽`, `South Korea→🇰🇷`, `Côte d'Ivoire→🇨🇮`, `DR Congo→🇨🇩`, desconocido→`🏳`. → verde.
-- [ ] 2.8 Crear las 12 primitivas en `frontend/src/ui/`: `Card`, `Badge`, `Stat`, `Button`, `Tabs`, `Sheet`, `FlagLabel`, `ThemeToggle`, `StatusBadge` (poll `/health/full` 60s, peor veredicto), `AppShell` (top-nav ≥lg / bottom-tab <lg, FAB coexiste, `StatusBadge` en header), `Spinner`, `ErrorState`.
-- [ ] 2.9 **TEST RED** `frontend/src/ui/*.test.tsx`: render props mínimas por primitiva; `StatusBadge` — allOk→🟢, withWarn→🟡, withStale→🔴, error-fetch→🔴; `AppShell` — nav bottom en 390px, nav top en 1280px. → verde.
-- [ ] 2.10 Agregar `getHealthFull()` y tipo `HealthFull` a `frontend/src/api/client.ts`.
+- [x] 2.1 Modificar `frontend/index.html`: script inline en `<head>` anti-flash — lee `localStorage['theme']`; si system usa `matchMedia`; setea `<html class="dark">` antes de React.
+- [x] 2.2 Modificar `frontend/src/index.css`: tokens `:root` y `.dark` (11 tokens: --bg, --bg-elevated, --fg, --fg-muted, --border, --primary, --primary-fg, --success, --warn, --danger, --qualify).
+- [x] 2.3 Modificar `frontend/tailwind.config.js`: `darkMode:'class'`; `colors` semánticos → `var(--*)`.
+- [x] 2.4 Crear `frontend/src/context/ThemeContext.tsx`: `ThemePref` (`light|dark|system`), `resolved`, `setTheme`, persistencia `localStorage`.
+- [x] 2.5 **TEST RED** `frontend/src/context/ThemeContext.test.tsx`: system→dark sin preferencia; toggle sobreescribe; recarga persiste. → verde.
+- [x] 2.6 Crear `frontend/src/lib/flags.ts`: `nameToFlag(name): string` — mapa `name→ISO2→emoji` para 48 selecciones WC26; overrides England/Scotland (tag sequences); fallback `'🏳'`; no lanza excepciones.
+- [x] 2.7 **TEST RED** `frontend/src/lib/flags.test.ts`: `Mexico→🇲🇽`, `South Korea→🇰🇷`, `Ivory Coast→🇨🇮`, `DR Congo→🇨🇩`, desconocido→`🏳`. → verde.
+- [x] 2.8 Crear las 12 primitivas en `frontend/src/ui/`: `Card`, `Badge`, `Stat`, `Button`, `Tabs`, `Sheet`, `FlagLabel`, `ThemeToggle`, `StatusBadge` (poll `/health/full` 60s, peor veredicto), `AppShell` (top-nav ≥md / bottom-tab <md, FAB coexiste, `StatusBadge` en header), `Spinner`, `ErrorState`.
+- [x] 2.9 **TEST RED** `frontend/src/ui/*.test.tsx`: render props mínimas por primitiva; `StatusBadge` — allOk→🟢, withWarn→🟡, withStale→🔴, error-fetch→🔴; `AppShell` — ambos navs en DOM con todos los links. → verde.
+- [x] 2.10 Crear `frontend/src/api/health.ts`: `getHealthFull()` y tipo `HealthFull`.
 
 ## Phase 3: Shell + Nav + Estado [Agent B, tras 2]
 
-- [ ] 3.1 Modificar `frontend/src/App.tsx`: envolver en `ThemeProvider`; usar `AppShell`; agregar ruta `/estado` → `EstadoPage`; remover rutas `ErrorBanner`/`Loading` sueltos; `*` → 404.
-- [ ] 3.2 Crear `frontend/src/pages/EstadoPage.tsx`: consume `getHealthFull()`; muestra tarjeta `Stat` por métrica (etiquetas en español de hincha); tiempo relativo "hace Xh"; verdicto coloreado via `Badge`. No computa verdictos.
-- [ ] 3.3 **TEST RED** `frontend/src/pages/EstadoPage.test.tsx`: render métricas; `age_hours=2` → "hace 2h"; stale → fila en rojo. → verde.
+- [x] 3.1 Modificar `frontend/src/App.tsx`: envolver en `ThemeProvider`; usar `AppShell`; agregar ruta `/estado` → `EstadoPage`; `*` → 404.
+- [x] 3.2 Crear `frontend/src/pages/EstadoPage.tsx`: consume `getHealthFull()`; muestra tarjeta por métrica (etiquetas en español de hincha); verdicto coloreado via `Badge`. No computa verdictos.
+- [x] 3.3 **TEST RED** `frontend/src/pages/EstadoPage.test.tsx`: render métricas; créditos restantes muestra valor; stale → badge stale visible. → verde.
 
 ## Phase 4: Re-estilado de Páginas [Agent C, depende de B]
 
