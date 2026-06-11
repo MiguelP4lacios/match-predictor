@@ -32,20 +32,20 @@
 
 ## Phase 4: Frontend
 
-- [ ] 4.1 `frontend/src/api/types.ts` — añadir `ParlayLegInput`, `LegDiagnostic`, `ParlayPreview`, `ParlayItem`
-- [ ] 4.2 `frontend/src/api/parlays.ts` — wrappers `previewParlay()`, `createParlay()`, `fetchParlays()` sobre `fetchAPI`
-- [ ] 4.3 RED: `tests/context/CuponContext.test.tsx` — `addLeg/removeLeg/clear`, persistencia `sessionStorage`, sin duplicados
-- [ ] 4.4 GREEN: `frontend/src/context/CuponContext.tsx` — Provider `addLeg/removeLeg/clear`, `sessionStorage`
-- [ ] 4.5 RED: `tests/components/CuponDrawer.test.tsx` — EV live (7.084/31.9%/+126.3%), warning leg −EV, retorno 35.420 COP, "Registrar cupón" POST+limpia, botón deshabilitado sin legs
-- [ ] 4.6 GREEN: `frontend/src/components/CuponDrawer.tsx` + `CuponLegRow.tsx` — preview debounced ≥300ms, inputs odds + stake COP, banner independencia, "Registrar cupón"
-- [ ] 4.7 RED: `tests/components/AddToCuponButton.test.tsx` — desde SignalCard añade leg; desde MatchesPage añade leg
-- [ ] 4.8 GREEN: `frontend/src/components/AddToCuponButton.tsx` — botón reutilizable; `SignalCard.tsx` y `pages/MatchesPage.tsx` lo montan
-- [ ] 4.9 `frontend/src/App.tsx` — montar `CuponContext` Provider + `CuponDrawer`
+- [x] 4.1 `frontend/src/api/types.ts` — añadir `ParlayLegInput`, `LegDiagnostic`, `ParlayPreview`, `ParlayItem`
+- [x] 4.2 `frontend/src/api/parlays.ts` — wrappers `previewParlay()`, `createParlay()`, `fetchParlays()` sobre `fetchAPI`
+- [x] 4.3 RED: `tests/context/CuponContext.test.tsx` — `addLeg/removeLeg/clear`, persistencia `sessionStorage`, sin duplicados
+- [x] 4.4 GREEN: `frontend/src/context/CuponContext.tsx` — Provider `addLeg/removeLeg/clear`, `sessionStorage`
+- [x] 4.5 RED: `tests/components/CuponDrawer.test.tsx` — EV live (7.084/31.9%/+126.3%), warning leg −EV, retorno 35.420 COP, "Registrar cupón" POST+limpia, botón deshabilitado sin legs
+- [x] 4.6 GREEN: `frontend/src/components/CuponDrawer.tsx` + `CuponLegRow.tsx` — preview debounced ≥300ms, inputs odds + stake COP, banner independencia, "Registrar cupón"
+- [x] 4.7 RED: `tests/components/AddToCuponButton.test.tsx` — desde SignalCard añade leg; desde MatchesPage añade leg
+- [x] 4.8 GREEN: `frontend/src/components/AddToCuponButton.tsx` — botón reutilizable; `SignalCard.tsx` y `pages/MatchesPage.tsx` lo montan
+- [x] 4.9 `frontend/src/App.tsx` — montar `CuponContext` Provider + `CuponDrawer`
 
 ## Phase 5: Cierre
 
-- [ ] 5.1 `pytest` full suite Docker — verde; `ruff check . && ruff format .` limpio
-- [ ] 5.2 `npm run build` (o `vite build`) — sin errores TS
-- [ ] 5.3 Deploy VPS — `rsync` + `docker compose up -d`; m7 corre al levantar
-- [ ] 5.4 Smoke real — preview parlay 2 partidos SCHEDULED vía URL pública (auth `miguel:2lYdO0TmxfHTSi4oXl+a`): math correcta; `settle_parlays` con 0 pendientes
-- [ ] 5.5 Commits convencionales + `git push`; `mem_save` apply-progress en engram
+- [x] 5.1 `pytest` full suite Docker — verde; `ruff check . && ruff format .` limpio
+- [x] 5.2 `npm run build` (o `vite build`) — sin errores TS
+- [x] 5.3 Deploy VPS — `rsync` + `docker compose up -d`; m7 corre al levantar
+- [x] 5.4 Smoke real — preview parlay 2 partidos SCHEDULED vía URL pública (auth `miguel:2lYdO0TmxfHTSi4oXl+a`): math correcta; `settle_parlays` con 0 pendientes
+- [x] 5.5 Commits convencionales + `git push`; `mem_save` apply-progress en engram
