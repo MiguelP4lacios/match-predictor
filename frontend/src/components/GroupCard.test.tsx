@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import GroupCard from './GroupCard'
 import type { StandingRow } from '../api/types'
 
@@ -60,7 +60,84 @@ describe('GroupCard', () => {
     // Todos los valores numéricos son 0
     const allCells = screen.getAllByRole('cell')
     const numericCells = allCells.filter((cell) => cell.textContent === '0')
-    // Cada fila tiene 8 columnas numéricas (pj, g, e, p, gf, gc, dg, pts)
+    // Cada fila tiene columnas numéricas (pj, g, e, p, gf, gc, dg, pts)
     expect(numericCells.length).toBeGreaterThanOrEqual(8)
+  })
+
+  it('NO tiene overflow-x-auto ni overflow-x-scroll (fix de scroll lateral)', () => {
+    const { container } = render(<GroupCard name="Grupo K" standings={[makeRow('España')]} />)
+    expect(container.innerHTML).not.toContain('overflow-x-auto')
+    expect(container.innerHTML).not.toContain('overflow-x-scroll')
+  })
+
+  it('tap en fila revela detalles expandidos (G/E/P/GF/GC) para esa fila', () => {
+    const standings = [makeRow('Colombia', { g: 2, e: 1, p: 0, gf: 5, gc: 2 })]
+    render(<GroupCard name="Grupo A" standings={standings} />)
+
+    // Inicialmente no hay fila expandida
+    expect(screen.queryByTestId('expanded-0')).not.toBeInTheDocument()
+
+    // Click en la primera fila de datos
+    const rows = screen.getAllByRole('row')
+    fireEvent.click(rows[1])
+
+    // Ahora aparece la fila expandida con los datos de detalle
+    expect(screen.getByTestId('expanded-0')).toBeInTheDocument()
+  })
+
+  it('segundo click en la misma fila colapsa el detalle', () => {
+    const standings = [makeRow('Colombia', { g: 2 })]
+    render(<GroupCard name="Grupo A" standings={standings} />)
+
+    const rows = screen.getAllByRole('row')
+    fireEvent.click(rows[1])
+    expect(screen.getByTestId('expanded-0')).toBeInTheDocument()
+
+    // Segundo click colapsa
+    fireEvent.click(rows[1])
+    expect(screen.queryByTestId('expanded-0')).not.toBeInTheDocument()
+  })
+
+  it('solo una fila expandida a la vez — tap en otra colapsa la anterior', () => {
+    const standings = [
+      makeRow('Colombia', { g: 2 }),
+      makeRow('DR Congo', { g: 1 }),
+    ]
+    render(<GroupCard name="Grupo K" standings={standings} />)
+
+    const rows = screen.getAllByRole('row')
+    // Expandir fila 0
+    fireEvent.click(rows[1])
+    expect(screen.getByTestId('expanded-0')).toBeInTheDocument()
+    expect(screen.queryByTestId('expanded-1')).not.toBeInTheDocument()
+
+    // Tap en fila 1 colapsa la 0 y expande la 1
+    fireEvent.click(rows[2])
+    expect(screen.queryByTestId('expanded-0')).not.toBeInTheDocument()
+    expect(screen.getByTestId('expanded-1')).toBeInTheDocument()
+  })
+
+  it('top-2 filas tienen atributo data-qualify="true" (zona de clasificación)', () => {
+    const standings = [
+      makeRow('Colombia', { pts: 9 }),
+      makeRow('DR Congo', { pts: 6 }),
+      makeRow('Portugal', { pts: 3 }),
+      makeRow('Uzbekistan', { pts: 0 }),
+    ]
+    render(<GroupCard name="Grupo K" standings={standings} />)
+
+    const rows = screen.getAllByRole('row')
+    // rows[0] es header, rows[1-4] son datos
+    expect(rows[1]).toHaveAttribute('data-qualify', 'true')
+    expect(rows[2]).toHaveAttribute('data-qualify', 'true')
+    expect(rows[3]).not.toHaveAttribute('data-qualify')
+    expect(rows[4]).not.toHaveAttribute('data-qualify')
+  })
+
+  it('muestra FlagLabel con bandera para cada equipo', () => {
+    render(<GroupCard name="Grupo A" standings={[makeRow('Mexico')]} />)
+    // nameToFlag('Mexico') = '🇲🇽'
+    expect(screen.getByText('🇲🇽')).toBeInTheDocument()
+    expect(screen.getByText('Mexico')).toBeInTheDocument()
   })
 })
