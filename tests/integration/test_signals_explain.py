@@ -26,9 +26,7 @@ def test_explain_signal_10_returns_200_with_expected_sections(client, db_session
     section_keys = [s["key"] for s in body["sections"]]
     expected_keys = ["apuesta", "edge", "origen_p_model", "stake", "calidad_modelo", "metadata"]
     assert section_keys == expected_keys, (
-        f"Claves de secciones incorrectas.\n"
-        f"  Esperado: {expected_keys}\n"
-        f"  Obtenido: {section_keys}"
+        f"Claves de secciones incorrectas.\n  Esperado: {expected_keys}\n  Obtenido: {section_keys}"
     )
 
     # Cada sección tiene steps

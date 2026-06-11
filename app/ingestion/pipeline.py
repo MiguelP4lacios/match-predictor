@@ -117,9 +117,7 @@ class ResultsIngestionPipeline:
         2026-06-10). El dict conserva la ÚLTIMA aparición — el dato más reciente
         gana. Duplicados ENTRE batches no rompen (comandos separados).
         """
-        deduped = {
-            (r["match_date"], r["home_team_id"], r["away_team_id"]): r for r in rows
-        }
+        deduped = {(r["match_date"], r["home_team_id"], r["away_team_id"]): r for r in rows}
         stmt = pg_insert(Match).values(list(deduped.values()))
         stmt = stmt.on_conflict_do_update(
             constraint="uq_match_identity",

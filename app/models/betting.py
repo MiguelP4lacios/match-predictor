@@ -35,12 +35,12 @@ class BetLog(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
     # Ruta PAPER: FK a la señal +EV que originó la apuesta (nullable desde m6).
-    value_signal_id: Mapped[int | None] = mapped_column(ForeignKey("value_signal.id"), nullable=True)
+    value_signal_id: Mapped[int | None] = mapped_column(
+        ForeignKey("value_signal.id"), nullable=True
+    )
 
     # Ruta REAL: FK directa al partido + outcome apostado.
-    match_id: Mapped[int | None] = mapped_column(
-        ForeignKey("match.id"), nullable=True, index=True
-    )
+    match_id: Mapped[int | None] = mapped_column(ForeignKey("match.id"), nullable=True, index=True)
     outcome_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     mode: Mapped[BetMode] = mapped_column(bet_mode_type, default=BetMode.PAPER)

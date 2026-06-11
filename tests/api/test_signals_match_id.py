@@ -14,7 +14,6 @@ from app.models.model import ModelVersion, Prediction
 from app.models.odds import Odds
 from app.models.team import Team
 
-
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------

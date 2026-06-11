@@ -14,8 +14,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from unittest.mock import patch
 
-import pytest
-
 from app.model.settle import settle_bets
 from app.models.betting import BetLog, ValueSignal
 from app.models.competition import Competition
@@ -24,7 +22,6 @@ from app.models.match import Match
 from app.models.model import ModelVersion, Prediction
 from app.models.odds import Odds
 from app.models.team import Team
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -46,7 +43,9 @@ def _make_teams(session) -> tuple[Team, Team]:
     return home, away
 
 
-def _make_match(session, comp, home, away, status=MatchStatus.FINISHED, home_score=2, away_score=0) -> Match:
+def _make_match(
+    session, comp, home, away, status=MatchStatus.FINISHED, home_score=2, away_score=0
+) -> Match:
     m = Match(
         competition_id=comp.id,
         match_date=date(2026, 6, 25),
@@ -61,7 +60,9 @@ def _make_match(session, comp, home, away, status=MatchStatus.FINISHED, home_sco
     return m
 
 
-def _make_real_bet(session, match, outcome_code="HOME", stake=Decimal("12000.00"), odds=1.40) -> BetLog:
+def _make_real_bet(
+    session, match, outcome_code="HOME", stake=Decimal("12000.00"), odds=1.40
+) -> BetLog:
     bet = BetLog(
         value_signal_id=None,
         match_id=match.id,
@@ -76,9 +77,13 @@ def _make_real_bet(session, match, outcome_code="HOME", stake=Decimal("12000.00"
     return bet
 
 
-def _make_paper_signal_bet(session, comp, home, away, match_status=MatchStatus.FINISHED, home_score=0, away_score=1) -> BetLog:
+def _make_paper_signal_bet(
+    session, comp, home, away, match_status=MatchStatus.FINISHED, home_score=0, away_score=1
+) -> BetLog:
     """Apuesta PAPER via value_signal_id → prediction → match."""
-    match = _make_match(session, comp, home, away, status=match_status, home_score=home_score, away_score=away_score)
+    match = _make_match(
+        session, comp, home, away, status=match_status, home_score=home_score, away_score=away_score
+    )
 
     mv = ModelVersion(name=f"settle-mv-{match.id}", params_json={})
     session.add(mv)
@@ -212,7 +217,9 @@ def test_settle_scheduled_match_untouched(db_session):
     """Apuesta PENDING con partido SCHEDULED → queda PENDING tras settle."""
     comp = _make_competition(db_session)
     home, away = _make_teams(db_session)
-    match = _make_match(db_session, comp, home, away, status=MatchStatus.SCHEDULED, home_score=None, away_score=None)
+    match = _make_match(
+        db_session, comp, home, away, status=MatchStatus.SCHEDULED, home_score=None, away_score=None
+    )
     bet = _make_real_bet(db_session, match)
 
     result = settle_bets(db_session)

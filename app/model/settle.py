@@ -63,9 +63,8 @@ def settle_bets(session: Session) -> dict[str, int]:
         .outerjoin(
             Match,
             # COALESCE lógico: REAL usa bet.match_id; PAPER usa prediction.match_id
-            (BetLog.match_id == Match.id) | (
-                (BetLog.match_id.is_(None)) & (Prediction.match_id == Match.id)
-            ),
+            (BetLog.match_id == Match.id)
+            | ((BetLog.match_id.is_(None)) & (Prediction.match_id == Match.id)),
         )
         .where(
             BetLog.status == BetStatus.PENDING,

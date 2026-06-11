@@ -14,7 +14,6 @@ from app.models.enums import BetMode, BetStatus, CompetitionKind, MatchStatus
 from app.models.match import Match
 from app.models.team import Team
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
