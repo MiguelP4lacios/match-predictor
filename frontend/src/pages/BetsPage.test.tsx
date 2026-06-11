@@ -1,11 +1,5 @@
 /**
- * PaperPage es redirigido a /apuestas — tests adaptados al nuevo shape.
- * El componente PaperPage ya no existe como página activa.
- * BetsPage.test.tsx cubre la nueva ruta.
- * Este archivo mantiene compatibilidad de importación para no borrar tests existentes.
- *
- * NOTE: PaperPage fue reemplazada por BetsPage + redirect /paper → /apuestas.
- * Tests de BetsPage en BetsPage.test.tsx
+ * Tests para BetsPage — TDD RED antes de implementar.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -31,46 +25,28 @@ const emptyModeStats = {
   roi: null,
 }
 
-function renderPage() {
+function renderPage(initialPath = '/apuestas') {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialPath]}>
         <BetsPage />
       </MemoryRouter>
     </QueryClientProvider>,
   )
 }
 
-describe('BetsPage (formerly PaperPage) — per-mode stats', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('muestra "—" para ROI null (sin apuestas cerradas)', async () => {
-    mockFetchAPI.mockImplementation((path: string) => {
-      if (path === '/v1/paper') {
-        return Promise.resolve({ paper: emptyModeStats, real: emptyModeStats })
-      }
-      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
-      if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
-      return Promise.resolve(null)
-    })
-
-    renderPage()
-
-    await waitFor(() => {
-      const dashes = screen.getAllByText('—')
-      expect(dashes.length).toBeGreaterThanOrEqual(2)
-    })
-    expect(screen.queryByText('0%')).not.toBeInTheDocument()
-    expect(screen.queryByText('0.0%')).not.toBeInTheDocument()
+describe('BetsPage (4.7)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
   })
 
-  it('muestra ROI positivo con signo + y %', async () => {
+  it('muestra stats PAPER y REAL', async () => {
     mockFetchAPI.mockImplementation((path: string) => {
       if (path === '/v1/paper') {
         return Promise.resolve({
-          paper: emptyModeStats,
-          real: { ...emptyModeStats, total: 10, settled: 8, won: 6, roi: 0.125 },
+          paper: { ...emptyModeStats, total: 5, roi: null },
+          real: { ...emptyModeStats, total: 2, staked: '24000', returns: '28800', roi: 0.20 },
         })
       }
       if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
@@ -81,7 +57,50 @@ describe('BetsPage (formerly PaperPage) — per-mode stats', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('+12.5%')).toBeInTheDocument()
+      expect(screen.getByText('Paper')).toBeInTheDocument()
+      expect(screen.getByText('Real')).toBeInTheDocument()
+    })
+  })
+
+  it('ModeStatsBlock REAL: roi=null → "—"', async () => {
+    mockFetchAPI.mockImplementation((path: string) => {
+      if (path === '/v1/paper') {
+        return Promise.resolve({
+          paper: emptyModeStats,
+          real: emptyModeStats,
+        })
+      }
+      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
+      return Promise.resolve(null)
+    })
+
+    renderPage()
+
+    await waitFor(() => {
+      // Should show "—" for roi null — at least two (paper + real)
+      const dashes = screen.getAllByText('—')
+      expect(dashes.length).toBeGreaterThanOrEqual(2)
+    })
+  })
+
+  it('ModeStatsBlock REAL: roi=0.20 → "+20.0%"', async () => {
+    mockFetchAPI.mockImplementation((path: string) => {
+      if (path === '/v1/paper') {
+        return Promise.resolve({
+          paper: emptyModeStats,
+          real: { ...emptyModeStats, total: 2, settled: 2, won: 2, staked: '24000', returns: '28800', roi: 0.20 },
+        })
+      }
+      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
+      return Promise.resolve(null)
+    })
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('+20.0%')).toBeInTheDocument()
     })
   })
 })

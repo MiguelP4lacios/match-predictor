@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import SignalCardGroup from './SignalCardGroup'
 import type { SignalItem } from '../api/types'
 
 const makeSignal = (overrides: Partial<SignalItem> & { edge: number }): SignalItem => ({
   id: 1,
+  match_id: null,
   match_date: '2026-06-20',
   kickoff_at: null,
   home_team: 'Haiti',
@@ -20,6 +22,14 @@ const makeSignal = (overrides: Partial<SignalItem> & { edge: number }): SignalIt
   captured_at: '2026-06-10T00:00:00',
   ...overrides,
 })
+
+function renderGroup(items: SignalItem[]) {
+  return render(
+    <MemoryRouter>
+      <SignalCardGroup items={items} onExplain={vi.fn()} />
+    </MemoryRouter>,
+  )
+}
 
 describe('SignalCardGroup', () => {
   describe('escenario Haiti(2 señales) + Brasil(1 señal)', () => {
@@ -40,21 +50,21 @@ describe('SignalCardGroup', () => {
     })
 
     it('muestra hint de exposición correlacionada para Haiti (2 señales)', () => {
-      render(<SignalCardGroup items={[haitiHome, haitiDraw, brasilAway]} onExplain={vi.fn()} />)
+      renderGroup([haitiHome, haitiDraw, brasilAway])
       expect(
         screen.getByText('⚠ 2 señales sobre este partido — exposición correlacionada')
       ).toBeInTheDocument()
     })
 
     it('NO muestra hint para Brasil (1 señal)', () => {
-      render(<SignalCardGroup items={[haitiHome, haitiDraw, brasilAway]} onExplain={vi.fn()} />)
+      renderGroup([haitiHome, haitiDraw, brasilAway])
       // Sólo 1 hint total (solo el partido con 2+ señales)
       const hints = screen.queryAllByText(/exposición correlacionada/)
       expect(hints).toHaveLength(1)
     })
 
     it('preserva el orden del servidor: Brasil primero si aparece antes en el input', () => {
-      render(<SignalCardGroup items={[brasilAway, haitiHome, haitiDraw]} onExplain={vi.fn()} />)
+      renderGroup([brasilAway, haitiHome, haitiDraw])
       // Usar el testid del header de grupo (no el <p> del SignalCard que también contiene "vs")
       const groupHeaders = screen.getAllByTestId('group-header')
       expect(groupHeaders).toHaveLength(2)
@@ -63,7 +73,7 @@ describe('SignalCardGroup', () => {
     })
 
     it('renderiza todas las señales del grupo Haiti (9.7% y 5.1%)', () => {
-      render(<SignalCardGroup items={[haitiHome, haitiDraw, brasilAway]} onExplain={vi.fn()} />)
+      renderGroup([haitiHome, haitiDraw, brasilAway])
       expect(screen.getByText('9.7%')).toBeInTheDocument()
       expect(screen.getByText('5.1%')).toBeInTheDocument()
     })
@@ -76,14 +86,14 @@ describe('SignalCardGroup', () => {
         home_team: 'Brasil', away_team: 'Argentina', match_date: '2026-06-21',
         outcome_code: 'AWAY',
       })
-      render(<SignalCardGroup items={[single]} onExplain={vi.fn()} />)
+      renderGroup([single])
       expect(screen.queryByText(/exposición correlacionada/)).not.toBeInTheDocument()
     })
   })
 
   describe('estado vacío', () => {
     it('muestra "Sin señales con ese filtro" cuando items=[]', () => {
-      render(<SignalCardGroup items={[]} onExplain={vi.fn()} />)
+      renderGroup([])
       expect(screen.getByText('Sin señales con ese filtro')).toBeInTheDocument()
     })
   })

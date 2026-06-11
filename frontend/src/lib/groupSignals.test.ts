@@ -6,6 +6,7 @@ const makeSignal = (
   overrides: Partial<SignalItem> & { edge: number },
 ): SignalItem => ({
   id: 1,
+  match_id: null,
   match_date: '2026-06-20',
   kickoff_at: null,
   home_team: 'Haiti',

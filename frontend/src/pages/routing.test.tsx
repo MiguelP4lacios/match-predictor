@@ -38,6 +38,12 @@ describe('Router', () => {
     expect(screen.getByRole('link', { name: 'Grupos' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Partidos' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Modelo' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Paper' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Apuestas' })).toBeInTheDocument()
+  })
+
+  it('/paper redirige a /apuestas', () => {
+    renderAtPath('/paper')
+    // La redirección navega a /apuestas — BetsPage debe renderizarse (tiene h1 "Apuestas")
+    expect(screen.getByRole('heading', { name: /apuestas/i })).toBeInTheDocument()
   })
 })

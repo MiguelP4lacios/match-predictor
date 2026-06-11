@@ -15,6 +15,7 @@ export type ISODateTime = string
 
 export interface SignalItem {
   id: number
+  match_id: number | null
   match_date: ISODate
   kickoff_at: ISODateTime | null
   home_team: string
@@ -116,6 +117,56 @@ export interface PaperStats {
   open: number
   settled: number
   roi: number | null
+}
+
+// ─── Apuestas (bet-settlement-real) ──────────────────────────────────────────
+
+export interface BetCreate {
+  match_id: number
+  outcome_code: 'HOME' | 'DRAW' | 'AWAY'
+  odds_taken: number
+  stake: number
+  note?: string
+}
+
+export interface BetItem {
+  id: number
+  mode: 'REAL' | 'PAPER' | string
+  status: 'PENDING' | 'WON' | 'LOST' | string
+  match_id: number | null
+  outcome_code: string | null
+  odds_taken: number
+  /** Decimal serializado como string por Pydantic */
+  stake: string
+  pnl: string | null
+  settled_result: string | null
+  settled_at: ISODateTime | null
+  placed_at: ISODateTime | null
+  note: string | null
+  value_signal_id: number | null
+}
+
+export interface BetList {
+  items: BetItem[]
+  total: number
+}
+
+export interface ModeStats {
+  total: number
+  pending: number
+  settled: number
+  won: number
+  lost: number
+  /** Decimal serializado como string */
+  staked: string | null
+  /** Decimal serializado como string */
+  returns: string | null
+  roi: number | null
+}
+
+export interface BetsPageStats {
+  paper: ModeStats
+  real: ModeStats
 }
 
 // ─── Explain endpoint types (espejo del schema Pydantic del backend) ───────────

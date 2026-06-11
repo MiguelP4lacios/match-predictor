@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SignalsPage from './pages/SignalsPage'
 import GroupsPage from './pages/GroupsPage'
 import GroupDetailPage from './pages/GroupDetailPage'
 import MatchesPage from './pages/MatchesPage'
 import ModelPage from './pages/ModelPage'
-import PaperPage from './pages/PaperPage'
+import BetsPage from './pages/BetsPage'
 import NotFound from './pages/NotFound'
 
 const queryClient = new QueryClient({
@@ -21,7 +21,7 @@ const NAV_LINKS = [
   { to: '/grupos', label: 'Grupos' },
   { to: '/partidos', label: 'Partidos' },
   { to: '/modelo', label: 'Modelo' },
-  { to: '/paper', label: 'Paper' },
+  { to: '/apuestas', label: 'Apuestas' },
 ]
 
 /**
@@ -57,7 +57,9 @@ export function AppRoutes() {
           <Route path="/grupos/:letra" element={<GroupDetailPage />} />
           <Route path="/partidos" element={<MatchesPage />} />
           <Route path="/modelo" element={<ModelPage />} />
-          <Route path="/paper" element={<PaperPage />} />
+          <Route path="/apuestas" element={<BetsPage />} />
+          {/* Redirect de /paper → /apuestas para retrocompatibilidad */}
+          <Route path="/paper" element={<Navigate to="/apuestas" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

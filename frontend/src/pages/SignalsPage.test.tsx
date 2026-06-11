@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import SignalsPage from './SignalsPage'
 
 vi.mock('../api/client', () => ({
@@ -18,11 +19,18 @@ function renderWithQuery(ui: React.ReactElement) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        {ui}
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
 }
 
 const SIGNAL_FIXTURE = {
   id: 1,
+  match_id: null,
   match_date: '2026-06-15',
   kickoff_at: null,
   home_team: 'España',
