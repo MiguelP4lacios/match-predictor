@@ -1,6 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { formatEdge, formatStake, formatOdds } from '../lib/formatters'
 import type { SignalItem } from '../api/types'
+import { Card } from '../ui/Card'
+import { Badge } from '../ui/Badge'
+import { Button } from '../ui/Button'
+import { FlagLabel } from '../ui/FlagLabel'
 import AddToCuponButton from './AddToCuponButton'
 
 interface SignalCardProps {
@@ -34,59 +38,63 @@ export default function SignalCard({ signal, onExplain }: SignalCardProps) {
   )
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <Card>
       {/* Header: fecha + partido */}
-      <p className="mb-2 text-xs text-gray-500">
+      <p className="mb-2 text-xs text-text-muted">
         {signal.match_date} · {signal.home_team} vs {signal.away_team}
       </p>
 
       {/* Apuesta */}
-      <p className="mb-3 text-lg font-bold text-gray-900">
+      <p data-testid="bet-label" className="mb-3 text-lg font-bold text-text">
         <span aria-hidden="true">🎯 </span>
-        <span>Apostale a {outcomeLabel}</span>
+        <span>Apostale a </span>
+        {signal.outcome_code === 'DRAW' ? (
+          <span>{outcomeLabel}</span>
+        ) : (
+          <FlagLabel team={outcomeLabel} size="md" />
+        )}
       </p>
 
       {/* Cuota + bookmaker */}
-      <p className="mb-2 text-sm text-gray-700">
+      <p className="mb-2 text-sm text-text">
         {formatOdds(signal.best_odds)} ({signal.bookmaker})
       </p>
 
-      {/* Edge badge — "sobre la cuota", NO sobre el rival: la señal es de VALOR,
-          no de favoritismo (el favorito del partido puede ser el otro equipo) */}
+      {/* Edge badge — prominente, color success */}
       <div className="mb-2 flex items-center gap-2">
-        <span className="rounded-full bg-green-100 px-2 py-0.5 text-sm font-semibold text-green-800">
+        <Badge variant="success" className="text-sm font-semibold">
           {formatEdge(signal.edge)}
-        </span>
-        <span className="text-xs text-gray-500">la cuota paga de más</span>
+        </Badge>
+        <span className="text-xs text-text-muted">la cuota paga de más</span>
       </div>
 
       {/* Stake sugerido */}
-      <p className="mb-3 text-sm text-gray-700">
+      <p className="mb-3 text-sm text-text">
         Sugerido: <span className="font-semibold">${formatStake(signal.recommended_stake)}</span>
       </p>
 
       {/* CTAs */}
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="md"
           onClick={() => onExplain(signal.id)}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           ¿Por qué? →
-        </button>
+        </Button>
 
         {signal.match_id !== null && signal.match_id !== undefined && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() =>
               navigate(
                 `/apuestas?match_id=${signal.match_id}&outcome=${signal.outcome_code}&odds=${signal.best_odds}`,
               )
             }
-            className="rounded border border-blue-600 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Registrar apuesta
-          </button>
+          </Button>
         )}
 
         {signal.match_id !== null && signal.match_id !== undefined && signal.outcome_code !== null && signal.outcome_code !== undefined && (
@@ -99,6 +107,6 @@ export default function SignalCard({ signal, onExplain }: SignalCardProps) {
           />
         )}
       </div>
-    </div>
+    </Card>
   )
 }

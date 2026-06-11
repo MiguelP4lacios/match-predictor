@@ -146,8 +146,8 @@ describe('SignalsPage', () => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
       })
 
-      // Cerrar con el botón X (aria-label="Cerrar explicación")
-      fireEvent.click(screen.getByRole('button', { name: /Cerrar explicación/i }))
+      // Cerrar con el botón X (aria-label="Cerrar")
+      fireEvent.click(screen.getByRole('button', { name: /Cerrar/i }))
 
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

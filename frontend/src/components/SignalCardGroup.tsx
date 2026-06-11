@@ -16,7 +16,7 @@ interface SignalCardGroupProps {
 export default function SignalCardGroup({ items, onExplain }: SignalCardGroupProps) {
   if (items.length === 0) {
     return (
-      <p className="py-8 text-center text-gray-500">
+      <p className="py-8 text-center text-text-muted">
         Sin señales con ese filtro
       </p>
     )
@@ -32,16 +32,16 @@ export default function SignalCardGroup({ items, onExplain }: SignalCardGroupPro
           <div className="mb-2">
             <span
               data-testid="group-header"
-              className="text-sm font-semibold text-gray-700"
+              className="text-sm font-semibold text-text"
             >
               {group.home_team} vs {group.away_team}
             </span>
-            <span className="ml-2 text-xs text-gray-400">{group.match_date}</span>
+            <span className="ml-2 text-xs text-text-muted">{group.match_date}</span>
           </div>
 
           {/* Hint de exposición correlacionada */}
           {group.signals.length >= 2 && (
-            <p className="mb-2 text-xs font-medium text-amber-700">
+            <p className="mb-2 text-xs font-medium text-warn">
               ⚠ {group.signals.length} señales sobre este partido — exposición correlacionada
             </p>
           )}

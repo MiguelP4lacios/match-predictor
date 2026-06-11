@@ -4,8 +4,8 @@ import { fetchAPI } from '../api/client'
 import type { SignalsResponse } from '../api/types'
 import SignalCardGroup from '../components/SignalCardGroup'
 import ExplainDrawer from '../components/ExplainDrawer'
-import Loading from '../components/Loading'
-import ErrorBanner from '../components/ErrorBanner'
+import { Spinner } from '../ui/Spinner'
+import { ErrorState } from '../ui/ErrorState'
 
 export default function SignalsPage() {
   const [minEdge, setMinEdge] = useState('')
@@ -26,16 +26,16 @@ export default function SignalsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Señales +EV</h1>
+        <h1 className="text-xl font-bold text-text">Señales +EV</h1>
         <div className="flex items-center gap-2">
-          <label htmlFor="min-edge" className="text-sm text-gray-600">
+          <label htmlFor="min-edge" className="text-sm text-text-muted">
             Edge mínimo
           </label>
           <select
             id="min-edge"
             value={minEdge}
             onChange={(e) => setMinEdge(e.target.value)}
-            className="rounded border px-2 py-1 text-sm"
+            className="rounded border border-border bg-surface px-2 py-1 text-sm text-text"
           >
             <option value="">Todos</option>
             <option value="0.05">5%</option>
@@ -46,8 +46,8 @@ export default function SignalsPage() {
         </div>
       </div>
 
-      {isLoading && <Loading />}
-      {isError && <ErrorBanner onRetry={() => refetch()} />}
+      {isLoading && <Spinner />}
+      {isError && <ErrorState onRetry={() => refetch()} />}
       {data && (
         <SignalCardGroup
           items={data.items}

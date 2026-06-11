@@ -67,9 +67,12 @@ describe('SignalCard', () => {
       expect(screen.getByText('1.47 (gtbets)')).toBeInTheDocument()
     })
 
-    it('muestra "Apostale a México" para outcome HOME', () => {
+    it('muestra "Apostale a" con nombre del equipo (outcome HOME)', () => {
       renderCard(makeSignal())
-      expect(screen.getByText('Apostale a México')).toBeInTheDocument()
+      // The bet label contains "Apostale a" text + FlagLabel(México)
+      const betLabel = screen.getByTestId('bet-label')
+      expect(betLabel).toHaveTextContent('Apostale a')
+      expect(betLabel).toHaveTextContent('México')
     })
 
     it('muestra botón "¿Por qué? →"', () => {
@@ -92,14 +95,18 @@ describe('SignalCard', () => {
   })
 
   describe('outcomes humanizados', () => {
-    it('DRAW → "Apostale a Empate"', () => {
+    it('DRAW → bet-label muestra "Apostale a Empate"', () => {
       renderCard(makeSignal({ outcome_code: 'DRAW' }))
-      expect(screen.getByText('Apostale a Empate')).toBeInTheDocument()
+      const betLabel = screen.getByTestId('bet-label')
+      expect(betLabel).toHaveTextContent('Apostale a')
+      expect(betLabel).toHaveTextContent('Empate')
     })
 
-    it('AWAY → "Apostale a South Africa" (via away_team del fixture)', () => {
+    it('AWAY → bet-label muestra equipo visitante', () => {
       renderCard(makeSignal({ outcome_code: 'AWAY' }))
-      expect(screen.getByText('Apostale a South Africa')).toBeInTheDocument()
+      const betLabel = screen.getByTestId('bet-label')
+      expect(betLabel).toHaveTextContent('Apostale a')
+      expect(betLabel).toHaveTextContent('South Africa')
     })
   })
 
