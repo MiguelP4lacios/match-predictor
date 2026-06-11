@@ -35,9 +35,9 @@ echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Iniciando tournament_update..."
 # Paso 1: Captura de odds (skippable)
 # ---------------------------------------------------------------------------
 if [[ "$SKIP_ODDS" == "true" ]]; then
-  echo "[1/5] Captura de odds — SALTADA (--skip-odds activo)."
+  echo "[1/6] Captura de odds — SALTADA (--skip-odds activo)."
 else
-  echo "[1/5] Capturando odds actuales..."
+  echo "[1/6] Capturando odds actuales..."
   # scheduler está en profiles:[manual]; usamos COMPOSE_PROFILES para que compose lo encuentre.
   COMPOSE_PROFILES=manual $COMPOSE run --rm scheduler python -m app.scheduler.run --once
 fi
@@ -45,25 +45,31 @@ fi
 # ---------------------------------------------------------------------------
 # Paso 2: Ingesta histórica (--force: upsert ON CONFLICT, seguro idempotente)
 # ---------------------------------------------------------------------------
-echo "[2/5] Ingesta histórica (--force)..."
+echo "[2/6] Ingesta histórica (--force)..."
 $COMPOSE run --rm ingest python -m app.ingestion.run --force
 
 # ---------------------------------------------------------------------------
-# Paso 3: Recalcular Elo
+# Paso 3: Liquidar apuestas PENDING contra partidos FINISHED
 # ---------------------------------------------------------------------------
-echo "[3/5] Recalculando ratings Elo..."
+echo "[3/6] Liquidando apuestas PENDING..."
+$COMPOSE run --rm api python -m app.model.run_settle
+
+# ---------------------------------------------------------------------------
+# Paso 4: Recalcular Elo
+# ---------------------------------------------------------------------------
+echo "[4/6] Recalculando ratings Elo..."
 $COMPOSE run --rm api python -m app.model.run_elo
 
 # ---------------------------------------------------------------------------
-# Paso 4: Generar predicciones 1X2
+# Paso 5: Generar predicciones 1X2
 # ---------------------------------------------------------------------------
-echo "[4/5] Generando predicciones 1X2..."
+echo "[5/6] Generando predicciones 1X2..."
 $COMPOSE run --rm api python -m app.model.run_1x2 predict
 
 # ---------------------------------------------------------------------------
-# Paso 5: Generar señales +EV
+# Paso 6: Generar señales +EV
 # ---------------------------------------------------------------------------
-echo "[5/5] Generando señales +EV PAPER..."
+echo "[6/6] Generando señales +EV PAPER..."
 $COMPOSE run --rm api python -m app.model.run_1x2 signals
 
 # ---------------------------------------------------------------------------
