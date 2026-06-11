@@ -69,3 +69,35 @@ describe('formatROI', () => {
     expect(formatROI(-0.05)).toBe('-5.0%')
   })
 })
+
+// ─── 4.3 RED: formatCop + formatPnl ─────────────────────────────────────────
+
+import { formatCop, formatPnl } from './formatters'
+
+describe('formatCop (4.3)', () => {
+  it('formatCop(12000) → "$12.000" (miles con punto, sin decimales)', () => {
+    expect(formatCop(12000)).toBe('$12.000')
+  })
+
+  it('formatCop(1500000) → "$1.500.000" (múltiples bloques de miles)', () => {
+    expect(formatCop(1500000)).toBe('$1.500.000')
+  })
+
+  it('formatCop(500) → "$500" (menos de 1000, sin separador)', () => {
+    expect(formatCop(500)).toBe('$500')
+  })
+})
+
+describe('formatPnl (4.3)', () => {
+  it('formatPnl(4800) → "+$4.800" (positivo con signo +)', () => {
+    expect(formatPnl(4800)).toBe('+$4.800')
+  })
+
+  it('formatPnl(-12000) → "−$12.000" (negativo con guion menos Unicode)', () => {
+    expect(formatPnl(-12000)).toBe('−$12.000')
+  })
+
+  it('formatPnl(0) → "+$0" (cero como positivo)', () => {
+    expect(formatPnl(0)).toBe('+$0')
+  })
+})
