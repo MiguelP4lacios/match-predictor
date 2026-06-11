@@ -20,8 +20,10 @@ La app MUST implementar react-router-dom v6 con las siguientes rutas:
 | `/grupos/:letra` | Detalle grupo + fixtures |
 | `/partidos` | Fixtures próximos |
 | `/modelo` | Transparencia del modelo |
-| `/paper` | Registro paper-betting |
+| `/apuestas` | Registro y seguimiento de apuestas |
 | `*` | 404 — "Página no encontrada" |
+
+(Previously: ruta `/paper` → Vista "Registro paper-betting".)
 
 #### Scenario: Deep-link directo a grupo
 
@@ -34,6 +36,12 @@ La app MUST implementar react-router-dom v6 con las siguientes rutas:
 - GIVEN el usuario navega a `/foo`
 - WHEN la app carga
 - THEN renderiza la vista 404, sin crash ni pantalla en blanco
+
+#### Scenario: Ruta /paper redirige a /apuestas
+
+- GIVEN el usuario navega a `/paper` (ruta vieja)
+- WHEN la app carga
+- THEN redirige a `/apuestas` con `<Navigate replace />`
 
 ---
 
@@ -123,7 +131,11 @@ ahora cards agrupadas visualmente bajo encabezado de grupo, sin tabla)
 
 ---
 
-### Requirement: R2B — ExplainDrawer
+### Requirement: R2B — SignalCard-Register y ExplainDrawer
+
+`SignalCard` MUST incluir un botón secundario `"Registrar apuesta"` (además del CTA
+`"¿Por qué? →"` existente). Al pulsar MUST navegar a
+`/apuestas?match_id={match_id}&outcome={outcome_code}`.
 
 La vista Señales MUST incluir el componente `ExplainDrawer` que:
 - MUST abrirse al pulsar "¿Por qué? →" en cualquier `SignalCard`, cargando
@@ -134,6 +146,12 @@ La vista Señales MUST incluir el componente `ExplainDrawer` que:
   valores `formatted` verbatim — MUST NOT interpretar ni recomputar números.
 - En error MUST mostrar "Error al cargar explicación" dentro del drawer.
 - En mobile (viewport < 640px) MUST renderizarse como bottom sheet a ancho completo.
+
+#### Scenario: Navegación con pre-fill
+
+- GIVEN signal con `match_id=42`, `outcome_code=HOME`
+- WHEN usuario pulsa "Registrar apuesta" en la SignalCard
+- THEN navega a `/apuestas?match_id=42&outcome=HOME`; formulario pre-rellena partido y outcome
 
 #### Scenario: Apertura y contenido
 
@@ -263,31 +281,87 @@ MUST NOT inventar valores — todo se lee de la API.
 
 ---
 
-### Requirement: R6 — Vista Paper
+### Requirement: R6 — Vista Apuestas
 
-La vista MUST mostrar `total`, `open`, `settled` y `roi`.
-Cuando `roi = null`, MUST renderizar `"—"`.
+La vista MUST mostrar dos bloques de stats (PAPER / REAL) y una lista de apuestas
+con formulario de registro. MUST NOT mezclar monedas ni unidades entre bloques.
+
+(Previously: Vista Paper — un único bloque con `total`, `open`, `settled`, `roi`.)
+
+**Bloque PAPER:** campos `total`, `pending`, `settled`, `won`, `lost`, `roi`.
+**Bloque REAL (COP):** mismos campos + `staked` y `returns` formateados en COP.
+
+Formato COP: entero sin decimales con separador de miles (`$12.000`).
+Formato pnl: con signo explícito (`+$4.800` / `−$12.000`).
+Formato ROI: `null` → `"—"`; `0.20` → `"+20.0%"`; `−0.30` → `"−30.0%"`.
 MUST NOT renderizar `"0%"` cuando `roi` es `null` — invariante de honestidad.
 
-Formatter MUST cumplir:
+**Lista de apuestas:** renderiza filas ordenadas por `placed_at DESC`.
+Cada fila MUST mostrar: partido (home vs away), outcome humanizado, cuota, stake,
+estado con color (`pending`=gris, `won`=verde, `lost`=rojo), pnl con signo y color.
+Botón "Borrar" MUST aparecer solo para `mode=REAL status=PENDING`; al pulsar MUST
+pedir confirmación antes de llamar `DELETE /api/v1/bets/{id}`.
 
-| roi raw | Formato renderizado |
-|---|---|
-| `null` | `"—"` |
-| `0.125` | `"+12.5%"` (1 decimal, signo explícito) |
-| `-0.05` | `"-5.0%"` |
+#### Scenario: ROI REAL — verificación numérica
 
-#### Scenario: ROI null — verificación honestidad
+- GIVEN `real.staked=24000`, `real.returns=28800`, `real.roi=0.20`
+- WHEN la vista renderiza el bloque REAL
+- THEN muestra `staked "$24.000"`, `returns "$28.800"`, `roi "+20.0%"`
 
-- GIVEN la API retorna `roi: null`
-- WHEN la vista Paper renderiza
+#### Scenario: ROI null — honestidad
+
+- GIVEN `real.roi=null` (no hay apuestas liquidadas REAL)
+- WHEN la vista renderiza el bloque REAL
 - THEN muestra `"—"`, NO `"0%"` ni `"0.0%"`
 
-#### Scenario: ROI positivo — verificación numérica
+#### Scenario: Borrar con confirmación
 
-- GIVEN la API retorna `roi: 0.125` (staked 80.00, returns 90.00)
-- WHEN `formatROI(0.125)` es invocado
-- THEN retorna `"+12.5%"`
+- GIVEN apuesta REAL PENDING en lista
+- WHEN usuario pulsa "Borrar"
+- THEN aparece diálogo de confirmación; al confirmar llama `DELETE /api/v1/bets/{id}`;
+  la fila desaparece de la lista
+
+---
+
+### Requirement: R6A — Formulario "Registrar Apuesta"
+
+La vista Apuestas MUST incluir formulario standalone para crear apuestas REAL.
+
+Campos del formulario:
+
+| Campo | Control | Notas |
+|-------|---------|-------|
+| Partido | `<select>` | MUST listar solo partidos `status=SCHEDULED`; opción por "Home vs Away (fecha)" |
+| Outcome | `<select>` | MUST mostrar nombres de equipos: "Local" / "Empate" / "Visitante" |
+| Cuota (BetPlay) | `<input type="number">` | Placeholder "1.40"; validación > 1.01 |
+| Stake (COP) | `<input type="number">` | Placeholder "$12.000"; validación > 0 |
+| Nota | `<input type="text">` | Opcional |
+
+Al enviar MUST llamar `POST /api/v1/bets`. En 201 MUST refrescar la lista de
+apuestas y limpiar el formulario. En error MUST mostrar mensaje inline, sin
+navegar ni mostrar pantalla en blanco.
+
+El formulario MUST soportar pre-carga vía query params `?match_id=<id>&outcome=<HOME|DRAW|AWAY>` — los campos correspondientes se pre-rellenan y el foco recae en el campo cuota.
+
+#### Scenario: Registro exitoso
+
+- GIVEN formulario con `match_id=42`, `outcome=HOME`, `odds_taken=1.40`, `stake=12000`
+- WHEN usuario envía
+- THEN `POST /api/v1/bets` recibe esos valores; en 201 la lista muestra la nueva
+  apuesta con `status=pending`, `stake=$12.000`, `odds=1.40`
+
+#### Scenario: Pre-carga por query params
+
+- GIVEN usuario navega a `/apuestas?match_id=42&outcome=HOME`
+- WHEN el formulario monta
+- THEN el selector de partido pre-selecciona el partido 42 y el outcome HOME;
+  foco en campo cuota
+
+#### Scenario: Error de validación inline
+
+- GIVEN `odds_taken=0.80` (inválido)
+- WHEN usuario envía
+- THEN muestra error inline "Cuota debe ser > 1.01", formulario no se limpia
 
 ---
 
@@ -307,10 +381,15 @@ Tipos críticos (grounded en shapes reales de la API):
 | `ModelVersion` | `name: string, backtest: Backtest, calibration: null` |
 | `Backtest` | `brier: number, logloss: number, beats_baselines: boolean, calibration_table: CalibrationRow[], baselines: Record<string, number>` |
 | `CalibrationRow` | `bin_low: number, bin_high: number, mean_predicted: number, observed_freq: number, count: number` |
-| `PaperStats` | `total: number, open: number, settled: number, roi: number\|null` |
+| `ModeStats` | `total: number, pending: number, settled: number, won: number, lost: number, staked: number\|null, returns: number\|null, roi: number\|null` |
+| `BetsPageStats` | `paper: ModeStats, real: ModeStats` |
+| `BetItem` | `id: number, mode: 'real'\|'paper', status: 'pending'\|'won'\|'lost'\|'void', match_id: number\|null, outcome_code: string\|null, odds_taken: number, stake: string, pnl: string\|null, settled_result: string\|null, settled_at: string\|null, placed_at: string, note: string\|null, value_signal_id: number\|null` |
 
 `recommended_stake` MUST ser typed como `string` — la API lo retorna como string
 (ej. `"120.16"`). `UpcomingMatch` se tipea como array directo, no envuelto.
+`BetItem.mode` y `BetItem.status` MUST tipificar los valores en minúscula como
+retorna la API (ej. `'real'`, `'pending'`). `BetItem.stake` y `BetItem.pnl` se
+tipean como `string` para preservar precisión decimal sin pérdida.
 
 ---
 
