@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     odds_markets: str = "h2h,totals"  # 1X2 + Over/Under (2 créditos/snapshot)
     odds_capture_interval_hours: int = 8
 
+    # --- Futures (WC outright winner odds) ---
+    # Clave de sport en The Odds API para mercados de ganador del Mundial.
+    # Verificado vía /v4/sports: soccer_fifa_world_cup_winner (activo en WC2026).
+    odds_futures_sport_key: str = "soccer_fifa_world_cup_winner"
+    # OFF por defecto: habilitar cuando haya key con créditos disponibles.
+    odds_futures_enabled: bool = False
+
     # --- Kambi (flag-gated, default OFF) ---
     # OFF por defecto: 429 confirmado desde IPs de datacenter.
     # Activar solo desde IP residencial o con proxy configurado.
