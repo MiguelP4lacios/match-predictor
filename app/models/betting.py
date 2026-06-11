@@ -44,7 +44,7 @@ class BetLog(Base, TimestampMixin):
     outcome_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     bet_kind: Mapped[BetKind] = mapped_column(
-        bet_kind_type, default=BetKind.SINGLE, server_default="single"
+        bet_kind_type, default=BetKind.SINGLE, server_default="SINGLE"
     )
     mode: Mapped[BetMode] = mapped_column(bet_mode_type, default=BetMode.PAPER)
     stake: Mapped[Decimal] = mapped_column(Numeric(14, 2))

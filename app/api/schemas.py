@@ -260,6 +260,73 @@ class GroupDetail(GroupItem):
 
 
 # ---------------------------------------------------------------------------
+# Parlays
+# ---------------------------------------------------------------------------
+
+
+class ParlayLegInput(BaseModel):
+    """Una pierna del parlay proporcionada por el usuario."""
+
+    match_id: int
+    outcome_code: Literal["HOME", "DRAW", "AWAY"]
+    odds: Annotated[Decimal, Field(gt=1, description="Cuota decimal > 1")]
+    label: str | None = None
+
+
+class ParlayLegDiag(BaseModel):
+    """Diagnóstico de una pierna individual."""
+
+    match_id: int
+    outcome_code: str
+    odds: Decimal
+    p_model: float | None
+    ev: float | None
+    is_negative_ev: bool
+
+
+class ParlayPreviewRequest(BaseModel):
+    """Body para POST /parlays/preview."""
+
+    legs: Annotated[list[ParlayLegInput], Field(min_length=2)]
+    stake: Annotated[Decimal, Field(gt=0)] = Decimal("0")
+
+
+class ParlayPreviewResponse(BaseModel):
+    """Respuesta del preview — sin persistencia."""
+
+    combined_odds: Decimal
+    model_prob: float | None
+    ev: float | None
+    stake: Decimal
+    retorno: Decimal  # stake × combined_odds
+    legs: list[ParlayLegDiag]
+    suggested_without_negatives: list[ParlayLegDiag]
+
+
+class ParlayCreate(BaseModel):
+    """Body para POST /parlays — persiste el parlay."""
+
+    legs: Annotated[list[ParlayLegInput], Field(min_length=2)]
+    stake: Annotated[Decimal, Field(gt=0)]
+    note: str | None = None
+
+
+class ParlayItem(_ORMBase):
+    """Ítem de parlay en respuesta de lista."""
+
+    id: int
+    mode: str
+    status: str
+    bet_kind: str
+    stake: Decimal
+    odds_taken: float
+    pnl: Decimal | None
+    settled_at: datetime | None
+    placed_at: datetime | None
+    note: str | None
+
+
+# ---------------------------------------------------------------------------
 # Explicación de señal (+EV)
 # ---------------------------------------------------------------------------
 

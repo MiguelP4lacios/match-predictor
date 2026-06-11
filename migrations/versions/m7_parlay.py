@@ -27,7 +27,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 # PG enum name shared with the SQLAlchemy type defined in app/models/types.py
-_BET_KIND_ENUM = sa.Enum("single", "parlay", name="bet_kind")
+_BET_KIND_ENUM = sa.Enum("SINGLE", "PARLAY", name="bet_kind")
 
 
 def upgrade() -> None:
@@ -40,9 +40,9 @@ def upgrade() -> None:
         "bet_log",
         sa.Column(
             "bet_kind",
-            sa.Enum("single", "parlay", name="bet_kind", create_type=False),
+            sa.Enum("SINGLE", "PARLAY", name="bet_kind", create_type=False),
             nullable=False,
-            server_default="single",
+            server_default="SINGLE",
         ),
     )
 
@@ -53,7 +53,7 @@ def upgrade() -> None:
     op.create_check_constraint(
         "ck_bet_resolvable",
         "bet_log",
-        "(bet_kind = 'parlay') OR (value_signal_id IS NOT NULL) OR "
+        "(bet_kind = 'PARLAY') OR (value_signal_id IS NOT NULL) OR "
         "(match_id IS NOT NULL AND outcome_code IS NOT NULL)",
     )
 
