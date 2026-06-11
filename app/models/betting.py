@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -28,12 +28,20 @@ class ValueSignal(Base, TimestampMixin):
 
 
 class BetLog(Base, TimestampMixin):
-    """Registro de apuesta. Arranca en modo PAPER hasta validar el edge."""
+    """Registro de apuesta. PAPER (señal automática) o REAL (manual, COP)."""
 
     __tablename__ = "bet_log"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    value_signal_id: Mapped[int] = mapped_column(ForeignKey("value_signal.id"))
+
+    # Ruta PAPER: FK a la señal +EV que originó la apuesta (nullable desde m6).
+    value_signal_id: Mapped[int | None] = mapped_column(ForeignKey("value_signal.id"), nullable=True)
+
+    # Ruta REAL: FK directa al partido + outcome apostado.
+    match_id: Mapped[int | None] = mapped_column(
+        ForeignKey("match.id"), nullable=True, index=True
+    )
+    outcome_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     mode: Mapped[BetMode] = mapped_column(bet_mode_type, default=BetMode.PAPER)
     stake: Mapped[Decimal] = mapped_column(Numeric(14, 2))
@@ -43,4 +51,9 @@ class BetLog(Base, TimestampMixin):
     pnl: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     placed_at: Mapped[datetime | None] = mapped_column()
 
-    signal: Mapped["ValueSignal"] = relationship(back_populates="bets")
+    # Liquidación
+    settled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    signal: Mapped["ValueSignal | None"] = relationship(back_populates="bets")
+    match: Mapped["Match | None"] = relationship()  # noqa: F821

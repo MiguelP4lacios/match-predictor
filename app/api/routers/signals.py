@@ -46,6 +46,7 @@ def list_signals(
     base = (
         select(
             ValueSignal.id,
+            Match.id.label("match_id"),
             Match.match_date,
             Match.kickoff_at,
             home_team_alias.name.label("home_team"),
@@ -84,6 +85,7 @@ def list_signals(
     items = [
         SignalItem(
             id=r.id,
+            match_id=r.match_id,
             match_date=r.match_date,
             kickoff_at=r.kickoff_at,
             home_team=r.home_team,

@@ -38,6 +38,7 @@ class SignalItem(_ORMBase):
     """Ítem de señal de valor esperado positivo."""
 
     id: int
+    match_id: int | None
     match_date: date
     kickoff_at: datetime | None
     home_team: str
