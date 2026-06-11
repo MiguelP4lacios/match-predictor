@@ -278,3 +278,42 @@ def test_settle_parlays_idempotent(db_session):
     assert result2["settled"] == 0
     assert bet.pnl == first_pnl
     assert bet.settled_at == first_settled_at
+
+
+def test_settled_result_se_fija_won_all_y_lost(db_session):
+    """Verify warning: parlay liquidado fija settled_result (WON_ALL / LOST)."""
+    comp = _make_competition(db_session)
+    # Parlay ganador: ambos legs WON
+    h1, a1 = _make_teams(db_session, "sr1")
+    h2, a2 = _make_teams(db_session, "sr2")
+    m1 = _make_match(db_session, comp, h1, a1, home_score=2, away_score=0)  # HOME
+    m2 = _make_match(db_session, comp, h2, a2, home_score=1, away_score=0)  # HOME
+    won = _make_parlay(
+        db_session,
+        [
+            {"match": m1, "outcome_code": "HOME", "odds": "1.50"},
+            {"match": m2, "outcome_code": "HOME", "odds": "2.00"},
+        ],
+    )
+    # Parlay perdedor: un leg LOST
+    h3, a3 = _make_teams(db_session, "sr3")
+    h4, a4 = _make_teams(db_session, "sr4")
+    m3 = _make_match(db_session, comp, h3, a3, home_score=2, away_score=0)  # HOME
+    # AWAY gana (el leg pide HOME → LOST)
+    m4 = _make_match(db_session, comp, h4, a4, home_score=0, away_score=2)
+    lost = _make_parlay(
+        db_session,
+        [
+            {"match": m3, "outcome_code": "HOME", "odds": "1.50"},
+            {"match": m4, "outcome_code": "HOME", "odds": "2.00"},
+        ],
+    )
+
+    settle_parlays(db_session)
+
+    db_session.refresh(won)
+    db_session.refresh(lost)
+    assert won.status == BetStatus.WON
+    assert won.settled_result == "WON_ALL"
+    assert lost.status == BetStatus.LOST
+    assert lost.settled_result == "LOST"

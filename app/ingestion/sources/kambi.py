@@ -33,13 +33,15 @@ from app.models.enums import DataSource
 # Mínimo 6 entradas según design.
 # ---------------------------------------------------------------------------
 
+# Overrides para lang=en_US (nombres de Kambi en inglés que NO coinciden con los
+# canónicos de martj42). Verificado en el exploration; mapea al canónico de la BD.
 _KAMBI_NAME_OVERRIDES: dict[str, str] = {
     "USA": "United States",
-    "EE.UU.": "United States",
-    "Corea del Sur": "South Korea",
     "Korea Republic": "South Korea",
-    "Irán": "Iran",
-    "Bosnia": "Bosnia & Herzegovina",
+    "Côte d'Ivoire": "Ivory Coast",
+    "Czechia": "Czech Republic",
+    "Congo DR": "DR Congo",
+    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
 }
 
 # Full Time criterion ID de Kambi (invariante del proveedor)

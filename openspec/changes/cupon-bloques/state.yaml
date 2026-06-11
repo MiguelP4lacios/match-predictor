@@ -1,0 +1,25 @@
+change: cupon-bloques
+phase: design
+artifact_store: hybrid
+execution_mode: auto
+artifacts:
+  exploration: true
+  proposal: true
+  specs: true
+  design: true
+  tasks: false
+  verify_report: false
+tasks_progress:
+  completed: []
+  pending: []
+last_updated: 2026-06-11
+notes: |
+  Cupón de parlays +EV estilo BetPlay. Kambi confirmado 429 desde IP datacenter (VPS) → adapter
+  flag-gated OFF por defecto, manual es el core garantizado. Decisiones design: bet_kind enum
+  SINGLE|PARLAY + CHECK relajado (m7); bet_leg table (1 BetLog + N legs); parlay.py puro (Decimal
+  odds/money, float probs); parlay_service.py resuelve p_model por leg (api→model); settle_parlays()
+  separado (simples intactos, parlay tiene match_id/signal NULL → fuera del JOIN existente);
+  CuponContext + sessionStorage; preview endpoint server-side (front no calcula). Escenario verbatim:
+  3 legs 1.40×2.75×1.84=7.084, prob 0.834×0.491×0.780=0.3194, EV +1.2627; stake 5000→retorno 35420.
+  CAVEAT independencia (sobreestima EV del parlay) — banner obligatorio en UI.
+  Next: sdd-tasks. Open questions no-bloqueantes: slug betplay sin confirmar, selector model_version activa.

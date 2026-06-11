@@ -173,6 +173,7 @@ def settle_parlays(session: Session) -> dict[str, int]:
 
         if any_lost:
             parlay.status = BetStatus.LOST
+            parlay.settled_result = "LOST"
             parlay.pnl = (-parlay.stake).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             parlay.settled_at = now
             settled_count += 1
@@ -182,6 +183,7 @@ def settle_parlays(session: Session) -> dict[str, int]:
             profit = parlay.stake * (combined_odds - Decimal("1"))
             parlay.pnl = profit.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             parlay.status = BetStatus.WON
+            parlay.settled_result = "WON_ALL"
             parlay.settled_at = now
             settled_count += 1
             won_count += 1
