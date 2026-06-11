@@ -9,6 +9,26 @@ from app.ingestion.sources.odds_api import OddsApiSource
 
 log = logging.getLogger(__name__)
 
+# Kambi import diferido (flag-gated) para evitar dependencias no deseadas
+# cuando KAMBI_ENABLED=false (default).
+
+
+def make_kambi_source():
+    """Crea KambiOddsSource si KAMBI_ENABLED=true, de lo contrario None.
+
+    NO añadir al loop de captura existente — Kambi es un enhancement
+    flag-gated que requiere IP residencial (429 desde datacenter).
+    """
+    if not settings.kambi_enabled:
+        return None
+
+    from app.ingestion.sources.kambi import KambiOddsSource  # noqa: PLC0415
+
+    return KambiOddsSource(
+        operator=settings.kambi_operator,
+        base_url=settings.kambi_base_url,
+    )
+
 
 def make_odds_source() -> OddsApiSource:
     return OddsApiSource(

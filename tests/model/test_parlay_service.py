@@ -17,7 +17,6 @@ from app.models.match import Match
 from app.models.model import ModelVersion, Prediction
 from app.models.team import Team
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -107,8 +106,18 @@ def test_resolve_legs_no_prediction_gives_none(db_session):
     # No hay ModelVersion ni Prediction — la BD está vacía para este test
 
     raw_legs = [
-        {"match_id": match.id, "outcome_code": "AWAY", "odds": Decimal("2.50"), "label": "FRA AWAY"},
-        {"match_id": match.id, "outcome_code": "HOME", "odds": Decimal("2.00"), "label": "GER HOME"},
+        {
+            "match_id": match.id,
+            "outcome_code": "AWAY",
+            "odds": Decimal("2.50"),
+            "label": "FRA AWAY",
+        },
+        {
+            "match_id": match.id,
+            "outcome_code": "HOME",
+            "odds": Decimal("2.00"),
+            "label": "GER HOME",
+        },
     ]
     result = resolve_legs(db_session, raw_legs)
 

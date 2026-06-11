@@ -9,16 +9,17 @@ Escenarios verbatim de spec/design:
   S6 — GET /parlays → lista; ?mode=real filtra
 """
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
+
+import pytest
 
 from app.models.betting import BetLeg, BetLog
 from app.models.competition import Competition
-from app.models.enums import BetKind, BetMode, BetStatus, CompetitionKind, MarketType, MatchStatus
+from app.models.enums import BetKind, CompetitionKind, MarketType, MatchStatus
 from app.models.match import Match
-from app.models.model import ModelVersion, Prediction
+from app.models.model import Prediction
 from app.models.team import Team
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -178,15 +179,14 @@ def test_create_parlay_persists_betlog_and_legs(client, db_session):
 
     # Verify BetLog in DB
     from sqlalchemy import select
+
     bet = db_session.get(BetLog, bet_id)
     assert bet is not None
     assert bet.bet_kind == BetKind.PARLAY
     assert bet.stake == Decimal("5000")
 
     # Verify BetLeg rows
-    legs = db_session.execute(
-        select(BetLeg).where(BetLeg.bet_log_id == bet_id)
-    ).scalars().all()
+    legs = db_session.execute(select(BetLeg).where(BetLeg.bet_log_id == bet_id)).scalars().all()
     assert len(legs) == 2
     outcome_codes = {leg.outcome_code for leg in legs}
     assert "HOME" in outcome_codes
@@ -204,13 +204,16 @@ def test_get_parlays_list(client, db_session):
     m2 = _make_match(db_session, idx="g2")
 
     # Create one real parlay
-    resp = client.post("/api/v1/parlays", json={
-        "legs": [
-            {"match_id": m1.id, "outcome_code": "HOME", "odds": "1.80"},
-            {"match_id": m2.id, "outcome_code": "AWAY", "odds": "2.20"},
-        ],
-        "stake": "1000",
-    })
+    resp = client.post(
+        "/api/v1/parlays",
+        json={
+            "legs": [
+                {"match_id": m1.id, "outcome_code": "HOME", "odds": "1.80"},
+                {"match_id": m2.id, "outcome_code": "AWAY", "odds": "2.20"},
+            ],
+            "stake": "1000",
+        },
+    )
     assert resp.status_code == 201
 
     # GET all
@@ -225,6 +228,3 @@ def test_get_parlays_list(client, db_session):
     assert resp_real.status_code == 200
     for item in resp_real.json():
         assert item["mode"] == "real"
-
-
-import pytest

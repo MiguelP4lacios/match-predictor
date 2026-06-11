@@ -18,7 +18,6 @@ import pytest
 
 from app.model.parlay import Leg, ParlayDiagnosis, combine_parlay
 
-
 # ---------------------------------------------------------------------------
 # S1 — 3-leg happy path: números verbatim
 # ---------------------------------------------------------------------------
@@ -56,9 +55,9 @@ def test_combine_parlay_per_leg_ev():
     result = combine_parlay(legs)
 
     assert len(result.legs) == 3
-    assert result.legs[0].ev == pytest.approx(0.168, abs=0.002)   # +16.8%
-    assert result.legs[1].ev == pytest.approx(0.350, abs=0.002)   # +35.0%
-    assert result.legs[2].ev == pytest.approx(0.435, abs=0.002)   # +43.5%
+    assert result.legs[0].ev == pytest.approx(0.168, abs=0.002)  # +16.8%
+    assert result.legs[1].ev == pytest.approx(0.350, abs=0.002)  # +35.0%
+    assert result.legs[2].ev == pytest.approx(0.435, abs=0.002)  # +43.5%
     # All positive
     assert all(not ld.is_negative_ev for ld in result.legs)
 
@@ -69,11 +68,13 @@ def test_combine_parlay_per_leg_ev():
 
 
 def test_combine_parlay_negative_ev_leg_filtered():
-    """Un leg con EV negativo → is_negative_ev=True + suggested_without_negatives excluye ese leg."""
-    # Leg 1: p=0.60, odds=1.40 → EV = 0.60*0.40 - 0.40 = 0.24-0.40 = -0.16 → EV NEGATIVO
+    """Un leg EV- → is_negative_ev=True + suggested_without_negatives excluye ese leg."""
+    # Leg 1: p=0.60, odds=1.40 → EV = 0.60*0.40 - 0.40 = -0.16 → EV NEGATIVO
     # Leg 2: p=0.834, odds=1.84 → EV = 0.834*0.84 - 0.166 = +0.535 → EV POSITIVO
     leg_neg = Leg(match_id=10, outcome_code="HOME", odds=Decimal("1.40"), p_model=0.60, label="NEG")
-    leg_pos = Leg(match_id=11, outcome_code="AWAY", odds=Decimal("1.84"), p_model=0.834, label="POS")
+    leg_pos = Leg(
+        match_id=11, outcome_code="AWAY", odds=Decimal("1.84"), p_model=0.834, label="POS"
+    )
 
     result = combine_parlay([leg_neg, leg_pos])
 
@@ -103,9 +104,9 @@ def test_combine_parlay_empty_raises():
 def test_combine_parlay_single_leg_raises():
     """combine_parlay con 1 leg debe lanzar ValueError."""
     with pytest.raises(ValueError, match="al menos 2"):
-        combine_parlay([
-            Leg(match_id=1, outcome_code="HOME", odds=Decimal("1.90"), p_model=0.60, label="X")
-        ])
+        combine_parlay(
+            [Leg(match_id=1, outcome_code="HOME", odds=Decimal("1.90"), p_model=0.60, label="X")]
+        )
 
 
 # ---------------------------------------------------------------------------

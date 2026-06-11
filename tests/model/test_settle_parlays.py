@@ -9,21 +9,17 @@ Escenarios verbatim de spec/design:
   S5 — Idempotencia: re-run sobre parlay ya WON → 0 cambios
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from unittest.mock import patch
 
 import pytest
 
 from app.model.settle import settle_bets, settle_parlays
 from app.models.betting import BetLeg, BetLog
 from app.models.competition import Competition
-from app.models.enums import BetKind, BetMode, BetStatus, CompetitionKind, MarketType, MatchStatus
+from app.models.enums import BetKind, BetMode, BetStatus, CompetitionKind, MatchStatus
 from app.models.match import Match
-from app.models.model import ModelVersion, Prediction
-from app.models.odds import Odds
 from app.models.team import Team
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -45,7 +41,9 @@ def _make_teams(session, prefix="") -> tuple:
     return home, away
 
 
-def _make_match(session, comp, home, away, status=MatchStatus.FINISHED, home_score=2, away_score=0) -> Match:
+def _make_match(
+    session, comp, home, away, status=MatchStatus.FINISHED, home_score=2, away_score=0
+) -> Match:
     m = Match(
         competition_id=comp.id,
         match_date=date(2026, 7, 15),
@@ -115,11 +113,15 @@ def test_settle_parlays_all_legs_won(db_session):
     m2 = _make_match(db_session, comp, h2, a2, home_score=0, away_score=1)  # AWAY wins
     m3 = _make_match(db_session, comp, h3, a3, home_score=3, away_score=0)  # HOME wins
 
-    bet = _make_parlay(db_session, [
-        {"match": m1, "outcome_code": "HOME", "odds": "1.40"},
-        {"match": m2, "outcome_code": "AWAY", "odds": "2.75"},
-        {"match": m3, "outcome_code": "HOME", "odds": "1.84"},
-    ], stake=Decimal("5000"))
+    bet = _make_parlay(
+        db_session,
+        [
+            {"match": m1, "outcome_code": "HOME", "odds": "1.40"},
+            {"match": m2, "outcome_code": "AWAY", "odds": "2.75"},
+            {"match": m3, "outcome_code": "HOME", "odds": "1.84"},
+        ],
+        stake=Decimal("5000"),
+    )
 
     result = settle_parlays(db_session)
 
@@ -147,10 +149,14 @@ def test_settle_parlays_one_leg_lost(db_session):
     m2 = _make_match(db_session, comp, h2, a2, home_score=1, away_score=1)  # DRAW
 
     # Second leg bets on HOME (but result is DRAW) → LOST
-    bet = _make_parlay(db_session, [
-        {"match": m1, "outcome_code": "HOME", "odds": "1.40"},
-        {"match": m2, "outcome_code": "HOME", "odds": "2.00"},
-    ], stake=Decimal("5000"))
+    bet = _make_parlay(
+        db_session,
+        [
+            {"match": m1, "outcome_code": "HOME", "odds": "1.40"},
+            {"match": m2, "outcome_code": "HOME", "odds": "2.00"},
+        ],
+        stake=Decimal("5000"),
+    )
 
     result = settle_parlays(db_session)
 
@@ -175,10 +181,14 @@ def test_settle_parlays_pending_leg_stays_pending(db_session):
     m1 = _make_match(db_session, comp, h1, a1, home_score=2, away_score=0)  # FINISHED
     m2 = _make_match(db_session, comp, h2, a2, status=MatchStatus.SCHEDULED)  # still pending
 
-    bet = _make_parlay(db_session, [
-        {"match": m1, "outcome_code": "HOME", "odds": "1.40"},
-        {"match": m2, "outcome_code": "AWAY", "odds": "2.00"},
-    ], stake=Decimal("5000"))
+    bet = _make_parlay(
+        db_session,
+        [
+            {"match": m1, "outcome_code": "HOME", "odds": "1.40"},
+            {"match": m2, "outcome_code": "AWAY", "odds": "2.00"},
+        ],
+        stake=Decimal("5000"),
+    )
 
     result = settle_parlays(db_session)
 
@@ -216,10 +226,13 @@ def test_settle_bets_does_not_touch_parlays(db_session):
     # PARLAY bet — should NOT be touched by settle_bets
     m2 = _make_match(db_session, comp, h2, a2, home_score=1, away_score=0)
     m3_scheduled = _make_match(db_session, comp, h1, a2, status=MatchStatus.SCHEDULED)
-    parlay_bet = _make_parlay(db_session, [
-        {"match": m2, "outcome_code": "HOME", "odds": "1.50"},
-        {"match": m3_scheduled, "outcome_code": "AWAY", "odds": "2.00"},
-    ])
+    parlay_bet = _make_parlay(
+        db_session,
+        [
+            {"match": m2, "outcome_code": "HOME", "odds": "1.50"},
+            {"match": m3_scheduled, "outcome_code": "AWAY", "odds": "2.00"},
+        ],
+    )
 
     # settle_bets settles the single, leaves parlay alone
     result_bets = settle_bets(db_session)
@@ -245,10 +258,14 @@ def test_settle_parlays_idempotent(db_session):
     m1 = _make_match(db_session, comp, h1, a1, home_score=1, away_score=0)  # HOME
     m2 = _make_match(db_session, comp, h2, a2, home_score=0, away_score=2)  # AWAY
 
-    bet = _make_parlay(db_session, [
-        {"match": m1, "outcome_code": "HOME", "odds": "1.50"},
-        {"match": m2, "outcome_code": "AWAY", "odds": "2.00"},
-    ], stake=Decimal("1000"))
+    bet = _make_parlay(
+        db_session,
+        [
+            {"match": m1, "outcome_code": "HOME", "odds": "1.50"},
+            {"match": m2, "outcome_code": "AWAY", "odds": "2.00"},
+        ],
+        stake=Decimal("1000"),
+    )
 
     settle_parlays(db_session)
     db_session.refresh(bet)

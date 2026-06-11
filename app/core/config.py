@@ -27,5 +27,12 @@ class Settings(BaseSettings):
     odds_markets: str = "h2h,totals"  # 1X2 + Over/Under (2 créditos/snapshot)
     odds_capture_interval_hours: int = 8
 
+    # --- Kambi (flag-gated, default OFF) ---
+    # OFF por defecto: 429 confirmado desde IPs de datacenter.
+    # Activar solo desde IP residencial o con proxy configurado.
+    kambi_enabled: bool = False
+    kambi_operator: str = "betplay"
+    kambi_base_url: str = "https://eu.sb-odds.kambi.com/api/betOffer/v3"
+
 
 settings = Settings()

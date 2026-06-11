@@ -17,7 +17,6 @@ from functools import reduce
 
 from app.model.probabilities import compute_ev
 
-
 # ---------------------------------------------------------------------------
 # Dataclasses de dominio
 # ---------------------------------------------------------------------------
@@ -39,8 +38,8 @@ class LegDiagnosis:
     """Diagnóstico de una leg individual."""
 
     leg: Leg
-    ev: float | None          # None cuando p_model es None
-    is_negative_ev: bool      # False cuando ev es None (no hay base para decir negativo)
+    ev: float | None  # None cuando p_model es None
+    is_negative_ev: bool  # False cuando ev es None (no hay base para decir negativo)
 
 
 @dataclass(frozen=True)
@@ -48,8 +47,8 @@ class ParlayDiagnosis:
     """Diagnóstico del parlay completo."""
 
     combined_odds: Decimal
-    model_prob: float | None   # None si algún leg no tiene p_model
-    ev: float | None           # None si model_prob es None
+    model_prob: float | None  # None si algún leg no tiene p_model
+    ev: float | None  # None si model_prob es None
     legs: list[LegDiagnosis]
     suggested_without_negatives: list[Leg]  # Legs EV+ que quedan si se remueven las EV-
 
@@ -77,9 +76,7 @@ def combine_parlay(legs: list[Leg]) -> ParlayDiagnosis:
     esta suposición es razonable; en cruces directos relacionados puede sesgar al alza.
     """
     if len(legs) < 2:
-        raise ValueError(
-            f"Un parlay requiere al menos 2 legs; recibido: {len(legs)}"
-        )
+        raise ValueError(f"Un parlay requiere al menos 2 legs; recibido: {len(legs)}")
 
     # --- combined_odds: producto de odds (Decimal para precisión) ---
     combined_odds: Decimal = reduce(lambda acc, leg: acc * leg.odds, legs, Decimal("1"))
@@ -93,9 +90,7 @@ def combine_parlay(legs: list[Leg]) -> ParlayDiagnosis:
             leg_diags.append(LegDiagnosis(leg=leg, ev=None, is_negative_ev=False))
         else:
             leg_ev = compute_ev(leg.p_model, float(leg.odds))
-            leg_diags.append(
-                LegDiagnosis(leg=leg, ev=leg_ev, is_negative_ev=leg_ev < 0)
-            )
+            leg_diags.append(LegDiagnosis(leg=leg, ev=leg_ev, is_negative_ev=leg_ev < 0))
 
     # --- model_prob: producto de probabilidades (bajo independencia) ---
     # Si algún leg no tiene p_model, no podemos calcular la prob. conjunta.

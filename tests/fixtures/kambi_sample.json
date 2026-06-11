@@ -1,0 +1,83 @@
+{
+  "events": [
+    {
+      "event": {
+        "id": 123,
+        "name": "USA vs Mexico",
+        "start": "2026-07-01T18:00:00Z",
+        "path": [
+          {"id": 1, "name": "Football"},
+          {"id": 2, "name": "International"},
+          {"id": 3, "name": "FIFA World Cup"}
+        ],
+        "homeName": "USA",
+        "awayName": "Mexico",
+        "state": "NOT_STARTED"
+      },
+      "betOffers": [
+        {
+          "id": 456,
+          "criterion": {
+            "id": 1001374577,
+            "label": "Full Time",
+            "englishLabel": "Full Time"
+          },
+          "betOfferType": {
+            "id": 2,
+            "name": "Match"
+          },
+          "status": "OPEN",
+          "outcomes": [
+            {
+              "id": 2001,
+              "label": "1",
+              "englishLabel": "Home",
+              "odds": 1400,
+              "participant": "USA",
+              "type": "OT_ONE"
+            },
+            {
+              "id": 2002,
+              "label": "X",
+              "englishLabel": "Draw",
+              "odds": 3200,
+              "participant": "",
+              "type": "OT_CROSS"
+            },
+            {
+              "id": 2003,
+              "label": "2",
+              "englishLabel": "Away",
+              "odds": 2100,
+              "participant": "Mexico",
+              "type": "OT_TWO"
+            }
+          ]
+        },
+        {
+          "id": 457,
+          "criterion": {
+            "id": 9999,
+            "label": "Half Time",
+            "englishLabel": "Half Time"
+          },
+          "betOfferType": {
+            "id": 2,
+            "name": "Match"
+          },
+          "status": "OPEN",
+          "outcomes": [
+            {
+              "id": 3001,
+              "label": "1",
+              "englishLabel": "Home",
+              "odds": 1700,
+              "participant": "USA",
+              "type": "OT_ONE"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
