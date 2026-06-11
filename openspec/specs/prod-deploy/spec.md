@@ -47,7 +47,7 @@ A script `scripts/migrate_data.sh` MUST implement the full Mac→VPS migration p
 4. Restore: `gunzip -c <dump> | docker compose exec -T db psql -U postgres match_predictor`.
 5. Assert row counts (MUST exit non-zero and abort if any assertion fails):
    - `match` table: ≥ 49,443
-   - `odds_snapshot` table: > 5,800
+   - `odds` table: > 5,800
    - `value_signal` table: ≥ 69
 6. If all counts pass, proceed with full `up`.
 
@@ -55,12 +55,12 @@ A script `scripts/migrate_data.sh` MUST implement the full Mac→VPS migration p
 
 - GIVEN a valid dump is restored into the VPS db container
 - WHEN `bash scripts/migrate_data.sh` verifies counts
-- THEN `match` ≥ 49,443, `odds_snapshot` > 5,800, `value_signal` ≥ 69 are confirmed
+- THEN `match` ≥ 49,443, `odds` > 5,800, `value_signal` ≥ 69 are confirmed
 - AND the script continues to `docker compose -f docker-compose.prod.yml up -d --build`
 
 #### Scenario: Incomplete restore blocks startup
 
-- GIVEN the restored DB has `odds_snapshot` count = 0
+- GIVEN the restored DB has `odds` count = 0
 - WHEN count assertions run
 - THEN the script prints the failing assertion and exits non-zero
 - AND `docker compose up` is NOT called
@@ -80,7 +80,7 @@ not present.)
 |------|---------|
 | 1 (optional) | `docker compose ... run --rm scheduler python -m app.scheduler.run --once` |
 | 2 | `docker compose ... run --rm ingest python -m app.ingestion.run --force` |
-| 3 | `docker compose ... run --rm api python -m app.betting.settle` |
+| 3 | `docker compose ... run --rm api python -m app.model.run_settle` |
 | 4 | `docker compose ... run --rm api python -m app.model.run_elo` |
 | 5 | `docker compose ... run --rm api python -m app.model.run_1x2 predict` |
 | 6 | `docker compose ... run --rm api python -m app.model.run_1x2 signals` |
@@ -95,7 +95,7 @@ Step numbering in log messages MUST reflect the updated 6-step chain.
 
 - GIVEN ingest (step 2) completa con exit 0
 - WHEN `tournament_update.sh` avanza
-- THEN step 3 (`python -m app.betting.settle`) corre, imprime `"Settled: N bets"`,
+- THEN step 3 (`python -m app.model.run_settle`) corre, imprime `"Settled: N bets"`,
   y el script continúa a step 4 (elo)
 
 #### Scenario: Settle liquida apuestas del día
