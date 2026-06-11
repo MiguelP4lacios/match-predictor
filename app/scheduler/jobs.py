@@ -16,6 +16,7 @@ from app.models.sync import SyncLog
 log = logging.getLogger(__name__)
 
 _CAPTURE_RESOURCE = "odds_api:capture"
+_FUTURES_CAPTURE_RESOURCE = "odds_api:futures_capture"
 
 # Kambi import diferido (flag-gated) para evitar dependencias no deseadas
 # cuando KAMBI_ENABLED=false (default).
@@ -110,3 +111,81 @@ def capture_odds_job() -> dict[str, object]:
     source = make_odds_source()
     with SessionLocal() as session:
         return _run_capture(session, source)
+
+
+def make_futures_source() -> OddsApiSource:
+    """Crea OddsApiSource configurada para el mercado de ganador del Mundial."""
+    return OddsApiSource(
+        api_key=settings.odds_api_key,
+        base_url=settings.odds_api_base_url,
+        sport_key=settings.odds_futures_sport_key,
+        regions=settings.odds_regions,
+        markets="outrights",
+    )
+
+
+def _run_futures_capture(session: Session, source) -> dict[str, object]:
+    """Ejecuta la captura de odds de futuros y escribe la fila de auditoría.
+
+    Misma lógica que _run_capture pero con resource='odds_api:futures_capture'.
+    """
+    result = OddsCapturePipeline(session, source).capture()
+    inserted: int = result.get("inserted", 0)  # type: ignore[assignment]
+
+    credits: int | None
+    if source.last_remaining is not None:
+        try:
+            credits = int(source.last_remaining)
+        except (ValueError, TypeError):
+            credits = None
+    else:
+        credits = None
+
+    now = datetime.now(UTC).replace(tzinfo=None)
+    stmt = (
+        pg_insert(SyncLog)
+        .values(
+            resource=_FUTURES_CAPTURE_RESOURCE,
+            source=DataSource.ODDS_API,
+            last_fetched_at=now,
+            rows_inserted=inserted,
+            credits_remaining=credits,
+            status="ok",
+        )
+        .on_conflict_do_update(
+            constraint="uq_sync_resource_source",
+            set_={
+                "last_fetched_at": now,
+                "rows_inserted": inserted,
+                "credits_remaining": credits,
+                "status": "ok",
+            },
+        )
+    )
+    session.execute(stmt)
+    session.commit()
+
+    log.info(
+        "Captura futures odds: %s | créditos restantes: %s",
+        result,
+        source.last_remaining,
+    )
+    return result
+
+
+def capture_futures_odds_job() -> dict[str, object]:
+    """Captura diaria de odds de ganador del Mundial (futures outright).
+
+    Gateado por odds_futures_enabled (default False). Consume 1 crédito/run.
+    """
+    if not settings.odds_futures_enabled:
+        log.info("odds_futures_enabled=False; captura de futuros deshabilitada.")
+        return {"skipped": "disabled"}
+
+    if not settings.odds_api_key:
+        log.warning("ODDS_API_KEY no configurada; salto la captura de futuros.")
+        return {"skipped": "no_api_key"}
+
+    source = make_futures_source()
+    with SessionLocal() as session:
+        return _run_futures_capture(session, source)

@@ -270,9 +270,34 @@ def _run_simulate() -> None:
 
 
 def _run_signals() -> None:
-    """Subcomando: genera señales +EV PAPER sobre odds capturadas vs MC probs."""
-    print("INFO: el subcomando 'signals' se implementa en Phase 5 (futures_signals.py).")
-    print("  Requiere odds capturadas con OUTRIGHT_WINNER market type.")
+    """Subcomando: genera señales +EV PAPER sobre odds capturadas vs MC probs.
+
+    Requiere:
+      - Haber ejecutado 'simulate' previamente (predicciones montecarlo-v1 en BD).
+      - Odds OUTRIGHT_WINNER capturadas (por pipeline automático o manual).
+
+    CAVEAT: señales son PAPER (informativas). Monte Carlo champion probs no están
+    backtestadas como el OLM 1X2 — ver app/model/futures_signals.py.
+    """
+    from app.core.database import SessionLocal
+    from app.model.futures_signals import generate_futures_signals
+
+    with SessionLocal() as session:
+        mv = session.scalar(select(ModelVersion).where(ModelVersion.name == _MC_MODEL_NAME))
+        if mv is None:
+            print(f"ERROR: ModelVersion '{_MC_MODEL_NAME}' no existe. Ejecutar 'simulate' primero.")
+            return
+
+        print(f"Generando señales +EV PAPER para ModelVersion '{_MC_MODEL_NAME}' (id={mv.id})...")
+        signal_ids = generate_futures_signals(session, mv.id)
+        session.commit()
+
+    if signal_ids:
+        suffix = "..." if len(signal_ids) > 10 else ""
+        print(f"  Señales emitidas: {len(signal_ids)} (IDs: {signal_ids[:10]}{suffix})")
+    else:
+        print("  Sin señales +EV: no hay odds capturadas o ningún equipo tiene edge ≥ 0.03.")
+    print("  AVISO: todas las señales son PAPER — Monte Carlo sin backtest histórico.")
 
 
 # ---------------------------------------------------------------------------

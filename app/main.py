@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
 from app.api.routers.bets import router as bets_router
+from app.api.routers.futures import router as futures_router
 from app.api.routers.groups import router as groups_router
 from app.api.routers.health_full import router as health_full_router
 from app.api.routers.matches import router as matches_router
 from app.api.routers.model import router as model_router
+from app.api.routers.odds import router as odds_router
 from app.api.routers.paper import router as paper_router
 from app.api.routers.parlays import router as parlays_router
 from app.api.routers.signals import router as signals_router
@@ -35,3 +37,5 @@ app.include_router(paper_router, prefix="/api/v1")
 app.include_router(bets_router, prefix="/api/v1")
 app.include_router(parlays_router, prefix="/api/v1")
 app.include_router(groups_router, prefix="/api/v1")
+app.include_router(futures_router, prefix="/api/v1")
+app.include_router(odds_router, prefix="/api/v1")

@@ -20,21 +20,21 @@
 
 ## Phase 4: Futures Odds (TDD)
 
-- [ ] 4.1 `app/ingestion/sources/odds_api.py` — add `fetch_futures() -> list[OutrightOddsRow]` (sport key from config, market `outrights`, 1 credit/run); test with fixture (NEVER live).
-- [ ] 4.2 `app/ingestion/odds_pipeline.py` — outright capture path: resolve `outcome_name→team_id` via `TeamAlias`; discard+warn unresolved; persist `Odds(market_type=OUTRIGHT_WINNER, outcome_team_id)`; `SyncLog` upsert `resource='odds_api:futures_capture'`; test idempotency.
-- [ ] 4.3 `app/scheduler/jobs.py` — add `capture_futures_odds_job()` (daily, configurable); test SyncLog upsert on repeat run.
-- [ ] 4.4 `POST /api/v1/odds/manual` — accept `{market_type, outcome_team_id, decimal_odds, bookmaker, captured_at}`; allow only `GROUP_ADVANCE/REACH_SEMI_FINAL/REACH_FINAL`; reject `MATCH_1X2/OVER_UNDER` with HTTP 422; test both scenarios.
+- [x] 4.1 `app/ingestion/sources/odds_api.py` — add `fetch_futures() -> list[OutrightOddsRow]` (sport key from config, market `outrights`, 1 credit/run); test with fixture (NEVER live).
+- [x] 4.2 `app/ingestion/odds_pipeline.py` — outright capture path: resolve `outcome_name→team_id` via `TeamAlias`; discard+warn unresolved; persist `Odds(market_type=OUTRIGHT_WINNER, outcome_team_id)`; `SyncLog` upsert `resource='odds_api:futures_capture'`; test idempotency.
+- [x] 4.3 `app/scheduler/jobs.py` — add `capture_futures_odds_job()` (daily, configurable); test SyncLog upsert on repeat run.
+- [x] 4.4 `POST /api/v1/odds/manual` — accept `{market_type, outcome_team_id, decimal_odds, bookmaker, captured_at}`; allow only `GROUP_ADVANCE/REACH_SEMI_FINAL/REACH_FINAL`; reject `MATCH_1X2/OVER_UNDER` with HTTP 422; test both scenarios.
 
 ## Phase 5: Futures EV (TDD)
 
-- [ ] 5.1 `app/model/futures_signals.py` RED+GREEN — `generate_futures_signals(session, mv_id)`: proportional de-vig over all N captured OUTRIGHT_WINNER odds; emit `ValueSignal(PAPER)` where `edge=p_model−p_fair≥edge_min`; idempotent on `(prediction_id, odds_id)`; skip `BacktestGateError` for futures (document caveat); test de-vig [1.80,3.50,4.50]→overround 1.0635→p_fair [0.5224,0.2686,0.2090] and edge scenarios (positive/negative/idempotent).
+- [x] 5.1 `app/model/futures_signals.py` RED+GREEN — `generate_futures_signals(session, mv_id)`: proportional de-vig over all N captured OUTRIGHT_WINNER odds; emit `ValueSignal(PAPER)` where `edge=p_model−p_fair≥edge_min`; idempotent on `(prediction_id, odds_id)`; skip `BacktestGateError` for futures (document caveat); test de-vig [1.80,3.50,4.50]→overround 1.0635→p_fair [0.5224,0.2686,0.2090] and edge scenarios (positive/negative/idempotent).
 
 ## Phase 6: API + Frontend (TDD)
 
-- [ ] 6.1 `app/api/routers/futures.py` — `GET /api/v1/futures/probabilities` (48 items, p_champion ranked DESC, no external calls) and `GET /api/v1/futures/signals` (pre-computed EV, no recompute in path); add `FuturesProbItem`, `FuturesProbResponse`, `FuturesSignalItem` to `app/api/schemas.py`; register router in `app/main.py`; test 200+48 items, empty case, sum constraint.
-- [ ] 6.2 `frontend/src/api/types.ts` — add `FutureTeamRow`, `FuturesList`, `FutureSignal` types per spec R7.
-- [ ] 6.3 `frontend/src/pages/FuturesDashboard.tsx` — champion table (ranked, `FlagLabel`, pct 1 decimal), group-advance cards (A–L), EV signals table; `staleTime: 55_000`; skeleton + error banner + "Reintentar"; only design-system primitives; no hardcoded colors; test all three scenarios (table, empty signals, fetch error).
-- [ ] 6.4 `frontend/src/App.tsx` — add `/futures` route + "Futuros" nav entry; test deep-link and nav click.
+- [x] 6.1 `app/api/routers/futures.py` — `GET /api/v1/futures/probabilities` (48 items, p_champion ranked DESC, no external calls) and `GET /api/v1/futures/signals` (pre-computed EV, no recompute in path); add `FuturesProbItem`, `FuturesProbResponse`, `FuturesSignalItem` to `app/api/schemas.py`; register router in `app/main.py`; test 200+48 items, empty case, sum constraint.
+- [x] 6.2 `frontend/src/api/types.ts` — add `FutureTeamRow`, `FuturesList`, `FutureSignal` types per spec R7.
+- [x] 6.3 `frontend/src/pages/FuturesDashboard.tsx` — champion table (ranked, `FlagLabel`, pct 1 decimal), group-advance cards (A–L), EV signals table; `staleTime: 55_000`; skeleton + error banner + "Reintentar"; only design-system primitives; no hardcoded colors; test all three scenarios (table, empty signals, fetch error).
+- [x] 6.4 `frontend/src/App.tsx` — add `/futures` route + "Futuros" nav entry; test deep-link and nav click.
 
 ## Phase 7: Cierre
 
