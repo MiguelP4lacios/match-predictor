@@ -24,9 +24,10 @@ function humanizeOutcome(code: string | null): string {
 /** Badge con color según estado */
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    PENDING: { label: 'PENDIENTE', cls: 'bg-gray-100 text-gray-700' },
-    WON: { label: 'GANADA', cls: 'bg-green-100 text-green-700' },
-    LOST: { label: 'PERDIDA', cls: 'bg-red-100 text-red-700' },
+    pending: { label: 'PENDIENTE', cls: 'bg-gray-100 text-gray-700' },
+    won: { label: 'GANADA', cls: 'bg-green-100 text-green-700' },
+    lost: { label: 'PERDIDA', cls: 'bg-red-100 text-red-700' },
+    void: { label: 'ANULADA', cls: 'bg-yellow-100 text-yellow-700' },
   }
   const { label, cls } = map[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
   return (
@@ -67,7 +68,7 @@ export default function BetList({ bets, onRefresh }: BetListProps) {
         </thead>
         <tbody>
           {sorted.map((bet) => {
-            const canDelete = bet.mode === 'REAL' && bet.status === 'PENDING'
+            const canDelete = bet.mode === 'real' && bet.status === 'pending'
             const pnlValue = bet.pnl ? parseFloat(bet.pnl) : null
             const stakeValue = parseFloat(bet.stake)
 

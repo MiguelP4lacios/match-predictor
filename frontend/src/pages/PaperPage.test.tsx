@@ -50,7 +50,7 @@ describe('BetsPage (formerly PaperPage) — per-mode stats', () => {
       if (path === '/v1/paper') {
         return Promise.resolve({ paper: emptyModeStats, real: emptyModeStats })
       }
-      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path === '/v1/bets') return Promise.resolve([])
       if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
       return Promise.resolve(null)
     })
@@ -73,7 +73,7 @@ describe('BetsPage (formerly PaperPage) — per-mode stats', () => {
           real: { ...emptyModeStats, total: 10, settled: 8, won: 6, roi: 0.125 },
         })
       }
-      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path === '/v1/bets') return Promise.resolve([])
       if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
       return Promise.resolve(null)
     })

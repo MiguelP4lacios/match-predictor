@@ -131,8 +131,10 @@ export interface BetCreate {
 
 export interface BetItem {
   id: number
-  mode: 'REAL' | 'PAPER' | string
-  status: 'PENDING' | 'WON' | 'LOST' | string
+  /** StrEnum minúscula — API retorna 'real' | 'paper' */
+  mode: 'real' | 'paper' | string
+  /** StrEnum minúscula — API retorna 'pending' | 'won' | 'lost' | 'void' */
+  status: 'pending' | 'won' | 'lost' | 'void' | string
   match_id: number | null
   outcome_code: string | null
   odds_taken: number
@@ -144,11 +146,6 @@ export interface BetItem {
   placed_at: ISODateTime | null
   note: string | null
   value_signal_id: number | null
-}
-
-export interface BetList {
-  items: BetItem[]
-  total: number
 }
 
 export interface ModeStats {

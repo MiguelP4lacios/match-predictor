@@ -4,11 +4,11 @@
  * Muestra:
  *   - 2 ModeStatsBlock (PAPER / REAL)
  *   - BetForm (registro de nueva apuesta)
- *   - BetList (lista de apuestas existentes)
+ *   - BetList component (lista de apuestas existentes, GET /v1/bets → BetItem[])
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchAPI } from '../api/client'
-import type { BetsPageStats, BetList, UpcomingMatch } from '../api/types'
+import type { BetsPageStats, BetItem, UpcomingMatch } from '../api/types'
 import BetForm from '../components/BetForm'
 import BetListComponent from '../components/BetList'
 import Loading from '../components/Loading'
@@ -74,9 +74,9 @@ export default function BetsPage() {
     staleTime: 60_000,
   })
 
-  const { data: betList, isLoading: loadingBets, isError: errBets } = useQuery<BetList>({
+  const { data: betList, isLoading: loadingBets, isError: errBets } = useQuery<BetItem[]>({
     queryKey: ['bets'],
-    queryFn: () => fetchAPI<BetList>('/v1/bets'),
+    queryFn: () => fetchAPI<BetItem[]>('/v1/bets'),
     staleTime: 30_000,
   })
 
@@ -111,7 +111,7 @@ export default function BetsPage() {
       <BetForm matches={matches} onSuccess={invalidateAll} />
 
       <BetListComponent
-        bets={betList?.items ?? []}
+        bets={betList ?? []}
         onRefresh={invalidateAll}
       />
     </div>

@@ -36,9 +36,45 @@ function renderPage(initialPath = '/apuestas') {
   )
 }
 
+const exampleBet = {
+  id: 1,
+  mode: 'real',
+  status: 'pending',
+  match_id: 42,
+  outcome_code: 'HOME',
+  odds_taken: 1.85,
+  stake: '12000',
+  pnl: null,
+  settled_result: null,
+  settled_at: null,
+  placed_at: '2026-06-15T10:00:00',
+  note: null,
+  value_signal_id: null,
+}
+
 describe('BetsPage (4.7)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('muestra apuestas desde array plano (shape real de la API)', async () => {
+    mockFetchAPI.mockImplementation((path: string) => {
+      if (path === '/v1/paper') {
+        return Promise.resolve({
+          paper: emptyModeStats,
+          real: emptyModeStats,
+        })
+      }
+      if (path === '/v1/bets') return Promise.resolve([exampleBet])
+      if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
+      return Promise.resolve(null)
+    })
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Partido #42')).toBeInTheDocument()
+    })
   })
 
   it('muestra stats PAPER y REAL', async () => {
@@ -49,7 +85,7 @@ describe('BetsPage (4.7)', () => {
           real: { ...emptyModeStats, total: 2, staked: '24000', returns: '28800', roi: 0.20 },
         })
       }
-      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path === '/v1/bets') return Promise.resolve([])
       if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
       return Promise.resolve(null)
     })
@@ -70,7 +106,7 @@ describe('BetsPage (4.7)', () => {
           real: emptyModeStats,
         })
       }
-      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path === '/v1/bets') return Promise.resolve([])
       if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
       return Promise.resolve(null)
     })
@@ -92,7 +128,7 @@ describe('BetsPage (4.7)', () => {
           real: { ...emptyModeStats, total: 2, settled: 2, won: 2, staked: '24000', returns: '28800', roi: 0.20 },
         })
       }
-      if (path === '/v1/bets') return Promise.resolve({ items: [], total: 0 })
+      if (path === '/v1/bets') return Promise.resolve([])
       if (path.includes('/v1/matches/upcoming')) return Promise.resolve([])
       return Promise.resolve(null)
     })
