@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { formatEdge, formatStake, formatOdds } from '../lib/formatters'
 import type { SignalItem } from '../api/types'
+import AddToCuponButton from './AddToCuponButton'
 
 interface SignalCardProps {
   signal: SignalItem
@@ -86,6 +87,16 @@ export default function SignalCard({ signal, onExplain }: SignalCardProps) {
           >
             Registrar apuesta
           </button>
+        )}
+
+        {signal.match_id !== null && signal.match_id !== undefined && signal.outcome_code !== null && signal.outcome_code !== undefined && (
+          <AddToCuponButton
+            matchId={signal.match_id}
+            outcomeCode={signal.outcome_code as 'HOME' | 'DRAW' | 'AWAY'}
+            homeTeam={signal.home_team}
+            awayTeam={signal.away_team}
+            matchDate={signal.match_date}
+          />
         )}
       </div>
     </div>

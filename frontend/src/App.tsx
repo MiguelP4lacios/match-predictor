@@ -7,6 +7,8 @@ import MatchesPage from './pages/MatchesPage'
 import ModelPage from './pages/ModelPage'
 import BetsPage from './pages/BetsPage'
 import NotFound from './pages/NotFound'
+import { CuponProvider } from './context/CuponContext'
+import CuponDrawer from './components/CuponDrawer'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,7 +73,10 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppRoutes />
+        <CuponProvider>
+          <AppRoutes />
+          <CuponDrawer />
+        </CuponProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

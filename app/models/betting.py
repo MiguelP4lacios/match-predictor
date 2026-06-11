@@ -60,9 +60,7 @@ class BetLog(Base, TimestampMixin):
 
     signal: Mapped["ValueSignal | None"] = relationship(back_populates="bets")
     match: Mapped["Match | None"] = relationship()  # noqa: F821
-    legs: Mapped[list["BetLeg"]] = relationship(
-        back_populates="bet", cascade="all, delete-orphan"
-    )
+    legs: Mapped[list["BetLeg"]] = relationship(back_populates="bet", cascade="all, delete-orphan")
 
 
 class BetLeg(Base):

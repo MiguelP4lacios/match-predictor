@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchAPI } from '../api/client'
 import type { UpcomingMatch } from '../api/types'
 import MatchProbBar from '../components/MatchProbBar'
+import AddToCuponButton from '../components/AddToCuponButton'
 import Loading from '../components/Loading'
 import ErrorBanner from '../components/ErrorBanner'
 
@@ -42,7 +43,32 @@ export default function MatchesPage() {
         <div key={date} className="space-y-2">
           <h2 className="border-b pb-1 text-sm font-semibold text-gray-500">{date}</h2>
           {matches.map((match) => (
-            <MatchProbBar key={match.id} match={match} />
+            <div key={match.id}>
+              <MatchProbBar match={match} />
+              <div className="mt-1 flex flex-wrap gap-1 pl-1">
+                <AddToCuponButton
+                  matchId={match.id}
+                  outcomeCode="HOME"
+                  homeTeam={match.home_team}
+                  awayTeam={match.away_team}
+                  matchDate={match.match_date}
+                />
+                <AddToCuponButton
+                  matchId={match.id}
+                  outcomeCode="DRAW"
+                  homeTeam={match.home_team}
+                  awayTeam={match.away_team}
+                  matchDate={match.match_date}
+                />
+                <AddToCuponButton
+                  matchId={match.id}
+                  outcomeCode="AWAY"
+                  homeTeam={match.home_team}
+                  awayTeam={match.away_team}
+                  matchDate={match.match_date}
+                />
+              </div>
+            </div>
           ))}
         </div>
       ))}

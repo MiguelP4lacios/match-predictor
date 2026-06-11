@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { CuponProvider } from '../context/CuponContext'
 import MatchesPage from './MatchesPage'
 import type { UpcomingMatch } from '../api/types'
 
@@ -20,7 +21,11 @@ function renderWithQuery(ui: React.ReactElement) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={qc}>
+      <CuponProvider>{ui}</CuponProvider>
+    </QueryClientProvider>,
+  )
 }
 
 function match(partial: Partial<UpcomingMatch>): UpcomingMatch {
