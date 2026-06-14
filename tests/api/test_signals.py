@@ -213,3 +213,27 @@ def test_signals_pagination(client, db_session):
     # El offset reduce la lista en 1
     assert len(resp_offset.json()["items"]) == len(resp_all.json()["items"]) - 1
     assert resp_all.json()["total"] == total  # total no cambia con offset
+
+
+def test_signals_excluye_partidos_jugados(client, db_session):
+    """Una señal de un partido FINISHED NO debe aparecer (la apuesta ya no es posible)."""
+    comp = _make_competition(db_session)
+    home, away = _make_teams(db_session)
+    mv = _make_model_version(db_session)
+
+    # Partido por jugar → su señal SÍ aparece
+    m_sched = _make_match(db_session, comp, home, away, date(2026, 6, 20))
+    p_sched = _make_prediction(db_session, m_sched, mv)
+    sig_sched = _make_signal(db_session, p_sched, _make_odds(db_session, m_sched), edge=0.10)
+
+    # Partido ya jugado → su señal NO aparece
+    m_done = _make_match(db_session, comp, home, away, date(2026, 6, 11))
+    m_done.status = MatchStatus.FINISHED
+    db_session.flush()
+    p_done = _make_prediction(db_session, m_done, mv)
+    sig_done = _make_signal(db_session, p_done, _make_odds(db_session, m_done), edge=0.10)
+    db_session.flush()
+
+    ids = [i["id"] for i in client.get("/api/v1/signals?min_edge=0.05").json()["items"]]
+    assert sig_sched.id in ids
+    assert sig_done.id not in ids

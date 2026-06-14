@@ -17,6 +17,7 @@ from app.model.explain import ExplainSection as ModelExplainSection
 from app.model.explain import ExplainStep as ModelExplainStep
 from app.model.explain import build_explanation
 from app.models.betting import ValueSignal
+from app.models.enums import MatchStatus
 from app.models.match import Match
 from app.models.model import Prediction
 from app.models.odds import Odds
@@ -68,6 +69,9 @@ def list_signals(
         .join(away_team_alias, Match.away_team_id == away_team_alias.id)
         .join(Odds, ValueSignal.odds_id == Odds.id)
         .where(ValueSignal.edge >= min_edge)
+        # Solo partidos por jugar: una señal de un partido ya jugado es ruido
+        # (la apuesta tenía que hacerse ANTES del pitazo).
+        .where(Match.status == MatchStatus.SCHEDULED)
     )
 
     if from_:
